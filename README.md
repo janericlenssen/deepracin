@@ -25,7 +25,7 @@ If you have questions, feedback, suggestions or if you want to contribute, feel 
 These are reduced examples to give the intuition of how to use deepRacin. Therefore, configuration and data loading code is omitted. See examples/vgg16 for a full example of a VGG16 network for classification of the 1000 ILSVRC2012 classes.
 
 For <b>Step 1</b> in Python:
-```
+```python
 import deepracin as dr
 # Create empty graph
 graph = dr.create_graph()
@@ -62,7 +62,7 @@ for img_data in img_paths:
 ```
 
 For <b>Steps 2</b>, <b>3</b> and <b>4</b> in C with a new OpenCL environment:
-```
+```c
 // Load Graph
 net = dR_NewGraph();
 dR_loadGraph(net,model_path,&nodeslist,&numnodes,&feedlist,&numfeeds);
@@ -90,7 +90,7 @@ for(int i = 0; i<numImages;i++)
 }
 ```
 or with an existing OpenCL context and buffers:
-```
+```c
 // Load Graph
 net = dR_NewGraph();
 dR_loadGraph(net,model_path,&nodeslist,&numnodes,&feedlist,&numfeeds);
