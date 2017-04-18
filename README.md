@@ -3,9 +3,11 @@
 <ul>
 <li>Deploy computation graphs (such as trained deep neural network models) to mobile or desktop OpenCL supporting platforms.
 <li>Automated, resource-aware graph scheduling and parametrization
-<li>Platform-independent through the use of OpenCL, C and minimal dependencies
+<li>Runs on Linux, Windows and MacOS systems
+<li>Runs on Nvidia, AMD, Intel and many mobile GPUs: Adreno, Mali (OpenCL 1.1 required)
 </ul>
-<b>Note:</b> This library is under ongoing development and in alpha status.
+<b>Note:</b> This library is under ongoing development and in alpha status. While the library should run on all OS and GPUs mentioned above in theory, it is not tested on all configurations.
+ 
 If you have questions, feedback, suggestions or if you want to contribute, feel free to contact me!
 
 

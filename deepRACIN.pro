@@ -67,7 +67,7 @@ unix {
                     /usr/lib/x86_64-linux-gnu/glib-2.0/include \
                     /usr/include/glib-2.0/ \
                     include/ \
-                    "../../Libs/NVIDIA_GPU_Computing_SDK/OpenCL/common/inc"
+                    /usr/local/cuda/include
 
 
     CONFIG(debug, debug|release) {
