@@ -4,6 +4,39 @@
 #include <stdlib.h>
 #include "deepRACIN.h"
 
+char* own_strtok_r(
+    char *str,
+    const char *delim,
+    char **nextp)
+{
+    char *ret;
+
+    if (str == NULL)
+    {
+        str = *nextp;
+    }
+
+    str += strspn(str, delim);
+
+    if (*str == '\0')
+    {
+        return NULL;
+    }
+
+    ret = str;
+
+    str += strcspn(str, delim);
+
+    if (*str)
+    {
+        *str++ = '\0';
+    }
+
+    *nextp = str;
+
+    return ret;
+}
+
 float* loadVariables(char* path, int length)
 {
  gfloat* ret = g_malloc(length*sizeof(gfloat));
@@ -161,14 +194,14 @@ dR_Node* dR_parseGraph(dR_Graph* net, gchar* path, dR_Node*** outnodes, gint* nu
         return 0;
     }
 
-    line = strtok_r(filecontent,"\n",&lineptr);
+    line = own_strtok_r(filecontent,"\n",&lineptr);
 
     // Get number of nodes and feed nodes;
-    strtok_r(line," ",&inlineptr);
-    strtok_r(NULL," ",&inlineptr);
-    number_of_nodes = atoi(strtok_r(NULL," ",&inlineptr));
-    strtok_r(NULL," ",&inlineptr);
-    number_of_feednodes = atoi(strtok_r(NULL," ",&inlineptr));
+    own_strtok_r(line," ",&inlineptr);
+    own_strtok_r(NULL," ",&inlineptr);
+    number_of_nodes = atoi(own_strtok_r(NULL," ",&inlineptr));
+    own_strtok_r(NULL," ",&inlineptr);
+    number_of_feednodes = atoi(own_strtok_r(NULL," ",&inlineptr));
 
     *outnodes = g_malloc(number_of_nodes*sizeof(dR_Node*));
     *outfeednodes = g_malloc(number_of_feednodes*sizeof(dR_Node*));
@@ -198,52 +231,52 @@ dR_Node* dR_parseGraph(dR_Graph* net, gchar* path, dR_Node*** outnodes, gint* nu
         dR_Node** input;
         dR_Node* node;
 
-        line = strtok_r(NULL,"\n",&lineptr);
+        line = own_strtok_r(NULL,"\n",&lineptr);
 
-        strtok_r(line, " ",&inlineptr);
-        id = atoi(strtok_r(NULL, " ",&inlineptr));
-        desc = strtok_r(NULL, " ",&inlineptr);
+        own_strtok_r(line, " ",&inlineptr);
+        id = atoi(own_strtok_r(NULL, " ",&inlineptr));
+        desc = own_strtok_r(NULL, " ",&inlineptr);
 
         if(!net->config->silent&&net->config->debugInfo)
             g_print("Loading Node %d\n",id);
 
         // Get params
-        line = strtok_r(NULL,"\n",&lineptr);
+        line = own_strtok_r(NULL,"\n",&lineptr);
 
-        token = strtok_r(line, " ",&inlineptr);
-        token = strtok_r(NULL, " ",&inlineptr);
+        token = own_strtok_r(line, " ",&inlineptr);
+        token = own_strtok_r(NULL, " ",&inlineptr);
         while(token != NULL) {
             params[it] = token;
-            token = strtok_r(NULL, " ",&inlineptr);
+            token = own_strtok_r(NULL, " ",&inlineptr);
             it++;
         }
         num_params = it;
 
         // Get prev_nodes
-        line = strtok_r(NULL,"\n",&lineptr);
+        line = own_strtok_r(NULL,"\n",&lineptr);
 
-        token = strtok_r(line, " ",&inlineptr);
-        token = strtok_r(NULL, " ",&inlineptr);
+        token = own_strtok_r(line, " ",&inlineptr);
+        token = own_strtok_r(NULL, " ",&inlineptr);
         it = 0;
         while(token != NULL) {
             prev_nodes[it] = atoi(token);
-            token = strtok_r(NULL, " ",&inlineptr);
+            token = own_strtok_r(NULL, " ",&inlineptr);
             it++;
         }
         num_prev_nodes = it;
 
         // Ignore next_node line
-        line = strtok_r(NULL,"\n",&lineptr);
+        line = own_strtok_r(NULL,"\n",&lineptr);
 
         // Get variables
-        line = strtok_r(NULL,"\n",&lineptr);
+        line = own_strtok_r(NULL,"\n",&lineptr);
 
-        token = strtok_r(line, " ",&inlineptr);
-        token = strtok_r(NULL, " ",&inlineptr);
+        token = own_strtok_r(line, " ",&inlineptr);
+        token = own_strtok_r(NULL, " ",&inlineptr);
         it = 0;
         while(token != NULL) {
             variableFilenames[it] = token;
-            token = strtok_r(NULL, " ",&inlineptr);
+            token = own_strtok_r(NULL, " ",&inlineptr);
             it++;
         }
         num_variables = it;
@@ -765,3 +798,5 @@ void dR_printNet(dR_Graph* net, char* path)
         fclose(fp);
     g_print("---------------------------------\n\n");
 }
+
+
