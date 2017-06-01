@@ -1,5 +1,5 @@
 # deepRacin
-<b>Deep resource-aware OpenCL inference networks</b>
+<b>Deep Resource-aware OpenCL Inference Networks</b>
 <ul>
 <li>Deploy computation graphs (such as trained deep neural network models) to mobile or desktop OpenCL supporting platforms.
 <li>Automated, resource-aware graph scheduling and parametrization
@@ -24,7 +24,7 @@ If you have questions, feedback, suggestions or if you want to contribute, feel 
 </ol>
 
 <h4>Basic examples</h4>
-These are reduced examples to give the intuition of how to use deepRacin. Therefore, configuration and data loading code is omitted. See examples/vgg16 for a full example of a VGG16 network for classification of the 1000 ILSVRC2012 classes.
+These are reduced examples to give the intuition of how to use deepRacin. Therefore, configuration and data loading code is omitted. See examples/vgg16 or examples/squeezenet-v1.1 for full examples of networks for classification of the 1000 ILSVRC2012 classes.
 
 For <b>Step 1</b> in Python:
 ```python
