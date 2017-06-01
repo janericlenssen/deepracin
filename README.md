@@ -1,5 +1,5 @@
 # deepRacin
-<b>Deep resource-aware OpenCL inference networks</b>
+<b>Deep Resource-aware OpenCL Inference Networks</b>
 <ul>
 <li>Deploy computation graphs (such as trained deep neural network models) to mobile or desktop OpenCL supporting platforms.
 <li>Automated, resource-aware graph scheduling and parametrization
