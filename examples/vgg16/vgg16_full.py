@@ -5,13 +5,13 @@ import numpy as np
 # Properties
 
 # If true, all debug outputs are printed (Default: False)
-dr.env.debuginfo = False
+dr.env.debuginfo = True
 
 # If true, the overall CPU runtimes are profiled and printed (Default: False)
-dr.env.profileCPU = False
+dr.env.profileCPU = True
 
 # If true, the GPU kernel runtimes are profiled and printed (Default: False)
-dr.env.profileGPU = False
+dr.env.profileGPU = True
 
 # If true, all outputs are supressed (Default: True)
 dr.env.silent = False
@@ -20,7 +20,7 @@ dr.env.silent = False
 # Folder is used to store kernels, ptx, and (if model is exported) the exported model)
 dr.env.model_path = '/media/jan/DataExt4/deepRacinModels/test'
 
-# Can be a substring of actual platform name (NVIDIA, AMD, INTEL,...). If not set, first available device is chosen.
+# Can be a substring of actual platform name (NVIDIA, AMD, INTEL, MALI, ADRENO, ...). If not set, first available device is chosen.
 dr.env.preferred_platform_name = 'NVIDIA'
 
 # Create empty graph
@@ -35,7 +35,7 @@ w = np.load('/media/jan/DataExt4/deepRacinModels/vgg16/vgg16.npy', encoding='lat
 # Feed node - Will be fed with data for each graph application
 feed = dr.feed_node(graph, shape=(224, 224, 3))
 
-# VGG channel reorder and normalization
+# Channel reorder and normalization
 r, g, b = [feed[0:224, 0:224, 0] - 123.68,
            feed[0:224, 0:224, 1] - 116.779,
            feed[0:224, 0:224, 2] - 103.939]
@@ -92,7 +92,7 @@ fc8 = dr.Fully_Connected(fc7, filters.shape, 'linear', filters, biases)
 logits = dr.Softmax(fc8)
 
 # Mark output nodes (determines what dr.apply() returns)
-dr.mark_as_output(concat)
+dr.mark_as_output(feed)
 dr.mark_as_output(logits)
 
 # Print graph in console

@@ -28,6 +28,9 @@ gboolean dR_clInit(dR_Graph* net)
     if (!net->config->silent)
         g_print("Initializing OpenCL\n");
 
+    if (!net->config->silent&&net->config->debugInfo)
+        g_print("%s\n",net->clConfig->clKernelPath);
+
     //Make kernel path absolute
     if (g_path_is_absolute(net->clConfig->clKernelPath) == FALSE)
     {
@@ -246,7 +249,7 @@ gboolean dR_clBuildWithSource(dR_Graph* net, const gchar * const filenames[], gi
 #ifndef GPGPU_SIM_MODE
     size_t len;
 #endif
-    gsize totalLength = 0;
+    gint totalLength = 0;
     gboolean error = FALSE;
 #ifdef GPGPU_SIM_MODE
     gchar * gpgpuSimCode;
@@ -331,8 +334,8 @@ gboolean dR_clBuildWithSource(dR_Graph* net, const gchar * const filenames[], gi
                     sourceindex++;
                 }
                 current_layer = (dR_Node*)dR_list_next(net->scheduledLayers);
-                if (!net->config->silent&&net->config->debugInfo)
-                    g_print("Got generated kernel string with length: %d \n",(gint)length);
+                //if (!net->config->silent&&net->config->debugInfo)
+                //    g_print("Got generated kernel string with length: %d \n",(gint)length);
             }
         }
         if(loadedKernel)
@@ -348,6 +351,8 @@ gboolean dR_clBuildWithSource(dR_Graph* net, const gchar * const filenames[], gi
             }
             sourceCodeLengths[sourceindex-1] = length;
             totalLength += length;
+            if (!net->config->silent&&net->config->debugInfo)
+                g_print("Got generated kernel string with length: %d, total length: %d \n",(gint)length, (gint)totalLength);
         }
     }
     numberOfCodes = sourceindex;
@@ -395,6 +400,7 @@ gboolean dR_clBuildWithSource(dR_Graph* net, const gchar * const filenames[], gi
     {
         g_print("Done.\n");
         g_print("Creating OpenCL program... \n");
+        g_print("Source code length: %d \n",(gint)totalLength);
     }
 
 

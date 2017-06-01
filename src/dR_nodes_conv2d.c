@@ -29,7 +29,6 @@ dR_Node* dR_Conv2d(dR_Graph* net, dR_Node* inputLayer, dR_Shape4 sh, dR_Shape4 s
 
     //If filter is 3x3 and stride 1, use Winograd implementation
     if(sh.s0==3 && sh.s1==3 && st.s1==1 && st.s2==1)
-    //if(FALSE)
     {
         l->compute = dR_conv2d_winograd_compute;
         l->schedule = dR_conv2d_winograd_schedule;
@@ -41,10 +40,25 @@ dR_Node* dR_Conv2d(dR_Graph* net, dR_Node* inputLayer, dR_Shape4 sh, dR_Shape4 s
 
 
         conv2d->winoParallelizationPattern = 0;
-        l->generateKernel = dR_conv2d_winograd_generateKernel;
-        l->createKernelName = dR_conv2d_winograd_createKernelName;
-        //l->generateKernel = NULL;
-        //l->createKernelName = NULL;
+        //l->generateKernel = dR_conv2d_winograd_generateKernel;
+        //l->createKernelName = dR_conv2d_winograd_createKernelName;
+        l->generateKernel = NULL;
+        l->createKernelName = NULL;
+    }
+    // If filter is 1x1, use special conv2d_1x1 algorithm ("local fully connected")
+    else if(sh.s0==1 && sh.s1==1 && st.s1==1 && st.s2==1)
+    //else if(FALSE)
+    {
+        l->compute = dR_conv2d_1x1_compute;
+        l->schedule = dR_conv2d_1x1_schedule;
+        l->createKernel = dR_conv2d_1x1_createKernel;
+        l->allocateBuffers = dR_conv2d_1x1_allocateBuffers;
+        l->fillBuffers = dR_conv2d_1x1_fillBuffers;
+        l->cleanupBuffers = dR_conv2d_1x1_cleanupBuffers;
+        l->cleanupLayer = dR_conv2d_1x1_cleanupLayer;
+
+        l->generateKernel = NULL;
+        l->createKernelName = NULL;
     }
     else
     {
@@ -605,9 +619,18 @@ gboolean dR_conv2d_direct_generateKernel(dR_Graph* net, dR_Node* layer)
     }
     else
     {
-        temp = g_strdup_printf(
-    "                        sum +=  sampleZeroPaddedFloat(gInputImage, (inputindex*%d),get_global_id(0)+%d,get_global_id(1)+%d,%d,%d) * lFilter[findex]; findex++;\n"
-                    ,widthheight,x,y, width, height);
+        if(filterWidth==1 && filterHeight==1)
+        {
+            temp = g_strdup_printf(
+        "                        sum +=  gInputImage[(inputindex*%d) + (get_global_id(1)*%d+get_global_id(0))] * lFilter[findex]; findex++;\n"
+                        ,widthheight,width);
+        }
+        else
+        {
+            temp = g_strdup_printf(
+        "                        sum +=  sampleZeroPaddedFloat(gInputImage, (inputindex*%d),get_global_id(0)+%d,get_global_id(1)+%d,%d,%d) * lFilter[findex]; findex++;\n"
+                        ,widthheight,x,y, width, height);
+        }
         source = concat_and_free_old(source,temp);
         fid++;x++;
     }
@@ -983,6 +1006,7 @@ gboolean dR_conv2d_winograd_compute(dR_Graph* net, dR_Node* layer){
     cl_int lMemImageSize, lMemFilterSize;
     size_t localWorkSize[3];
     size_t globalWorkSize[3];
+    gint numOPerPartition, numIPerPartition, numO, numI;
     gint paramid = 0;
     cl_int usebias;
     cl_mem* input;
@@ -1034,10 +1058,11 @@ gboolean dR_conv2d_winograd_compute(dR_Graph* net, dR_Node* layer){
 
     usebias = (convlayer->useBias?1:0);
     numWGinX = convlayer->globalWorkSizeX;
-    //numOPerPartition = convlayer->shape.s3/convlayer->numberOfDepthPartitions;
-    //numIPerPartition = convlayer->numberOfDepthPartitionsInput;
-    //numO = convlayer->shape.s3;
-    //numI = convlayer->shape.s2;
+    //For non-generated kernels
+    numOPerPartition = convlayer->shape.s3/convlayer->numberOfDepthPartitions;
+    numIPerPartition = convlayer->numberOfDepthPartitionsInput;
+    numO = convlayer->shape.s3;
+    numI = convlayer->shape.s2;
 
     net->clConfig->clError = FALSE;
     if(convlayer->activation==tReLU)
@@ -1076,13 +1101,13 @@ gboolean dR_conv2d_winograd_compute(dR_Graph* net, dR_Node* layer){
     net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, lMemImageSize  * sizeof(cl_float), NULL);              paramid++;
     net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_int), (void *)&activation);                  paramid++;
     net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_int), (void *)&usebias);                     paramid++;
-    /*//For non-generated kernels
+    //For non-generated kernels
     net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_int), (void *)&convlayer->winogradNperDim);  paramid++;
     net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_int), (void *)&numOPerPartition);          paramid++;
     net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_int), (void *)&numIPerPartition);          paramid++;
     net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_int), (void *)&numO);                      paramid++;
     net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_int), (void *)&numI);                      paramid++;
-    */
+
     net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_int), (void *)&iwidth);                      paramid++;
     net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_int), (void *)&iheight);                      paramid++;
     net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_int), (void *)&numWGinX);                      paramid++;
@@ -1101,12 +1126,12 @@ gboolean dR_conv2d_winograd_compute(dR_Graph* net, dR_Node* layer){
 
 gboolean dR_conv2d_winograd_createKernel(dR_Graph* net, dR_Node* layer)
 {
-    //dR_Conv2d_Data* convlayer = (dR_Conv2d_Data*)(layer->layer);
-    return dR_createKernel(net,dR_conv2d_winograd_createKernelName(layer),&(layer->clKernel));
-    /*if(!convlayer->winogradWide)
+    //return dR_createKernel(net,dR_conv2d_winograd_createKernelName(layer),&(layer->clKernel));
+    dR_Conv2d_Data* convlayer = (dR_Conv2d_Data*)(layer->layer);
+    if(!convlayer->winogradWide)
         return dR_createKernel(net,"conv2dwinograd2",&(layer->clKernel));
     else
-        return dR_createKernel(net,"conv2dwinograd2_wide",&(layer->clKernel));*/
+        return dR_createKernel(net,"conv2dwinograd2_wide",&(layer->clKernel));
 }
 
 
@@ -1479,6 +1504,233 @@ gchar* dR_conv2d_winograd_createKernelName(dR_Node* layer)
     gchar* string = g_strdup_printf("conv2dwino%dx%d_%dx%d_%d%s", I, O, INumPartitions, OPartitionSize, N, wide);
     return string;
 }
+
+
+
+// 1x1 Implementation
+
+
+gboolean dR_conv2d_1x1_schedule(dR_Graph* net, dR_Node* layer){
+
+    // Trying to calculate [1,1,inputDepth,z] in one Thread and
+    // [x,y,inputDepth,z] in one Workgroup
+
+    // min f(x,y,z)= (width/x)*(height/y)*(outputDepth/z)*((x+filterx-1)*(y+filtery-1)*inputDepth + filterx*filtery*inputDepth*z)   // number of global memory accesses
+    // subject to:
+    // 8<=x<=width, 8<=y<=height, 1<=z<=outputDepth,
+    // ((x+filterx-1)*(y+filtery-1) + filterx*filtery*z)*4<localmemorysize  // restriction based on available local memory
+    // x*y = 32*k for k € N
+    // x*y <= maxworkgroupsize
+    // (width/x)*(height/y)*(outputDepth/z)>60 Minimum 60 Workgroups
+
+    // Minimizing global memory accesses subject to available local memory
+
+
+    //size_t maxwgs;
+    //clGetKernelWorkGroupInfo(layer->clKernel, net->clConfig->clDeviceId, CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), &maxwgs,NULL);
+
+    dR_Conv2d_Data* convlayer = (dR_Conv2d_Data*)(layer->layer);
+    gint lws = 16;
+    cl_ulong lms;
+    size_t mws;
+    gint numberofwgs;
+    gint localMemoryConFilter = (convlayer->shape.s0*convlayer->shape.s1*convlayer->shape.s3*4);
+    gint localMemoryConInput = 0;
+    int z=1;
+    convlayer->useLMEM = FALSE;
+
+
+
+    clGetDeviceInfo(net->clConfig->clDeviceId, CL_DEVICE_LOCAL_MEM_SIZE, sizeof(cl_ulong), &lms, NULL);
+    clGetDeviceInfo(net->clConfig->clDeviceId, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size_t), &mws, NULL);
+
+    // Find maximum size of workgroup in spatial dimension based on memory constraints
+    if(!net->config->silent&&net->config->debugInfo)
+        g_print("Local Memory Size: %d \nMax Workgroup Size: %d \n", (gint)lms, (gint)mws);
+    while(lws<(gint)layer->oshape.s0&&lws<(gint)layer->oshape.s1&&lws*lws<=(gint)mws){
+        lws*=2;
+    }
+    lws/=2;
+
+
+    if(layer->oshape.s0%lws==0)
+    {
+        convlayer->globalWorkSizeX = layer->oshape.s0;
+    }
+    else
+    {
+        convlayer->globalWorkSizeX = ((layer->oshape.s0/lws)+1)*lws;
+    }
+
+
+    if(layer->oshape.s1%lws==0)
+    {
+        convlayer->globalWorkSizeY = layer->oshape.s1;
+    }
+    else
+    {
+        convlayer->globalWorkSizeY = ((layer->oshape.s1/lws)+1)*lws;
+    }
+
+    convlayer->gidXGap = layer->oshape.s0 - convlayer->globalWorkSizeX;
+    convlayer->gidYGap = layer->oshape.s1 - convlayer->globalWorkSizeY;
+
+    numberofwgs = ((convlayer->globalWorkSizeX/lws) * (convlayer->globalWorkSizeY/lws))*z;
+
+
+    // If Number of Workgroups based on spatial division is to small -> parallize in filter dimension
+    while(z<convlayer->shape.s3)
+    {
+        z++;
+        while(convlayer->shape.s3%z!=0)
+            z++;
+        numberofwgs = ((convlayer->globalWorkSizeX/lws) * (convlayer->globalWorkSizeY/lws))*z;
+    }
+    //z = 1;
+    convlayer->localWorkSizexy = lws;
+    convlayer->numberOfDepthPartitions = z;
+
+    if(!net->config->silent&&net->config->debugInfo)
+        g_print("LocalWorkSizexy: %d \n", (gint)convlayer->localWorkSizexy);
+
+    if(!net->config->silent&&net->config->debugInfo)
+        g_print("Number of Depth-Partitions: %d \n", (gint)convlayer->numberOfDepthPartitions);
+
+
+    if(!net->config->silent&&net->config->debugInfo)
+        g_print("Local Memory Size: %d \nMax Workgroup Size: %d \n", (gint)lms, (gint)mws);
+
+    if(!net->config->silent&&net->config->debugInfo)
+        g_print("Scheduled Conv2D 1x1 Layer \n");
+
+    return TRUE;
+ }
+
+
+gboolean dR_conv2d_1x1_compute(dR_Graph* net, dR_Node* layer){
+    dR_Conv2d_Data* convlayer = ((dR_Conv2d_Data*)(layer->layer));
+    cl_int oDepth = convlayer->shape.s3;
+    cl_int lMemFilterSize;
+    cl_int numO, numI, activation, usebias, numFiltersPerWG, bW, hW;
+    size_t localWorkSize[3];
+    size_t globalWorkSize[3];
+    int paramid = 0;
+    cl_mem* input;
+    dR_list_resetIt(layer->previous_layers);
+    input = ((dR_Node*)dR_list_next(layer->previous_layers))->outputBuf->bufptr;
+
+    localWorkSize[0] = convlayer->localWorkSizexy;
+    localWorkSize[1] = convlayer->localWorkSizexy;;
+    localWorkSize[2] = 1;
+    lMemFilterSize = (oDepth/convlayer->numberOfDepthPartitions);
+    globalWorkSize[0] = convlayer->globalWorkSizeX;
+    globalWorkSize[1] = convlayer->globalWorkSizeY;
+    globalWorkSize[2] = convlayer->numberOfDepthPartitions;
+    usebias = (convlayer->useBias?1:0);
+    numO = convlayer->shape.s3;
+    numI = convlayer->shape.s2;
+    numFiltersPerWG = oDepth/convlayer->numberOfDepthPartitions;
+    bW = convlayer->ishape.s0;
+    hW = convlayer->ishape.s1;
+    if(convlayer->activation==tReLU)
+    {
+        activation = 1;
+    }
+    else
+    {
+        activation = 0;
+    }
+
+    /* Kernel Parameters
+    const __global float * biases,
+    const __global  float * gInputImage,
+    const __global float * gFilter,
+    __global  float * gOutputImage,
+    __local float* lFilter,
+    int bias,           // 0 no bias, 1 bias
+    int activation,     // 0 linear, 1 relu
+    int numO,              // Number of Filters
+    int numI ,             // Number of Input Channels
+    int depthPartitionSize, // Number of filters applied per workitem
+    int bW,             // Input Buffer Width
+    int bH             // Input Buffer Height
+    */
+    net->clConfig->clError = FALSE;
+    net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_mem), (void *)&convlayer->biasBuf);        paramid++;
+    net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_mem), (void *)input);                      paramid++;
+    net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_mem), (void *)&convlayer->weightsBuf);     paramid++;
+    net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_mem), (void *)layer->outputBuf->bufptr);   paramid++;
+    net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, lMemFilterSize * sizeof(cl_float), NULL);            paramid++;
+    net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_int), (void *)&usebias);                   paramid++;
+    net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_int), (void *)&activation);                paramid++;
+    net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_int), (void *)&numO);                      paramid++;
+    net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_int), (void *)&numI);                      paramid++;
+    net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_int), (void *)&numFiltersPerWG);           paramid++;
+    net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_int), (void *)&bW);                        paramid++;
+    net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_int), (void *)&hW);                        paramid++;
+
+    if (dR_openCLError(net, "Setting kernel args failed.", "Conv2d_1x1 Kernel"))
+        return FALSE;
+    //execute kernel
+     net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, layer->clKernel, 3, NULL, globalWorkSize,
+        localWorkSize, 0, NULL, net->clConfig->clEvent);
+
+    return dR_finishCLKernel(net, "deepRACIN:conv2d1x1");
+
+}
+
+
+
+gboolean dR_conv2d_1x1_createKernel(dR_Graph* net, dR_Node* layer)
+{
+    return dR_createKernel(net,"conv2d1x1",&(layer->clKernel));
+}
+
+
+gboolean dR_conv2d_1x1_allocateBuffers(dR_Graph* net, dR_Node* layer)
+{
+    gboolean ret = TRUE;
+    dR_Shape4 shape;
+    dR_Conv2d_Data* convlayer = ((dR_Conv2d_Data*)(layer->layer));
+    shape = convlayer->shape;
+    ret &= dR_createFloatBuffer(net, &(((dR_Conv2d_Data*)(layer->layer))->weightsBuf),shape.s0*shape.s1*shape.s2*shape.s3, CL_MEM_READ_ONLY);
+    if(convlayer->useBias)
+        ret &= dR_createFloatBuffer(net, &(((dR_Conv2d_Data*)(layer->layer))->biasBuf),shape.s3, CL_MEM_READ_ONLY);
+    else
+        ret &= dR_createFloatBuffer(net, &(((dR_Conv2d_Data*)(layer->layer))->biasBuf),1, CL_MEM_READ_ONLY);
+    return ret;
+}
+
+gboolean dR_conv2d_1x1_fillBuffers(dR_Graph* net, dR_Node* layer)
+{
+    gboolean ret = TRUE;
+    dR_Conv2d_Data* convlayer = ((dR_Conv2d_Data*)(layer->layer));
+    ret &= dR_uploadArray(net,"",convlayer->weights,0,convlayer->shape.s0*convlayer->shape.s1*convlayer->shape.s2*convlayer->shape.s3*sizeof(cl_float),convlayer->weightsBuf);
+    if(convlayer->useBias)
+        ret &= dR_uploadArray(net,"",convlayer->biases,0,convlayer->shape.s3*sizeof(cl_float),convlayer->biasBuf);
+    return ret;
+}
+
+gboolean dR_conv2d_1x1_cleanupBuffers(dR_Graph* net, dR_Node* layer)
+{
+    gboolean ret = TRUE;
+    ret &= dR_clMemoryBufferCleanup(net, ((dR_Conv2d_Data*)(layer->layer))->weightsBuf);
+    ret &= dR_clMemoryBufferCleanup(net, ((dR_Conv2d_Data*)(layer->layer))->biasBuf);
+    ret &= dR_cleanupKernel((layer->clKernel));
+    return ret;
+}
+
+gboolean dR_conv2d_1x1_cleanupLayer(dR_Graph* net, dR_Node* layer)
+{
+    if(net->prepared)
+    {
+        free(((dR_Conv2d_Data*)(layer->layer))->weights);
+        free(((dR_Conv2d_Data*)(layer->layer))->biases);
+        free((dR_Conv2d_Data*)(layer->layer));
+    }
+    return TRUE;
+}
+
 
 
 

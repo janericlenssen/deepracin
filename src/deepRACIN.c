@@ -17,7 +17,7 @@ dR_Graph* dR_NewGraph(){
     a->clConfig->clDeviceType = CL_DEVICE_TYPE_GPU;
     a->clConfig->clDeviceNumber = 0;
     a->clConfig->clInfo = TRUE;
-    a->clConfig->clKernelPath = "Kernels";
+    a->clConfig->clKernelPath = "/home/jan/Projects/deepracin/Kernels";
     a->clConfig->clPlatformName = " ";
     a->clConfig->configH = NULL;
     a->clConfig->fastRelaxedMath = TRUE;
@@ -92,7 +92,7 @@ gboolean dR_setDataFeedNodeBuffer(dR_Graph* net, dR_Node* node, cl_mem* buf)
     //dR_cleanupMemoryHandler(net,node->outputBuf);
     node->outputBuf = dR_newMemoryHandler(TRUE);
     node->outputBuf->bufptr = buf;
-    node->outputBuf->buf = &buf;
+    node->outputBuf->buf = *buf;
     node->outputBuf->size = feednode->shape.s0*feednode->shape.s1*feednode->shape.s2;
     dR_list_append(node->outputBuf->outputFor,node);
     return TRUE;

@@ -147,7 +147,23 @@ gboolean    dR_conv2d_winograd_generateKernel(dR_Graph* net, dR_Node* layer);
 gchar*      dR_conv2d_winograd_createKernelName(dR_Node* convlayer);
 
 
+// 1x1 Conv2d
 
+gboolean    dR_conv2d_1x1_createKernel(dR_Graph* net, dR_Node* layer);
+
+gboolean    dR_conv2d_1x1_allocateBuffers(dR_Graph* net, dR_Node* layer);
+
+gboolean    dR_conv2d_1x1_fillBuffers(dR_Graph* net, dR_Node* layer);
+
+gboolean    dR_conv2d_1x1_cleanupBuffers(dR_Graph* net, dR_Node* layer);
+
+gboolean    dR_conv2d_1x1_cleanupLayer(dR_Graph* net, dR_Node* layer);
+
+gboolean    dR_conv2d_1x1_compute(dR_Graph* net, dR_Node* layer);
+
+gboolean    dR_conv2d_1x1_schedule(dR_Graph* net, dR_Node* layer);
+
+// Opt
 
 
 

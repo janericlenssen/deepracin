@@ -6,15 +6,19 @@ import shutil
 import errno
 import os
 import sys
-
+dir = os.path.dirname(__file__)
+filename = os.path.join(dir, '/relative/path/to/file/you/want')
 
 if platform.system()=='Windows':
-    lib = cdll.LoadLibrary('../Release/deepracin')
+    filename = os.path.join(dir, '../Release/deepracin')
 elif platform.system()=='Linux':
-    lib = cdll.LoadLibrary('../libdeepracin.so')
+    filename = os.path.join(dir, '../libdeepracin.so')
+
 else:
     print("Not a known Platform!")
     exit()
+lib = cdll.LoadLibrary(filename)
+
 
 class Shape2(Structure):
     _fields_ = [("s0", c_int), ("s1", c_int)]

@@ -140,7 +140,8 @@ OTHER_FILES += \
     Kernels/dR_pooling.cl \
     Kernels/dR_math.cl \
     Kernels/dR_winograd2.cl \
-    Kernels/dR_transform.cl
+    Kernels/dR_transform.cl \
+    Kernels/dR_conv2d1x1.cl
 
 
 

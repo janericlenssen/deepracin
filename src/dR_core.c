@@ -369,9 +369,10 @@ gboolean dR_generateAndCompileKernels(dR_Graph* net)
         "dR_fcl.cl",
         "dR_math.cl",
         "dR_transform.cl",
-        "dR_winograd2.cl"
+        "dR_winograd2.cl",
+        "dR_conv2d1x1.cl"
     };
-    gint numberoffiles = 5;
+    gint numberoffiles = 6;
     gboolean ret;
     dR_Node* current_layer;
     dR_list_resetIt(net->scheduledLayers);
