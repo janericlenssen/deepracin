@@ -16,7 +16,7 @@ dr.env.preferred_platform_name = 'NVIDIA'
 graph = dr.create_graph(interface_layout='HWC')
 
 # Load graph
-nodes, feednodes = dr.load_graph(graph, '/media/jan/DataExt4/deepRacinModels/vgg16_whole/')
+nodes, feednodes = dr.load_graph(graph, '.../deepRacinModels/vgg16/')
 print(len(nodes),len(feednodes))
 # Mark output nodes (determines what dr.apply() returns)
 dr.mark_as_output(feednodes[0])

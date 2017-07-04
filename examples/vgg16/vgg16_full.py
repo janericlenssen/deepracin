@@ -91,12 +91,17 @@ fc8 = dr.Fully_Connected(fc7, filters.shape, 'linear', filters, biases)
 
 logits = dr.Softmax(fc8)
 
+dr.Create_Labels(logits,label_creation_type='')
+
 # Mark output nodes (determines what dr.apply() returns)
 dr.mark_as_output(feed)
 dr.mark_as_output(logits)
 
 # Print graph in console
 dr.print_graph(graph)
+
+# Store dR graph for loading in C or python
+# dr.save_graph(graph,'.../deepRacinModels/vgg16/')
 
 # Prepare graph for execution (setup and initialize)
 dr.prepare(graph)
