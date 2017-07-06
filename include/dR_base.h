@@ -9,4 +9,7 @@
 #include "dR_nodes_math.h"
 #include "dR_nodes_filter.h"
 #include "dR_nodes_transform.h"
+
+#define KERNEL_PATH
+
 #endif // DR_BASE_H
