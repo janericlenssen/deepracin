@@ -133,6 +133,7 @@ On Linux:
 <li> Checkout git repository
 <li> Navigate to checkout folder 
 <li> Create build dir, navigate there, apply cmake, configure, compile
+
 ```sh
 mkdir build
 cd build
