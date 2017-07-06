@@ -138,10 +138,10 @@ On Linux:
 mkdir build
 cd build
 ```
-<li>  Apply cmake. Note that Python and Numpy are required for installing the Python interface and OpenCV is required for building the examples
+<li>  Apply cmake. Choose ON or OFF for options (without brackets). Note that Python and Numpy are required for installing the Python interface and OpenCV is required for building the examples
 
 ```sh
-cmake .. -DINSTALL_PYTHON_INTERFACE=<On|Off> -DCOMPILE_EXAMPLES=<On|Off>
+cmake .. -DINSTALL_PYTHON_INTERFACE=<ON|OFF> -DCOMPILE_EXAMPLES=<ON|OFF>
 ```
 <li>  Compile and install the library
 
