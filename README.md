@@ -120,7 +120,7 @@ Dependencies of the C library:
 <li> OpenCL 1.1
 <li> Glib 2.0 
 </ul>
-For the C part of the VGG example, OpenCV is used to load test images.
+For the C part of the examples, OpenCV is required to load test images.
 
 Dependencies of the Python interface:
 <ul>
@@ -128,8 +128,20 @@ Dependencies of the Python interface:
 </ul>
 
 <h4> Installation </h4>
+On Linux:
+<ol>
+<li> Checkout git repository
+<li> Navigate to checkout folder 
+<li> Create build dir, navigate there, apply cmake, configure, compile
+```sh
+mkdir build
+cd build
+cmake ..
+sudo make install
+```
+</ol>
 
-TODO
+
 
 <h2> Currently implemented graph nodes </h2>
 <ul>
