@@ -1,0 +1,11 @@
+from distutils.core import setup
+
+setup(name='deepracin',
+      version='${PACKAGE_VERSION}',
+      description='Python interface of deepRacin: deep resource-aware OpenCL inference networks',
+      author='Jan Eric Lenssen',
+      author_email='janeric.lenssen@tu-dortmund.de',
+      package_dir={ '': '${CMAKE_CURRENT_SOURCE_DIR}' },
+      packages=['deepracin'])
+
+
