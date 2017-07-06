@@ -9,9 +9,9 @@ import sys
 dir = os.path.dirname(__file__)
 
 if platform.system()=='Windows':
-    filename = os.path.join(dir, '/usr/local/lib/deepracin/deepracin.dll')
+    filename = os.path.join(dir, '${CMAKE_INSTALL_PREFIX}/lib/deepracin/deepracin.dll')
 elif platform.system()=='Linux':
-    filename = os.path.join(dir, '/usr/local/lib/deepracin/libdeepracin.so')
+    filename = os.path.join(dir, '${CMAKE_INSTALL_PREFIX}/lib/deepracin/libdeepracin.so')
 
 else:
     print("Not a known Platform!")

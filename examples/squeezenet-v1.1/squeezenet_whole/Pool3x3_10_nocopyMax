@@ -1,0 +1,55 @@
+#ifndef kerneldef_Pool3x3_10_nocopyMax 
+#define kerneldef_Pool3x3_10_nocopyMax 
+
+__kernel void Pool3x3_10_nocopyMax(
+    const __global  float * gImage,
+    __global  float * gOutputImage,
+    const int width,
+    const int height,
+    const int depth,
+    const int sizex,
+    const int sizey,
+    const int sizez,
+    const int strifex,
+    const int strifey,
+    const int strifez
+)
+{
+    const int indexx = get_global_id(0)*strifex;
+    const int indexy = get_global_id(1)*strifey;
+    const int indexz = get_global_id(2)*strifez;
+    const int outputwidth = (int)ceil((float)width/strifex);
+    const int outputheight= (int)ceil((float)height/strifey);
+    const int ygap = width-sizex;
+    const int zgap = width*(height-sizey)-sizex;
+
+    //Implementation without using local memory. If overlapping is happening (stride<size) maybe inefficient.
+    float res = -FLT_MAX;
+    int ix = indexx;
+    int iy = indexy;
+    int iz = indexz;
+    res = max(res,sampleZeroPaddedFloat(gImage, iz*width*height,ix,iy,width,height));
+    ix++;
+    res = max(res,sampleZeroPaddedFloat(gImage, iz*width*height,ix,iy,width,height));
+    ix++;
+    res = max(res,sampleZeroPaddedFloat(gImage, iz*width*height,ix,iy,width,height));
+    ix++;
+    iy++; ix=indexx;
+    res = max(res,sampleZeroPaddedFloat(gImage, iz*width*height,ix,iy,width,height));
+    ix++;
+    res = max(res,sampleZeroPaddedFloat(gImage, iz*width*height,ix,iy,width,height));
+    ix++;
+    res = max(res,sampleZeroPaddedFloat(gImage, iz*width*height,ix,iy,width,height));
+    ix++;
+    iy++; ix=indexx;
+    res = max(res,sampleZeroPaddedFloat(gImage, iz*width*height,ix,iy,width,height));
+    ix++;
+    res = max(res,sampleZeroPaddedFloat(gImage, iz*width*height,ix,iy,width,height));
+    ix++;
+    res = max(res,sampleZeroPaddedFloat(gImage, iz*width*height,ix,iy,width,height));
+    ix++;
+    iy++; ix=indexx;
+    iz++; iy=indexy;
+    gOutputImage[get_global_id(2)*outputwidth*outputheight + get_global_id(1)*outputwidth + get_global_id(0)] = res;
+}
+#endif 

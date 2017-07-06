@@ -1,0 +1,23 @@
+#ifndef kerneldef_concat_2in2_128_128 
+#define kerneldef_concat_2in2_128_128 
+
+__kernel void concat_2in2_128_128(
+    const __global float *gInput0,
+    const __global float *gInput1,
+    __global  float * gOutputImage
+)
+{
+    if(get_global_id(2)<128);
+    {
+       int gid = (get_global_id(2)+0)*784+get_global_id(1)*28+get_global_id(0); 
+       int igid = get_global_id(2)*784+get_global_id(1)*28+get_global_id(0); 
+       gOutputImage[gid]=gInput0[igid];
+    }
+    if(get_global_id(2)<128);
+    {
+       int gid = (get_global_id(2)+128)*784+get_global_id(1)*28+get_global_id(0); 
+       int igid = get_global_id(2)*784+get_global_id(1)*28+get_global_id(0); 
+       gOutputImage[gid]=gInput1[igid];
+    }
+}
+#endif 

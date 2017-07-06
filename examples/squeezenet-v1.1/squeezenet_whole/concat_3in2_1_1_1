@@ -1,0 +1,30 @@
+#ifndef kerneldef_concat_3in2_1_1_1 
+#define kerneldef_concat_3in2_1_1_1 
+
+__kernel void concat_3in2_1_1_1(
+    const __global float *gInput0,
+    const __global float *gInput1,
+    const __global float *gInput2,
+    __global  float * gOutputImage
+)
+{
+    if(get_global_id(2)<1);
+    {
+       int gid = (get_global_id(2)+0)*50176+get_global_id(1)*224+get_global_id(0); 
+       int igid = get_global_id(2)*50176+get_global_id(1)*224+get_global_id(0); 
+       gOutputImage[gid]=gInput0[igid];
+    }
+    if(get_global_id(2)<1);
+    {
+       int gid = (get_global_id(2)+1)*50176+get_global_id(1)*224+get_global_id(0); 
+       int igid = get_global_id(2)*50176+get_global_id(1)*224+get_global_id(0); 
+       gOutputImage[gid]=gInput1[igid];
+    }
+    if(get_global_id(2)<1);
+    {
+       int gid = (get_global_id(2)+2)*50176+get_global_id(1)*224+get_global_id(0); 
+       int igid = get_global_id(2)*50176+get_global_id(1)*224+get_global_id(0); 
+       gOutputImage[gid]=gInput2[igid];
+    }
+}
+#endif 

@@ -1,0 +1,44 @@
+#ifndef kerneldef_Pool2x2_9_nocopyAverage 
+#define kerneldef_Pool2x2_9_nocopyAverage 
+
+__kernel void Pool2x2_9_nocopyAverage(
+    const __global  float * gImage,
+    __global  float * gOutputImage,
+    const int width,
+    const int height,
+    const int depth,
+    const int sizex,
+    const int sizey,
+    const int sizez,
+    const int strifex,
+    const int strifey,
+    const int strifez
+)
+{
+    const int indexx = get_global_id(0)*strifex;
+    const int indexy = get_global_id(1)*strifey;
+    const int indexz = get_global_id(2)*strifez;
+    const int outputwidth = (int)ceil((float)width/strifex);
+    const int outputheight= (int)ceil((float)height/strifey);
+    const int ygap = width-sizex;
+    const int zgap = width*(height-sizey)-sizex;
+
+    //Implementation without using local memory. If overlapping is happening (stride<size) maybe inefficient.
+    float res = 0.0f;
+    int ix = indexx;
+    int iy = indexy;
+    int iz = indexz;
+    res += sampleZeroPaddedFloat(gImage, iz*width*height,ix,iy,width,height);
+    ix++;
+    res += sampleZeroPaddedFloat(gImage, iz*width*height,ix,iy,width,height);
+    ix++;
+    iy++; ix=indexx;
+    res += sampleZeroPaddedFloat(gImage, iz*width*height,ix,iy,width,height);
+    ix++;
+    res += sampleZeroPaddedFloat(gImage, iz*width*height,ix,iy,width,height);
+    ix++;
+    iy++; ix=indexx;
+    iz++; iy=indexy;
+    gOutputImage[get_global_id(2)*outputwidth*outputheight + get_global_id(1)*outputwidth + get_global_id(0)] = res/(sizex*sizey*sizez);
+}
+#endif 
