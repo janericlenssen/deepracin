@@ -9,10 +9,13 @@ include_directories( ${OpenCV_INCLUDE_DIR} )
 
 # Create examples
 add_executable (vgg16_example vgg16/vgg_deployed.cpp)
+add_executable (squeezenet_example squeezenet-v1.1/squeezenet_deployed.cpp)
 
 # Link libraries
 target_link_libraries (vgg16_example deepracin)
 target_link_libraries (vgg16_example ${OpenCV_LIBRARIES})
+target_link_libraries (squeezenet_example deepracin)
+target_link_libraries (squeezenet_example ${OpenCV_LIBRARIES})
 
 
 # Create model folder

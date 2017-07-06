@@ -43,4 +43,5 @@ install(FILES ${HEADERS} DESTINATION include/${PROJECT_NAME})
 install(FILES ${KERNELS} DESTINATION lib/${PROJECT_NAME}/kernels/)
 
 add_subdirectory (examples)
+add_subdirectory (python)
 

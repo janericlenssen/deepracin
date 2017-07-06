@@ -7,12 +7,11 @@ import errno
 import os
 import sys
 dir = os.path.dirname(__file__)
-filename = os.path.join(dir, '/relative/path/to/file/you/want')
 
 if platform.system()=='Windows':
-    filename = os.path.join(dir, '../Release/deepracin')
+    filename = os.path.join(dir, '/usr/local/lib/deepracin/deepracin.dll')
 elif platform.system()=='Linux':
-    filename = os.path.join(dir, '../libdeepracin.so')
+    filename = os.path.join(dir, '/usr/local/lib/deepracin/libdeepracin.so')
 
 else:
     print("Not a known Platform!")
@@ -75,37 +74,37 @@ class Node:
         self.variables = variables
         graph.nodes.append(self)
 
-    def __add__(self, other: float):
+    def __add__(self, other):
         if isinstance(other,float):
             return Add_Scalar(self, other)
         elif isinstance(other,Node):
             return Add(self, other)
         else:
-            return NotImplemented
+            raise NotImplementedError("Add with other type than float or Node not supported")
 
-    def __sub__(self, other: float):
+    def __sub__(self, other):
         if isinstance(other,float):
             return Sub_Scalar(self, other)
         elif isinstance(other,Node):
             return Sub(self, other)
         else:
-            return NotImplemented
+            raise NotImplementedError("Add with other type than float or Node not supported")
 
-    def __mul__(self, other: float):
+    def __mul__(self, other):
         if isinstance(other,float):
             return Mul_Scalar(self, other)
         elif isinstance(other,Node):
             return Mul(self, other)
         else:
-            return NotImplemented
+            raise NotImplementedError("Add with other type than float or Node not supported")
 
-    def __rdiv__(self, other: float):
+    def __rdiv__(self, other):
         if isinstance(other,float):
             return Div_Scalar(self, other)
         elif isinstance(other,Node):
             return Div(self, other)
         else:
-            return NotImplemented
+            raise NotImplementedError("Add with other type than float or Node not supported")
 
     def __pow__(self, power, modulo=None):
         if isinstance(power,float):
@@ -113,7 +112,7 @@ class Node:
         elif isinstance(power,Node):
             return Pow(self, power)
         else:
-            return NotImplemented
+            raise NotImplementedError("Add with other type than float or Node not supported")
 
     def __getitem__(self, item):
         slices = None
@@ -127,18 +126,17 @@ class Node:
                     slices[k] = slice(i, i+1, None)
 
         if slices is None or any((i.step is not None or i.start is None) for i in slices):
-            sys.exit("DR Error: Way of indexing not allowed!")
+            raise ValueError('DR Error: Way of indexing not allowed!')
 
 
         origin = [slices[0].start,slices[1].start,slices[2].start]
         shape = [slices[0].stop-slices[0].start,slices[1].stop-slices[1].start,slices[2].stop-slices[2].start]
 
-        print("getitem test: ",origin,shape)
         return Slice(self,origin,shape)
 
 
 class Graph:
-    def __init__(self,id, layout):
+    def __init__(self,id, layout, env):
         self.ptr = lib.dR_NewGraph()
         self.num_outputs = 0
         self.outnodes = []
@@ -147,11 +145,15 @@ class Graph:
         self.nodes = []
         self.feed_nodes = []
         self.model_path = None
+        self.env = env
+        
 
 
-class Env:
+class Environment:
     def __init__(self, preferred_platform=''):
         self.preferred_platform_name = preferred_platform
+
+    def __enter__(self):
         self.silent = True
         self.debuginfo = False
         self.profileCPU = False
@@ -161,10 +163,11 @@ class Env:
         self.graphs = []
         self.graph_with_cl_context = -1
         self.id_counter = 0
-        return
+        return self
 
-    def __del__(self):
+    def __exit__(self, type, value, traceback):
         try:
+            import shutil
             shutil.rmtree(self.tmp_path)  # delete directory
         except OSError as exc:
             if exc.errno != errno.ENOENT:  # ENOENT - no such file or directory
@@ -176,16 +179,15 @@ class Env:
                 lib.dR_cleanup(graph.ptr,False)
         return
 
-env = Env()
+    # Create a new graph
+    def create_graph(self, interface_layout):
+        graph_id = self.id_counter
+        self.id_counter+=1
+        graph = Graph(graph_id,interface_layout, self)
+        self.graphs.append(graph)
+        return graph
 
 # general functions
-# Create a new graph
-def create_graph(interface_layout):
-    graph_id = env.id_counter
-    env.id_counter+=1
-    graph = Graph(graph_id,interface_layout)
-    env.graphs.append(graph)
-    return graph
 
 # Create a graph node that can be fed with data
 def feed_node(graph, shape):
@@ -201,7 +203,7 @@ def feed_node(graph, shape):
     elif graph.layout == 'HWC':
         dr_shape = [shape[1],shape[0],shape[2]]
     else:
-        sys.exit("DR Error: Graphs's layout "+graph.layout+" not supported!")
+        raise NotImplementedError("DR Error: Graphs's layout "+graph.layout+" not supported!")
     desc = 'DataFeedNode'
     params = [dr_shape[0],dr_shape[1],dr_shape[2]]
     node = Node(lib.dR_Datafeednode(graph.ptr, Shape3(*dr_shape)),graph,desc,params)
@@ -211,6 +213,7 @@ def feed_node(graph, shape):
 # Initializes and prepares a fully defined graph
 def prepare(graph):
     ret = True
+    env = graph.env
     if env.graph_with_cl_context == -1:
         platformname = create_string_buffer(str.encode(env.preferred_platform_name))
 
@@ -229,7 +232,7 @@ def prepare(graph):
         env.graph_with_cl_context = graph.id
 
         if not ret:
-            sys.exit("DR Error: deepRACIN initCL failed!")
+            raise RuntimeError("DR Error: deepRACIN initCL failed!")
     else:
         lib.dR_getClEnvironmentFrom(graph.ptr, env.graphs[env.graph_with_cl_context].ptr)
 
@@ -243,14 +246,14 @@ def prepare(graph):
         shape = cast(lib.dR_getOutputShape(feednode.ptr), POINTER(ArrayType)).contents
         feednode.shape = [shape[0],shape[1],shape[2]]
     if not ret:
-        sys.exit("DR Error: deepRACIN prepare failed!")
+        raise RuntimeError("DR Error: deepRACIN prepare failed!")
     return
 
 # Runs the graph - after that, data can be fetched from output arrays
 def apply(graph):
     ret = lib.dR_apply(graph.ptr)
     if not ret:
-        sys.exit("DR Error: deepRACIN apply failed!")
+        raise RuntimeError("DR Error: deepRACIN apply failed!")
 
     memptr = (c_void_p * graph.num_outputs)()
     lib.dR_getOutputBuffers(graph.ptr, memptr)
@@ -280,9 +283,9 @@ def mark_as_output(node):
 
 def feed_data(node, data):
     if not len(data.shape) == 3 :
-        sys.exit("DR Error: data fed to a feed_node needs to be an array with 3 dimensions!")
+        raise TypeError("DR Error: data fed to a feed_node needs to be an array with 3 dimensions!")
     if data.dtype!=np.float32:
-        sys.exit("DR Error: data fed to a feed_node is "+str(data.dtype)+" but needs to be an array of type float32!")
+        raise TypeError("DR Error: data fed to a feed_node is "+str(data.dtype)+" but needs to be an array of type float32!")
 
     dr_shape = [data.shape[1],data.shape[0],data.shape[2]]
     if node.graph.layout == 'WHC':
@@ -295,14 +298,16 @@ def feed_data(node, data):
         data = data.transpose([2, 0, 1]).copy()
 
     if not dr_shape==node.shape:
-        sys.exit("DR Error: data array's dimensions "+str(dr_shape)+" do not match node's dimensions "+str(node.shape)+"!")
+        raise ValueError("DR Error: data array's dimensions '+str(dr_shape)+' do not match node's dimensions '+str(node.shape)+'!")
 
     d = np.ctypeslib.as_ctypes(data)
     l = dr_shape[0]*dr_shape[1]*dr_shape[2]
     lib.dR_feedData(node.graph.ptr, node.ptr, d, 0, l)
     return
 
-def load_graph(graph,path : str):
+def load_graph(graph,path):
+    if not isinstance(path,str):
+        raise TypeError("DR Error: Load graph needs graph folder path!")
     graph.model_path = path
     num_nodes = c_int(0)
     num_feed_nodes = c_int(0)
@@ -311,7 +316,7 @@ def load_graph(graph,path : str):
     pathbuf = create_string_buffer(str.encode(path))
     outnodeptr = lib.dR_loadGraph(c_void_p(graph.ptr), pathbuf, byref(nodesptr),byref(num_nodes), byref(feednodesptr),byref(num_feed_nodes))
     if outnodeptr is None:
-        sys.exit("DR Error: Model could not be loaded!")
+        raise RuntimeError("DR Error: Model could not be loaded!")
 
     nodelist = [Node(nodesptr[i],graph, None, None) for i in range(num_nodes.value)]
     feednodelist = [Node(feednodesptr[i],graph, None, None) for i in range(num_feed_nodes.value)]
@@ -319,23 +324,27 @@ def load_graph(graph,path : str):
 
     return nodelist, feednodelist
 
-def load_graph_old(node,path : str):
+def load_graph_old(node,path):
+    if not isinstance(path,str):
+        raise TypeError("DR Error: Load graph needs graph folder path!")
     maxnumofnodes = 50
     maxnodes = c_int(maxnumofnodes)
     nodeptr = (c_void_p * maxnumofnodes)()
     pathbuf = create_string_buffer(str.encode(path))
     outnodeptr = lib.dR_loadGraph(c_void_p(node.graph.ptr), c_void_p(node.ptr), pathbuf, byref(nodeptr),byref(maxnodes))
     if outnodeptr is None:
-        sys.exit("DR Error: Model could not be loaded!")
+        raise RuntimeError("DR Error: Model could not be loaded!")
     outnode = Node(outnodeptr, node.graph, None, None)
     outlist = [Node(nodeptr[i],node.graph, None, None) for i in range(maxnodes.value)]
     return outnode, outlist
 
-def save_graph(graph,path : str):
+def save_graph(graph,path):
+    if not isinstance(path,str):
+        raise TypeError("DR Error: Save graph needs graph folder path!")
     pathbuf = create_string_buffer(str.encode(path))
     res = lib.dR_saveGraph(graph.ptr, pathbuf)
     if not res:
-        sys.exit("DR Error: Model could not be saved!")
+        raise RuntimeError("DR Error: Model could not be saved!")
     return
 
 def print_graph(graph):
@@ -343,16 +352,22 @@ def print_graph(graph):
 
 # Specific Node Functions
 
-def Conv2d(input_node : Node, shape : (int, int, int, int), stride : (int, int, int, int), activation : str, weights, biases=None):
+def Conv2d(input_node, shape, stride, activation, weights, biases=None):
 
     if not (shape[0] == shape[1] and shape[0]%2 == 1):
-        sys.exit("DR Error: Conv2d' currently only supports quadratic filter sizes with odd side length!")
+        raise TypeError("DR Error: Conv2d' currently only supports quadratic filter sizes with odd side length!")
     if not (stride[0] == stride[3] == 1 and stride[1] == stride[2]):
-        sys.exit("DR Error: Conv2d' currently only strides of from (1,x,x,1)!")
+        raise TypeError("DR Error: Conv2d' currently only strides of from (1,x,x,1)!")
     if biases is not None:
         use_bias = True
     else:
         use_bias = False
+    if not isinstance(activation,str):
+        raise ValueError("DR Error: Activation parameter needs to be 'max' or 'average!")
+    #if not (isinstance(shape,(int,int,int,int)) or (isinstance(shape,numpy.ndarray) and shape.shape[0]==4)):
+    #    raise TypeError("DR Error: Shape parameter needs to be a tuple of 4 ints!")
+    #if not isinstance(stride,(int,int,int,int)):
+    #    raise TypeError("DR Error: Stride parameter needs to be a tuple of 4 ints!")
 
     # deepRacin expects [C,F,H,W] conv2d weights
     # transpose [H,W,C,F] -> [C,F,H,W]
@@ -382,11 +397,9 @@ Not supported yet!
 def Conv2d_Transposed(input_node : Node, shape : (int, int, int, int), stride : (int, int, int, int), activation : str, weights, biases=None):
 
     if not (shape[0] == shape[1] and shape[0]%2 == 1):
-        print("Error: Conv2d_Transposed' currently only supports quadratic filter sizes with odd side length!")
-        exit()
+        raise ValueError("Error: Conv2d_Transposed' currently only supports quadratic filter sizes with odd side length!")
     if not (stride[0] == stride[3] == 1 and stride[1] == stride[2]):
-        print("Error: Conv2d_Transposed' currently only strides of from (1,x,x,1)!")
-        exit()
+        raise ValueError('Error: Conv2d_Transposed' currently only strides of from (1,x,x,1)!')
     if biases is not None:
         use_bias = True
     else:
@@ -399,11 +412,15 @@ def Conv2d_Transposed(input_node : Node, shape : (int, int, int, int), stride : 
     return onode
 '''
 
-def Fully_Connected(input_node: Node, shape: (int, int), activation: str, weights, biases=None):
+def Fully_Connected(input_node, shape, activation, weights, biases=None):
     if biases is not None:
         use_bias = True
     else:
         use_bias = False
+    if not isinstance(activation,str):
+        raise ValueError("DR Error: Activation parameter needs to be 'max' or 'average!")
+    if not isinstance(shape,(int,int)):
+        raise TypeError("DR Error: Shape parameter needs to be a tuple of 2 ints!")
 
     # Description for python structures
     desc = 'FullyConnected'
@@ -422,9 +439,10 @@ def Fully_Connected(input_node: Node, shape: (int, int), activation: str, weight
         lib.dR_FullyConnected_setVariables(onode.ptr, np.ctypeslib.as_ctypes(weights), 0)
     return onode
 
-def Mask_Dependent_Filter(input_node: Node, filter_mask : Node, shape: (int, int, int), filters):
+def Mask_Dependent_Filter(input_node, filter_mask, shape, filters):
+    # type: (Node, Node, (int,int,int), numpy.ndarray) -> None
     if input_node.graph != filter_mask.graph:
-        sys.exit("DR Error: Inputs for Mask_Dependent_Filter are not in the same graph!")
+        raise ValueError("DR Error: Inputs for Mask_Dependent_Filter are not in the same graph!")
 
     # Description for python structures
     desc = 'MaskDependentFilter'
@@ -437,8 +455,8 @@ def Mask_Dependent_Filter(input_node: Node, filter_mask : Node, shape: (int, int
     lib.dR_MaskDependentFilter_setVariables(input_node.graph.ptr, onode, np.ctypeslib.as_ctypes(filters), 0)
     return onode
 
-def Per_Pixel_Filter(input_node: Node, input_filters: Node, shape: (int, int, int, int), stride: (int, int, int, int)):
-
+def Per_Pixel_Filter(input_node, input_filters, shape, stride):
+    # type: (Node, Node, (int,int,int, int), (int, int, int, int)) -> None
     # Description for python structures
     desc = 'PPFilter'
     params = [shape[0], shape[1], shape[2], shape[3], stride[0], stride[1], stride[2], stride[3]]
@@ -448,8 +466,8 @@ def Per_Pixel_Filter(input_node: Node, input_filters: Node, shape: (int, int, in
                                        Shape4(*stride)),input_node.graph, desc, params)
     return onode
 
-def Add_Scalar(input_node: Node, scalar: float):
-
+def Add_Scalar(input_node, scalar):
+    # type: (Node, float) -> None
     # Description for python structures
     desc = 'ElemWise1Op'
     params = [elemwise_1op_dict['AddS'], scalar]
@@ -459,8 +477,8 @@ def Add_Scalar(input_node: Node, scalar: float):
                                            c_float(scalar)),input_node.graph, desc, params)
     return onode
 
-def Sub_Scalar(input_node: Node, scalar: float):
-
+def Sub_Scalar(input_node, scalar):
+    # type: (Node, float) -> None
     # Description for python structures
     desc = 'ElemWise1Op'
     params = [elemwise_1op_dict['SubS'], scalar]
@@ -470,8 +488,8 @@ def Sub_Scalar(input_node: Node, scalar: float):
                                            c_float(scalar)),input_node.graph, desc, params)
     return onode
 
-def Mul_Scalar(input_node: Node, scalar: float):
-
+def Mul_Scalar(input_node, scalar):
+    # type: (Node, float) -> None
     # Description for python structures
     desc = 'ElemWise1Op'
     params = [elemwise_1op_dict['MulS'], scalar]
@@ -481,8 +499,8 @@ def Mul_Scalar(input_node: Node, scalar: float):
                                            c_float(scalar)),input_node.graph, desc, params)
     return onode
 
-def Div_Scalar(input_node: Node, scalar: float):
-
+def Div_Scalar(input_node, scalar):
+    # type: (Node, float) -> None
     # Description for python structures
     desc = 'ElemWise1Op'
     params = [elemwise_1op_dict['DivS'], scalar]
@@ -492,8 +510,8 @@ def Div_Scalar(input_node: Node, scalar: float):
                                            c_float(scalar)),input_node.graph, desc, params)
     return onode
 
-def Log(input_node: Node):
-
+def Log(input_node):
+    # type: (Node) -> None
     # Description for python structures
     scalar = 0.0
     desc = 'ElemWise1Op'
@@ -504,7 +522,8 @@ def Log(input_node: Node):
                                            c_float(scalar)),input_node.graph, desc, params)
     return onode
 
-def Exp(input_node: Node):
+def Exp(input_node):
+    # type: (Node) -> None
     scalar = 0.0
 
     # Description for python structures
@@ -516,7 +535,8 @@ def Exp(input_node: Node):
                                            c_float(scalar)),input_node.graph, desc, params)
     return onode
 
-def Sqrt(input_node: Node):
+def Sqrt(input_node):
+    # type: (Node) -> None
     scalar = 0.0
 
     # Description for python structures
@@ -528,8 +548,8 @@ def Sqrt(input_node: Node):
                                            c_float(scalar)),input_node.graph, desc, params)
     return onode
 
-def Fill(input_node: Node, scalar: float):
-
+def Fill(input_node, scalar):
+    # type: (Node, float) -> None
     # Description for python structures
     desc = 'ElemWise1Op'
     params = [elemwise_1op_dict['Fill'], scalar]
@@ -539,8 +559,8 @@ def Fill(input_node: Node, scalar: float):
                                            c_float(scalar)),input_node.graph, desc, params)
     return onode
 
-def Pow_Scalar(input_node: Node, scalar: float):
-
+def Pow_Scalar(input_node, scalar):
+    # type: (Node, float) -> None
     # Description for python structures
     desc = 'ElemWise1Op'
     params = [elemwise_1op_dict['PowS'], scalar]
@@ -550,9 +570,10 @@ def Pow_Scalar(input_node: Node, scalar: float):
                                            c_float(scalar)),input_node.graph, desc, params)
     return onode
 
-def Add(input_node1: Node, input_node2: Node):
+def Add(input_node1, input_node2):
+    # type: (Node, Node) -> None
     if input_node1.graph != input_node2.graph:
-        sys.exit("DR Error: Inputs for Add are not in the same graph!")
+        raise ValueError("DR Error: Inputs for Add are not in the same graph!")
 
     # Description for python structures
     desc = 'ElemWise2Op'
@@ -563,9 +584,10 @@ def Add(input_node1: Node, input_node2: Node):
                                            elemwise_1op_dict['Add']), input_node1.graph, desc, params)
     return onode
 
-def Sub(input_node1: Node, input_node2: Node):
+def Sub(input_node1, input_node2):
+    # type: (Node, Node) -> None
     if input_node1.graph != input_node2.graph:
-        sys.exit("DR Error: Inputs for Add are not in the same graph!")
+        raise ValueError("DR Error: Inputs for Add are not in the same graph!")
 
     # Description for python structures
     desc = 'ElemWise2Op'
@@ -576,9 +598,10 @@ def Sub(input_node1: Node, input_node2: Node):
                                            elemwise_1op_dict['Sub']), input_node1.graph, desc, params)
     return onode
 
-def Mul(input_node1: Node, input_node2: Node):
+def Mul(input_node1, input_node2):
+    # type: (Node, Node) -> None
     if input_node1.graph != input_node2.graph:
-        sys.exit("DR Error: Inputs for Mul are not in the same graph!")
+        raise ValueError("DR Error: Inputs for Mul are not in the same graph!")
 
     # Description for python structures
     desc = 'ElemWise2Op'
@@ -589,9 +612,10 @@ def Mul(input_node1: Node, input_node2: Node):
                                            elemwise_1op_dict['Mul']), input_node1.graph, desc, params)
     return onode
 
-def Div(input_node1: Node, input_node2: Node):
+def Div(input_node1, input_node2):
+    # type: (Node, Node) -> None
     if input_node1.graph != input_node2.graph:
-        sys.exit("DR Error: Inputs for Mul are not in the same graph!")
+        raise ValueError("DR Error: Inputs for Mul are not in the same graph!")
 
     # Description for python structures
     desc = 'ElemWise2Op'
@@ -602,9 +626,10 @@ def Div(input_node1: Node, input_node2: Node):
                                            elemwise_1op_dict['Div']), input_node1.graph, desc, params)
     return onode
 
-def Pow(input_node1: Node, input_node2: Node):
+def Pow(input_node1, input_node2):
+    # type: (Node, Node) -> None
     if input_node1.graph != input_node2.graph:
-        sys.exit("DR Error: Inputs for Mul are not in the same graph!")
+        raise ValueError("DR Error: Inputs for Mul are not in the same graph!")
 
     # Description for python structures
     desc = 'ElemWise2Op'
@@ -615,8 +640,8 @@ def Pow(input_node1: Node, input_node2: Node):
                                            elemwise_1op_dict['Pow']), input_node1.graph, desc, params)
     return onode
 
-def Softmax(input_node: Node):
-
+def Softmax(input_node):
+    # type: (Node) -> None
     # Description for python structures
     desc = 'Softmax'
     params = [' ']
@@ -625,8 +650,8 @@ def Softmax(input_node: Node):
     onode = Node(lib.dR_Softmax(input_node.graph.ptr, input_node.ptr),input_node.graph, desc, params)
     return onode
 
-def Resolve_RoI(input_node: Node, shape: (int, int, int)):
-
+def Resolve_RoI(input_node, shape):
+    # type: (Node, (int, int, int)) -> None
     # Description for python structures
     desc = 'ResolveRoI'
     params = [shape[0], shape[1], shape[2]]
@@ -635,8 +660,8 @@ def Resolve_RoI(input_node: Node, shape: (int, int, int)):
     onode = Node(lib.dR_ResolveRoI(input_node.graph.ptr, input_node.ptr, Shape3(*shape)),input_node.graph, desc, params)
     return onode
 
-def RGB_to_gray(input_node: Node):
-
+def RGB_to_gray(input_node):
+    # type: (Node) -> None
     # Description for python structures
     desc = 'RGB2Gray'
     params = [' ']
@@ -645,8 +670,8 @@ def RGB_to_gray(input_node: Node):
     onode = Node(lib.dR_RGB2gray(input_node.graph.ptr, input_node.ptr),input_node.graph, desc, params)
     return onode
 
-def Upscaling(input_node: Node, upscaling_type: str, scale_factor_x: int, scale_factor_y: int):
-
+def Upscaling(input_node, upscaling_type, scale_factor_x, scale_factor_y):
+    # type: (Node, str, int, int) -> None
     # Description for python structures
     desc = 'Upscaling'
     params = [us_dict[upscaling_type], scale_factor_x, scale_factor_y]
@@ -656,8 +681,8 @@ def Upscaling(input_node: Node, upscaling_type: str, scale_factor_x: int, scale_
                                   scale_factor_x, scale_factor_y),input_node.graph, desc, params)
     return onode
 
-def Create_Labels(input_node: Node, label_creation_type: str):
-
+def Create_Labels(input_node, label_creation_type):
+    # type: (Node, str) -> None
     # Description for python structures
     desc = 'LabelCreation'
     params = [lc_dict[label_creation_type]]
@@ -667,8 +692,8 @@ def Create_Labels(input_node: Node, label_creation_type: str):
                                       0.0, 0.0, 0.0),input_node.graph, desc, params)
     return onode
 
-def Normalization(input_node: Node, normalization_type : str, target_mean: float, target_dev: float):
-
+def Normalization(input_node, normalization_type, target_mean, target_dev):
+    # type: (Node, str, float, float) -> None
     # Description for python structures
     desc = 'Normalization'
     params = [norm_dict[normalization_type], target_mean, target_dev]
@@ -678,8 +703,8 @@ def Normalization(input_node: Node, normalization_type : str, target_mean: float
                                       target_dev),input_node.graph, desc, params)
     return onode
 
-def Pooling(input_node: Node, pooling_type: str, shape: (int, int, int, int), stride: (int, int, int, int)):
-
+def Pooling(input_node, pooling_type, shape, stride):
+    # type: (Node, str, (int, int, int, int), (int, int, int, int)) -> None
     # Description for python structures
     desc = 'Pooling'
     params = [pool_dict[pooling_type],shape[0],shape[1],shape[2],shape[3],stride[0],stride[1],stride[2],stride[3]]
@@ -689,7 +714,8 @@ def Pooling(input_node: Node, pooling_type: str, shape: (int, int, int, int), st
                                 pool_dict[pooling_type]),input_node.graph, desc, params)
     return onode
 
-def Slice(input_node: Node, origin: (int, int, int), shape: (int, int, int)):
+def Slice(input_node, origin, shape):
+    # type: (Node, (int, int, int), (int, int, int)) -> None
     dr_shape = shape
     dr_origin = origin
     if input_node.graph.layout == 'WHC':
@@ -711,7 +737,8 @@ def Slice(input_node: Node, origin: (int, int, int), shape: (int, int, int)):
                  input_node.graph, desc, params)
     return onode
 
-def Crop_Or_Pad(input_node: Node, shape: (int, int, int)):
+def Crop_Or_Pad(input_node, shape):
+    # type: (Node, (int, int, int)) -> None
     dr_shape = shape
     if input_node.graph.layout == 'WHC':
         dr_shape = [shape[0],shape[1],shape[2],0]
@@ -729,10 +756,11 @@ def Crop_Or_Pad(input_node: Node, shape: (int, int, int)):
     return onode
 
 
-def Concat(input_nodes: list,  concat_dim: int, layout='HWC'):
+def Concat(input_nodes,  concat_dim, layout='HWC'):
+    # type: (list, int) -> None
     n = len(input_nodes)
     if not n > 1:
-        sys.exit("DR Error: Concat with one or less nodes not allowed!")
+        raise ValueError("DR Error: Concat with one or less nodes not allowed!")
     dr_dim = concat_dim
     graph = input_nodes[0].graph
     if graph.layout == 'WHC':
@@ -746,7 +774,7 @@ def Concat(input_nodes: list,  concat_dim: int, layout='HWC'):
     for i in range(n):
         nodeptr[i] = input_nodes[i].ptr
         if input_nodes[i].graph != graph:
-            sys.exit("DR Error: Inputs for Concat are not in the same graph!")
+            raise ValueError("DR Error: Inputs for Concat are not in the same graph!")
 
     # Description for python structures
     desc = 'Concat'
