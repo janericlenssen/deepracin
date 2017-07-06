@@ -136,7 +136,7 @@ TODO
   <li>DataFeedNode</li>
   <li>DNN Nodes</li>
   <ul>
-    <li>Conv2d (direct and winograd(2x2, 3x3) implementation)</li>
+    <li>Conv2d (direct, winograd(2x2, 3x3) and specialized 1x1 implementations)</li>
     <li>Pooling (currently Max, Avg)</li>
     <li>FullyConnected</li>
     <li>Activation fuctions (currently ReLU, Linear)</li>
