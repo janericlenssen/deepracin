@@ -143,7 +143,7 @@ cd build
 ```sh
 cmake .. -DINSTALL_PYTHON_INTERFACE=<ON|OFF> -DCOMPILE_EXAMPLES=<ON|OFF>
 ```
-<li>  Compile and install the library
+<li>  Install the library
 
 ```sh
 sudo make install
