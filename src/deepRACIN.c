@@ -17,7 +17,7 @@ dR_Graph* dR_NewGraph(){
     a->clConfig->clDeviceType = CL_DEVICE_TYPE_GPU;
     a->clConfig->clDeviceNumber = 0;
     a->clConfig->clInfo = TRUE;
-    a->clConfig->clKernelPath = "/home/jan/Projects/deepracin/Kernels";
+    a->clConfig->clKernelPath = KERNEL_PATH;
     a->clConfig->clPlatformName = " ";
     a->clConfig->configH = NULL;
     a->clConfig->fastRelaxedMath = TRUE;
