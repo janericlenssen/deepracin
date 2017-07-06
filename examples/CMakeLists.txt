@@ -25,3 +25,6 @@ file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/build/deepRacinModels)
 configure_file(vgg16/synset.txt ${CMAKE_BINARY_DIR}/examples COPYONLY)
 configure_file(vgg16/tiger.png ${CMAKE_BINARY_DIR}/examples COPYONLY)
 configure_file(vgg16/puzzle.png ${CMAKE_BINARY_DIR}/examples COPYONLY)
+
+# Copy Squeezenet-model
+file(COPY squeezenet-v1.1/squeezenet_whole DESTINATION ${CMAKE_BINARY_DIR}/deepRacinModels)

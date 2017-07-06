@@ -6,6 +6,12 @@ file(GLOB SOURCES src/*.c)
 file(GLOB HEADERS include/*.h)
 file(GLOB KERNELS Kernels/*.cl)
 
+# Options
+option (INSTALL_PYTHON_INTERFACE 
+        "Install the python interface of deepRacin (Python and Numpy required)" ON) 
+option (COMPILE_EXAMPLES 
+        "Compile deepRacin examples (OpenCV required)" ON) 
+
 # Include header files
 include_directories(include)
 
@@ -42,6 +48,11 @@ install(TARGETS ${PROJECT_NAME} DESTINATION lib/${PROJECT_NAME})
 install(FILES ${HEADERS} DESTINATION include/${PROJECT_NAME})
 install(FILES ${KERNELS} DESTINATION lib/${PROJECT_NAME}/kernels/)
 
-add_subdirectory (examples)
-add_subdirectory (python)
-
+# Install examples
+if (COMPILE_EXAMPLES)
+	add_subdirectory (examples)
+endif(COMPILE_EXAMPLES)
+# Install python interface
+if (INSTALL_PYTHON_INTERFACE)
+	add_subdirectory (python)
+endif(INSTALL_PYTHON_INTERFACE)
