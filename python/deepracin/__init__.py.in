@@ -254,7 +254,6 @@ def apply(graph):
     ret = lib.dR_apply(graph.ptr)
     if not ret:
         raise RuntimeError("DR Error: deepRACIN apply failed!")
-
     memptr = (c_void_p * graph.num_outputs)()
     lib.dR_getOutputBuffers(graph.ptr, memptr)
     out = []
@@ -263,7 +262,8 @@ def apply(graph):
 
         dataptr = (c_float * (out_shape[0]*out_shape[1]*out_shape[2]))()
         lib.dR_downloadArray(graph.ptr, "output"+str(i), memptr[i], 0, out_shape[0]*out_shape[1]*out_shape[2]*4, dataptr)
-        arr = np.ctypeslib.as_array(dataptr)
+        #arr = np.ctypeslib.as_array(dataptr)
+        arr = np.frombuffer(dataptr, dtype=np.float32)
         arr = arr.reshape([out_shape[2],out_shape[1],out_shape[0]])
         if graph.layout == 'WHC':
             arr = arr.transpose([2, 1, 0])

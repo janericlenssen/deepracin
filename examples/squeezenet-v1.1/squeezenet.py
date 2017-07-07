@@ -132,7 +132,7 @@ with dr.Environment(preferred_platform_name) as env:
     dr.print_graph(graph)
 
     # Save graph in dr format
-    dr.save_graph(graph,'../../build/deepRacinModels/')
+    #dr.save_graph(graph,'../../build/deepRacinModels/')
 
     # Prepare graph for execution (setup and initialize)
     dr.prepare(graph)
