@@ -69,7 +69,7 @@ gboolean dR_serializeGraph(dR_Graph* net, gchar* path)
     gchar* folderPath;
     gchar* filePath;
     gchar* folderName;
-    folderName = g_strdup_printf("dr_graph_%s",g_date_time_format(g_date_time_new_now_local(),"%F_%T"));
+    folderName = g_strdup_printf("dr_graph_export");
     folderPath = g_build_filename(path,folderName, NULL);
     g_mkdir(folderPath,0777);
     source = g_strdup_printf(
