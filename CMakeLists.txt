@@ -32,8 +32,9 @@ find_package (GLIB REQUIRED)
 include_directories( ${GLIB_INCLUDE_DIRS} )
 message( "Glib include dir: " ${GLIB_INCLUDE_DIRS} )
 
-# Create shared library
+# Create shared and non-shared library
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
+add_library(${PROJECT_NAME} ${SOURCES})
 
 # Definitions
 #add_definitions(-DKERNEL_PATH=""lib/deepracin/kernels/"")
