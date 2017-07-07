@@ -132,12 +132,20 @@ On Linux:
 <ol>
 <li> Checkout git repository
 <li> Navigate to checkout folder 
-<li> Create build dir, navigate there, apply cmake, configure, compile
+<li> Create build dir, navigate there
 
 ```sh
 mkdir build
 cd build
-cmake ..
+```
+<li>  Apply cmake. Choose ON or OFF for options (without brackets). Note that Python and Numpy are required for installing the Python interface and OpenCV is required for building the examples
+
+```sh
+cmake .. -DINSTALL_PYTHON_INTERFACE=<ON|OFF> -DCOMPILE_EXAMPLES=<ON|OFF>
+```
+<li>  Install the library
+
+```sh
 sudo make install
 ```
 </ol>
