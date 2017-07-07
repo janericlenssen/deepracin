@@ -1,5 +1,6 @@
 cmake_minimum_required (VERSION 2.4.0)
 project (deepracin)
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 # Find files
 file(GLOB SOURCES src/*.c)
@@ -34,7 +35,6 @@ message( "Glib include dir: " ${GLIB_INCLUDE_DIRS} )
 
 # Create shared and non-shared library
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
-add_library(${PROJECT_NAME} ${SOURCES})
 
 # Definitions
 #add_definitions(-DKERNEL_PATH=""lib/deepracin/kernels/"")
