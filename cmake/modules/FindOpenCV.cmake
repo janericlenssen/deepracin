@@ -83,6 +83,7 @@ SET(OpenCV_INCDIR_SUFFIXES
   include
   include/cv
   include/opencv
+  include/opencv2
   cv/include
   cxcore/include
   cvaux/include
@@ -93,6 +94,13 @@ SET(OpenCV_INCDIR_SUFFIXES
 # library linkdir suffixes appended to OpenCV_ROOT_DIR 
 SET(OpenCV_LIBDIR_SUFFIXES
   lib
+  OpenCV/lib
+  x86/vc15/lib
+  x86/vc14/lib
+  x86/vc13/lib
+  x64/vc15/lib
+  x64/vc14/lib
+  x64/vc13/lib
   OpenCV/lib
   )
 
