@@ -34,10 +34,10 @@ message( "Glib include dir: " ${GLIB_INCLUDE_DIRS} )
 
 # Create shared and non-shared library
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
-add_library(${PROJECT_NAME} ${SOURCES})
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+
 
 # Definitions
-#add_definitions(-DKERNEL_PATH=""lib/deepracin/kernels/"")
 add_definitions(-DKERNEL_PATH="\\"${CMAKE_INSTALL_PREFIX}/lib/deepracin/kernels/\\"")
 
 # Link libraries
