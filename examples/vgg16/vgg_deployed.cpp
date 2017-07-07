@@ -1,9 +1,6 @@
 #include <iostream>
-#include <dirent.h>
 #include <deepRACIN.h>
-#include <stdlib.h>
 #include <stdio.h>
-#include <vector>
 #include <opencv2/opencv.hpp>
 using namespace cv;
 
