@@ -5,7 +5,7 @@ find_package (OpenCV REQUIRED)
 # Include header files
 include_directories( ${GLIB_INCLUDE_DIRS} )
 include_directories( include/deepracin/ )
-include_directories( ${OpenCV_INCLUDE_DIR} )
+include_directories( ${OpenCV_INCLUDE_DIRS} )
 
 # Create examples
 add_executable (vgg16_example vgg16/vgg_deployed.cpp)
