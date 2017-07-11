@@ -1,14 +1,15 @@
 import deepracin as dr
 from scipy import misc
 import numpy as np
+from skimage import io
 
 # Can be a substring of actual platform name (NVIDIA, AMD, INTEL,...). If not set, first available device is chosen.
-preferred_platform_name = 'NVIDIA'
+preferred_platform_name = 'Intel'
 
 with dr.Environment(preferred_platform_name) as env:
     # Properties
     # If true, all debug outputs are printed (Default: False)
-    env.debuginfo = False
+    env.debuginfo = True
 
     # If true, the overall CPU runtimes are profiled and printed (Default: False)
     env.profileCPU = False
@@ -17,11 +18,11 @@ with dr.Environment(preferred_platform_name) as env:
     env.profileGPU = False
 
     # If true, all outputs are supressed (Default: True)
-    env.silent = True
+    env.silent = False
 
     # If not set, a temporary folder will be created in location depending on system
     # Folder is used to store kernels, ptx, and (if model is exported) the exported model)
-    env.model_path = '/media/jan/DataExt4/deepRacinModels/test'
+    #env.model_path = '/media/jan/DataExt4/deepRacinModels/test'
 
 
 
@@ -140,9 +141,11 @@ with dr.Environment(preferred_platform_name) as env:
 
     # Graph application
     image_paths = ['tiger.png','puzzle.png']
+
     for path in image_paths:
+
         # Feed Input
-        img = misc.imread(path)
+        img = io.imread(path)
         data = np.array(img).astype(np.float32)
         dr.feed_data(feed,data)
 
@@ -151,8 +154,9 @@ with dr.Environment(preferred_platform_name) as env:
         classid = np.argmax(logits)
 
         # Display fed data and inference result
-        synset = [l.strip() for l in open('/media/jan/DataExt4/deepRacinModels/vgg16/synset.txt').readlines()]
+        synset = [l.strip() for l in open('../vgg16/synset.txt').readlines()]
 
         print('Class: '+str(classid)+', '+synset[classid])
-        misc.imshow(feeddata[:,:,0:3])
+        io.imshow(feeddata[:,:,0:3]/255.0)
+        io.show()
 

@@ -453,9 +453,9 @@ gboolean dR_conv2d_direct_cleanupLayer(dR_Graph* net, dR_Node* layer)
 {
     if(net->prepared)
     {
-        free(((dR_Conv2d_Data*)(layer->layer))->weights);
-        free(((dR_Conv2d_Data*)(layer->layer))->biases);
-        free((dR_Conv2d_Data*)(layer->layer));
+        g_free(((dR_Conv2d_Data*)(layer->layer))->weights);
+        g_free(((dR_Conv2d_Data*)(layer->layer))->biases);
+        g_free((dR_Conv2d_Data*)(layer->layer));
     }
     return TRUE;
 }
@@ -1243,9 +1243,9 @@ gboolean dR_conv2d_winograd_cleanupLayer(dR_Graph* net, dR_Node* layer)
 {
     if(net->prepared)
     {
-        free(((dR_Conv2d_Data*)(layer->layer))->weights);
-        free(((dR_Conv2d_Data*)(layer->layer))->biases);
-        free((dR_Conv2d_Data*)(layer->layer));
+        g_free(((dR_Conv2d_Data*)(layer->layer))->weights);
+        g_free(((dR_Conv2d_Data*)(layer->layer))->biases);
+        g_free((dR_Conv2d_Data*)(layer->layer));
     }
     return TRUE;
 }
@@ -1715,9 +1715,9 @@ gboolean dR_conv2d_1x1_cleanupLayer(dR_Graph* net, dR_Node* layer)
 {
     if(net->prepared)
     {
-        free(((dR_Conv2d_Data*)(layer->layer))->weights);
-        free(((dR_Conv2d_Data*)(layer->layer))->biases);
-        free((dR_Conv2d_Data*)(layer->layer));
+        g_free(((dR_Conv2d_Data*)(layer->layer))->weights);
+        g_free(((dR_Conv2d_Data*)(layer->layer))->biases);
+        g_free((dR_Conv2d_Data*)(layer->layer));
     }
     return TRUE;
 }
@@ -2090,9 +2090,9 @@ gboolean dR_conv2dtranspose_cleanupLayer(dR_Graph* net, dR_Node* layer)
 {
     if(net->prepared)
     {
-        free(((dR_Conv2dTranspose_Data*)(layer->layer))->weights);
-        free(((dR_Conv2dTranspose_Data*)(layer->layer))->biases);
-        free((dR_Conv2dTranspose_Data*)(layer->layer));
+        g_free(((dR_Conv2dTranspose_Data*)(layer->layer))->weights);
+        g_free(((dR_Conv2dTranspose_Data*)(layer->layer))->biases);
+        g_free((dR_Conv2dTranspose_Data*)(layer->layer));
     }
     return TRUE;
 }

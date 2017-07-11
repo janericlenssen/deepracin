@@ -163,7 +163,7 @@ gboolean dR_bn_cleanupBuffers(dR_Graph* net, dR_Node* layer)
 gboolean dR_bn_cleanupLayer(dR_Graph* net, dR_Node* layer)
 {
     if(net->prepared)
-        free((dR_BN_Data*)(layer->layer));
+        g_free((dR_BN_Data*)(layer->layer));
     return TRUE;
 }
 

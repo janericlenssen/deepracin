@@ -106,7 +106,7 @@ gint32 dR_datafeednode_getRequiredOutputBufferSize(dR_Node* layer)
 gboolean dR_datafeednode_cleanupLayer(dR_Graph* net, dR_Node* layer)
 {
     if(net->prepared)
-        free((dR_DataFeedNode_Data*)(layer->layer));
+        g_free((dR_DataFeedNode_Data*)(layer->layer));
     return TRUE;
 }
 
@@ -457,7 +457,6 @@ void dR_cleanupNet(dR_Graph* net)
     dR_Node* current_layer;
     dR_Node* temp;
     dR_MemoryHandler* memhandle;
-
     dR_list_resetIt(net->streamBufferHandlers);
     memhandle = (dR_MemoryHandler*)dR_list_next(net->streamBufferHandlers);
 
@@ -475,7 +474,7 @@ void dR_cleanupNet(dR_Graph* net)
         {
             g_print("Layer cleanup failed for layer %d! \n",current_layer->layerID);
         }
-        free(current_layer);
+		g_free(current_layer);
         current_layer = (dR_Node*)dR_list_next(net->scheduledLayers);
     }
 

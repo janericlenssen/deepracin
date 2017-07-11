@@ -104,7 +104,7 @@ void convolutionWithImageCopy(
     const int bly = get_group_id(1)/get_num_groups(1)-halfFilterHeight;
     const int serializedLocalSize = get_local_size(1)*get_local_size(0);
     const int lwidth = get_local_size(0)+ filterWidth-1;
-    const int indexstart = mad24(get_local_id(1), lwidth, get_local_id(0));
+    const int indexstart = mad24((int)get_local_id(1), lwidth, (int)get_local_id(0));
     const int jumpint = lwidth - filterWidth;
     const int filterxy = filterWidth*filterHeight;
     const int widthheight = mul24(width,height);
@@ -286,7 +286,7 @@ void convolutionWithoutImageCopy(
             {
                 for (int xx = - halfFilterWidth; xx <= halfFilterWidth; xx++)
                 {
-                    int index = mad24(get_global_id(1) + halfFilterHeight + yy, localwidth, get_local_id(0) + halfFilterWidth + xx);
+                    int index = mad24((int)get_global_id(1) + halfFilterHeight + yy, localwidth, (int)get_local_id(0) + halfFilterWidth + xx);
                     outputArr[outputindex-depthstart] += sampleZeroPaddedFloat(gInputImage,get_global_id(0)+xx,get_global_id(1)+yy,width,height) * lFilter[fid];
                     fid++;
                 }
@@ -329,7 +329,7 @@ __kernel void conv2dReLU(
     outArr[0] = 0.0;
     convolutionWithImageCopy(gInputImage, gFilter, lImage, lFilter, width, height, depth, filterWidth, filterHeight, outputDepth, outArr);
 
-    int inImgOffset = mad24(width,get_global_id(1),get_global_id(0));
+    int inImgOffset = mad24(width,(int)get_global_id(1),(int)get_global_id(0));
     for(int i = depthstart; i< depthstart+lengthindepth; i++)
     {
         int layerpt = i*width*height;
@@ -368,7 +368,7 @@ __kernel void conv2dReLUwoLMEM(
     int depthstart = lengthindepth*get_global_id(2);
     float outArr[256];
     convolutionWithoutImageCopy(gInputImage, gFilter, lFilter, width, height, depth, filterWidth, filterHeight, outputDepth, outArr);
-    int inImgOffset = mad24(width,get_global_id(1),get_global_id(0));
+    int inImgOffset = mad24(width,(int)get_global_id(1),(int)get_global_id(0));
     for(int i = depthstart; i< depthstart+lengthindepth; i++)
     {
         int layerpt = i*width*height;
@@ -407,7 +407,7 @@ __kernel void conv2dLinear(
     int depthstart = lengthindepth*get_global_id(2);
     float outArr[256];
     convolutionWithImageCopy(gInputImage, gFilter, lImage, lFilter, width, height, depth, filterWidth, filterHeight, outputDepth, outArr);
-    int inImgOffset = mad24(width,get_global_id(1),get_global_id(0));
+    int inImgOffset = mad24(width,(int)get_global_id(1),(int)get_global_id(0));
     for(int i = depthstart; i< depthstart+lengthindepth; i++)
     {
         int layerpt = i*width*height;
@@ -446,7 +446,7 @@ __kernel void conv2dLinearwoLMEM(
     int depthstart = lengthindepth*get_global_id(2);
     float outArr[256];
     convolutionWithoutImageCopy(gInputImage, gFilter, lFilter, width, height, depth, filterWidth, filterHeight, outputDepth, outArr);
-    int inImgOffset = mad24(width,get_global_id(1),get_global_id(0));
+    int inImgOffset = mad24(width,(int)get_global_id(1),(int)get_global_id(0));
     for(int i = depthstart; i< depthstart+lengthindepth; i++)
     {
         int layerpt = i*width*height;

@@ -203,7 +203,7 @@ gboolean dR_slice_cleanupBuffers(dR_Graph* net, dR_Node* layer)
 gboolean dR_slice_cleanupLayer(dR_Graph* net, dR_Node* layer)
 {
     if(net->prepared)
-        free((dR_Slice_Data*)(layer->layer));
+        g_free((dR_Slice_Data*)(layer->layer));
     return TRUE;
 }
 
@@ -435,7 +435,7 @@ gboolean dR_concat_cleanupLayer(dR_Graph* net, dR_Node* layer)
     if(net->prepared)
     {
         g_free(concatnode->inputSizesInConcatDim);
-        free((dR_Concat_Data*)(layer->layer));
+        g_free((dR_Concat_Data*)(layer->layer));
     }
     return TRUE;
 }
@@ -746,7 +746,7 @@ gboolean dR_croporpad_cleanupBuffers(dR_Graph* net, dR_Node* layer)
 gboolean dR_croporpad_cleanupLayer(dR_Graph* net, dR_Node* layer)
 {
     if(net->prepared)
-        free((dR_CropOrPad_Data*)(layer->layer));
+        g_free((dR_CropOrPad_Data*)(layer->layer));
     return TRUE;
 }
 

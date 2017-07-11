@@ -256,7 +256,7 @@ gboolean dR_pooling_cleanupLayer(dR_Graph* net, dR_Node* layer)
 {
     if(net->prepared)
     {
-        free((dR_Pooling_Data*)(layer->layer));
+        g_free((dR_Pooling_Data*)(layer->layer));
     }
     return TRUE;
 }

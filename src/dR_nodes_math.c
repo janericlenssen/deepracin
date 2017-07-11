@@ -214,7 +214,7 @@ gboolean dR_elemwise2op_cleanupBuffers(dR_Graph* net, dR_Node* layer)
 gboolean dR_elemwise2op_cleanupLayer(dR_Graph* net, dR_Node* layer)
 {
     if(net->prepared)
-        free((dR_ElemWise2Op_Data*)(layer->layer));
+        g_free((dR_ElemWise2Op_Data*)(layer->layer));
     return TRUE;
 }
 
@@ -468,7 +468,7 @@ gboolean dR_elemwise1op_cleanupBuffers(dR_Graph* net, dR_Node* layer)
 gboolean dR_elemwise1op_cleanupLayer(dR_Graph* net, dR_Node* layer)
 {
     if(net->prepared)
-        free((dR_ElemWise1Op_Data*)(layer->layer));
+        g_free((dR_ElemWise1Op_Data*)(layer->layer));
     return TRUE;
 }
 
@@ -751,7 +751,7 @@ gboolean dR_softmax_cleanupLayer(dR_Graph* net, dR_Node* layer)
     if(net->prepared)
     {
         g_free(softmax->expsHost);
-        free((dR_Softmax_Data*)(layer->layer));
+        g_free((dR_Softmax_Data*)(layer->layer));
     }
     return TRUE;
 }

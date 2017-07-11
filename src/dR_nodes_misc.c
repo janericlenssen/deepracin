@@ -270,7 +270,7 @@ gboolean dR_resolveRoI_cleanupBuffers(dR_Graph* net, dR_Node* layer)
 gboolean dR_resolveRoI_cleanupLayer(dR_Graph* net, dR_Node* layer)
 {
     if(net->prepared)
-        free((dR_ResolveRoI_Data*)(layer->layer));
+        g_free((dR_ResolveRoI_Data*)(layer->layer));
     return TRUE;
 }
 
@@ -468,7 +468,7 @@ gboolean dR_rgb2gray_cleanupBuffers(dR_Graph* net, dR_Node* layer)
 gboolean dR_rgb2gray_cleanupLayer(dR_Graph* net, dR_Node* layer)
 {
     if(net->prepared)
-        free((dR_RGB2Gray_Data*)(layer->layer));
+        g_free((dR_RGB2Gray_Data*)(layer->layer));
     return TRUE;
 }
 
@@ -690,7 +690,7 @@ gboolean dR_us_cleanupBuffers(dR_Graph* net, dR_Node* layer)
 gboolean dR_us_cleanupLayer(dR_Graph* net, dR_Node* layer)
 {
     if(net->prepared)
-        free((dR_Upscaling_Data*)(layer->layer));
+        g_free((dR_Upscaling_Data*)(layer->layer));
     return TRUE;
 }
 
@@ -1010,7 +1010,7 @@ gboolean dR_lc_cleanupBuffers(dR_Graph* net, dR_Node* layer)
 gboolean dR_lc_cleanupLayer(dR_Graph* net, dR_Node* layer)
 {
     if(net->prepared)
-        free((dR_LabelCreation_Data*)(layer->layer));
+        g_free((dR_LabelCreation_Data*)(layer->layer));
     return TRUE;
 }
 
@@ -1511,7 +1511,7 @@ gboolean dR_norm_cleanupLayer(dR_Graph* net, dR_Node* layer)
     if(net->prepared)
     {
         g_free(normlayer->resultHost);
-        free((dR_Normalization_Data*)(layer->layer));
+        g_free((dR_Normalization_Data*)(layer->layer));
     }
     return TRUE;
 }

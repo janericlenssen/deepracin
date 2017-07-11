@@ -36,7 +36,7 @@ __kernel void elemWiseAdd(
     int gx = (int) get_global_id(0);
     int gy = (int) get_global_id(1);
     int gz = (int) get_global_id(2);
-    int gid = mad24(gz, get_global_size(0)*get_global_size(1), mad24(gy, get_global_size(0), gx));
+    int gid = mad24(gz, (int)get_global_size(0)*(int)get_global_size(1), mad24(gy, (int)get_global_size(0), gx));
     outputArr[gid] = gInput1[gid]+gInput2[gid];
 }
 
@@ -56,7 +56,7 @@ __kernel void elemWiseSub(
     int gx = (int) get_global_id(0);
     int gy = (int) get_global_id(1);
     int gz = (int) get_global_id(2);
-    int gid = mad24(gz, get_global_size(0)*get_global_size(1), mad24(gy, get_global_size(0), gx));
+    int gid = mad24(gz, (int)get_global_size(0)*(int)get_global_size(1), mad24(gy, (int)get_global_size(0), gx));
     outputArr[gid] = gInput1[gid]-gInput2[gid];
 }
 
@@ -76,7 +76,7 @@ __kernel void elemWiseMul(
     int gx = (int) get_global_id(0);
     int gy = (int) get_global_id(1);
     int gz = (int) get_global_id(2);
-    int gid = mad24(gz, get_global_size(0)*get_global_size(1), mad24(gy, get_global_size(0), gx));
+    int gid = mad24(gz, (int)get_global_size(0)*(int)get_global_size(1), mad24(gy, (int)get_global_size(0), gx));
     outputArr[gid] = gInput1[gid]*gInput2[gid];
 }
 
@@ -96,7 +96,7 @@ __kernel void elemWiseDiv(
     int gx = (int) get_global_id(0);
     int gy = (int) get_global_id(1);
     int gz = (int) get_global_id(2);
-    int gid = mad24(gz, get_global_size(0)*get_global_size(1), mad24(gy, get_global_size(0), gx));
+    int gid = mad24(gz, (int)get_global_size(0)*(int)get_global_size(1), mad24(gy, (int)get_global_size(0), gx));
     outputArr[gid] = gInput1[gid]/gInput2[gid];
 }
 
@@ -116,7 +116,7 @@ __kernel void elemWisePow(
     int gx = (int) get_global_id(0);
     int gy = (int) get_global_id(1);
     int gz = (int) get_global_id(2);
-    int gid = mad24(gz, get_global_size(0)*get_global_size(1), mad24(gy, get_global_size(0), gx));
+    int gid = mad24(gz, (int)get_global_size(0)*(int)get_global_size(1), mad24(gy, (int)get_global_size(0), gx));
     outputArr[gid] = pow(gInput1[gid],gInput2[gid]);
 }
 
@@ -139,7 +139,7 @@ __kernel void addMulScalar(
     int gx = (int) get_global_id(0);
     int gy = (int) get_global_id(1);
     int gz = (int) get_global_id(2);
-    int gid = mad24(gz, get_global_size(0)*get_global_size(1), mad24(gy, get_global_size(0), gx));
+    int gid = mad24(gz, (int)get_global_size(0)*(int)get_global_size(1), mad24(gy, (int)get_global_size(0), gx));
     outputArr[gid] = (gInput[gid]+scalaradd)*scalarmul;
 }
 
@@ -162,7 +162,7 @@ __kernel void madScalar(
     int gx = (int) get_global_id(0);
     int gy = (int) get_global_id(1);
     int gz = (int) get_global_id(2);
-    int gid = mad24(gz, get_global_size(0)*get_global_size(1), mad24(gy, get_global_size(0), gx));
+    int gid = mad24(gz, (int)get_global_size(0)*(int)get_global_size(1), mad24(gy, (int)get_global_size(0), gx));
     outputArr[gid] = gInput[gid]*scalarmul+scalaradd;
 }
 
@@ -182,7 +182,7 @@ __kernel void addScalar(
     int gx = (int) get_global_id(0);
     int gy = (int) get_global_id(1);
     int gz = (int) get_global_id(2);
-    int gid = mad24(gz, get_global_size(0)*get_global_size(1), mad24(gy, get_global_size(0), gx));
+    int gid = mad24(gz, (int)get_global_size(0)*(int)get_global_size(1), mad24(gy, (int)get_global_size(0), gx));
     outputArr[gid] = gInput[gid]+scalar;
 }
 
@@ -202,7 +202,7 @@ __kernel void subScalar(
     int gx = (int) get_global_id(0);
     int gy = (int) get_global_id(1);
     int gz = (int) get_global_id(2);
-    int gid = mad24(gz, get_global_size(0)*get_global_size(1), mad24(gy, get_global_size(0), gx));
+    int gid = mad24(gz, (int)get_global_size(0)*(int)get_global_size(1), mad24(gy, (int)get_global_size(0), gx));
     outputArr[gid] = gInput[gid]-scalar;
 }
 
@@ -222,7 +222,7 @@ __kernel void mulScalar(
     int gx = (int) get_global_id(0);
     int gy = (int) get_global_id(1);
     int gz = (int) get_global_id(2);
-    int gid = mad24(gz, get_global_size(0)*get_global_size(1), mad24(gy, get_global_size(0), gx));
+    int gid = mad24(gz, (int)get_global_size(0)*(int)get_global_size(1), mad24(gy, (int)get_global_size(0), gx));
     outputArr[gid] = gInput[gid]*scalar;
 }
 
@@ -242,7 +242,7 @@ __kernel void divScalar(
     int gx = (int) get_global_id(0);
     int gy = (int) get_global_id(1);
     int gz = (int) get_global_id(2);
-    int gid = mad24(gz, get_global_size(0)*get_global_size(1), mad24(gy, get_global_size(0), gx));
+    int gid = mad24(gz, (int)get_global_size(0)*(int)get_global_size(1), mad24(gy, (int)get_global_size(0), gx));
     outputArr[gid] = gInput[gid]/scalar;
 }
 
@@ -262,7 +262,7 @@ __kernel void powScalar(
     int gx = (int) get_global_id(0);
     int gy = (int) get_global_id(1);
     int gz = (int) get_global_id(2);
-    int gid = mad24(gz, get_global_size(0)*get_global_size(1), mad24(gy, get_global_size(0), gx));
+    int gid = mad24(gz, (int)get_global_size(0)*(int)get_global_size(1), mad24(gy, (int)get_global_size(0), gx));
     outputArr[gid] = pow(gInput[gid],scalar);
 }
 
@@ -281,7 +281,7 @@ __kernel void computeLog(
     int gx = (int) get_global_id(0);
     int gy = (int) get_global_id(1);
     int gz = (int) get_global_id(2);
-    int gid = mad24(gz, get_global_size(0)*get_global_size(1), mad24(gy, get_global_size(0), gx));
+    int gid = mad24(gz, (int)get_global_size(0)*(int)get_global_size(1), mad24(gy, (int)get_global_size(0), gx));
     outputArr[gid] = log(gInput[gid]);
 }
 
@@ -300,7 +300,7 @@ __kernel void computeExp(
     int gx = (int) get_global_id(0);
     int gy = (int) get_global_id(1);
     int gz = (int) get_global_id(2);
-    int gid = mad24(gz, get_global_size(0)*get_global_size(1), mad24(gy, get_global_size(0), gx));
+    int gid = mad24(gz, (int)get_global_size(0)*(int)get_global_size(1), mad24(gy, (int)get_global_size(0), gx));
     outputArr[gid] = exp(gInput[gid]);
 }
 
@@ -318,7 +318,7 @@ __kernel void computeSqrt(
     int gx = (int) get_global_id(0);
     int gy = (int) get_global_id(1);
     int gz = (int) get_global_id(2);
-    int gid = mad24(gz, get_global_size(0)*get_global_size(1), mad24(gy, get_global_size(0), gx));
+    int gid = mad24(gz, (int)get_global_size(0)*(int)get_global_size(1), mad24(gy, (int)get_global_size(0), gx));
     outputArr[gid] = sqrt(gInput[gid]);
 }
 
@@ -337,6 +337,6 @@ __kernel void fill(
     int gx = (int) get_global_id(0);
     int gy = (int) get_global_id(1);
     int gz = (int) get_global_id(2);
-    int gid = mad24(gz, get_global_size(0)*get_global_size(1), mad24(gy, get_global_size(0), gx));
+    int gid = mad24(gz, (int)get_global_size(0)*(int)get_global_size(1), mad24(gy, (int)get_global_size(0), gx));
     outputArr[gid] = scalar;
 }

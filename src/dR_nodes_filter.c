@@ -314,8 +314,8 @@ gboolean dR_cdfilter_cleanupLayer(dR_Graph* net, dR_Node* layer)
 {
     if(net->prepared)
     {
-        free(((dR_MDFilter_Data*)(layer->layer))->filters);
-        free((dR_MDFilter_Data*)(layer->layer));
+        g_free(((dR_MDFilter_Data*)(layer->layer))->filters);
+        g_free((dR_MDFilter_Data*)(layer->layer));
     }
     return TRUE;
 }
@@ -890,7 +890,7 @@ gboolean dR_conv2duw_cleanupBuffers(dR_Graph* net, dR_Node* layer)
 gboolean dR_conv2duw_cleanupLayer(dR_Graph* net, dR_Node* layer)
 {
     if(net->prepared)
-        free((dR_PPFilter_Data*)(layer->layer));
+        g_free((dR_PPFilter_Data*)(layer->layer));
     return TRUE;
 }
 
