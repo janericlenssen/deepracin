@@ -231,7 +231,7 @@ dR_Node* dR_parseGraph(dR_Graph* net, gchar* path, dR_Node*** outnodes, gint* nu
         dR_Node** input;
         dR_Node* node;
 
-        line = own_strtok_r(NULL,"\n",&lineptr);
+        line = own_strtok_r(NULL,"\r\n",&lineptr);
 
         own_strtok_r(line, " ",&inlineptr);
         id = atoi(own_strtok_r(NULL, " ",&inlineptr));
@@ -241,7 +241,7 @@ dR_Node* dR_parseGraph(dR_Graph* net, gchar* path, dR_Node*** outnodes, gint* nu
             g_print("Loading Node %d\n",id);
 
         // Get params
-        line = own_strtok_r(NULL,"\n",&lineptr);
+        line = own_strtok_r(NULL,"\r\n",&lineptr);
 
         token = own_strtok_r(line, " ",&inlineptr);
         token = own_strtok_r(NULL, " ",&inlineptr);
@@ -253,7 +253,7 @@ dR_Node* dR_parseGraph(dR_Graph* net, gchar* path, dR_Node*** outnodes, gint* nu
         num_params = it;
 
         // Get prev_nodes
-        line = own_strtok_r(NULL,"\n",&lineptr);
+        line = own_strtok_r(NULL,"\r\n",&lineptr);
 
         token = own_strtok_r(line, " ",&inlineptr);
         token = own_strtok_r(NULL, " ",&inlineptr);
@@ -266,10 +266,10 @@ dR_Node* dR_parseGraph(dR_Graph* net, gchar* path, dR_Node*** outnodes, gint* nu
         num_prev_nodes = it;
 
         // Ignore next_node line
-        line = own_strtok_r(NULL,"\n",&lineptr);
+        line = own_strtok_r(NULL,"\r\n",&lineptr);
 
         // Get variables
-        line = own_strtok_r(NULL,"\n",&lineptr);
+        line = own_strtok_r(NULL,"\r\n",&lineptr);
 
         token = own_strtok_r(line, " ",&inlineptr);
         token = own_strtok_r(NULL, " ",&inlineptr);
@@ -284,18 +284,17 @@ dR_Node* dR_parseGraph(dR_Graph* net, gchar* path, dR_Node*** outnodes, gint* nu
         if(!net->config->silent&&net->config->debugInfo)
             g_print("Found %s with id %d, %d params and %d variables\n",desc,id,num_params,num_variables);
         // Load variables
-
         for(it=0;it<num_variables;it++)
         {
             gsize length;
             gchar* filecontent;
             gchar* filepath;
-            filepath = g_build_filename(path,variableFilenames[it], NULL);
+            filepath = g_build_filename(path,variableFilenames[it], NULL); 
             success = g_file_get_contents(filepath,&filecontent,&length,&err);
             variables[it] = (gfloat*)filecontent;
             if(!success)
             {
-                g_print("Error while opening variable file.\n");
+                g_print("Error while opening variable file: %s, Length: %d, Errcode: %d\n", filepath, length, *err);
                 return 0;
             }
             g_free(filepath);
@@ -310,7 +309,7 @@ dR_Node* dR_parseGraph(dR_Graph* net, gchar* path, dR_Node*** outnodes, gint* nu
             }
         }
 
-        if(strncmp(desc, "Conv2D", 6)==0)
+        if(strncmp(desc, "Conv2D", strlen("Conv2D"))==0)
         {
             if(num_prev_nodes!=1)
             {
@@ -319,7 +318,7 @@ dR_Node* dR_parseGraph(dR_Graph* net, gchar* path, dR_Node*** outnodes, gint* nu
             }
             node = dR_conv2d_parseAppendNode(net,input,num_prev_nodes,params,num_params,variables,num_variables);
         }
-        else if(strncmp(desc, "Conv2DTranspose", 18)==0)
+        else if(strncmp(desc, "Conv2DTranspose", strlen("Conv2DTranspose"))==0)
         {
             if(num_prev_nodes!=1)
             {
@@ -328,7 +327,7 @@ dR_Node* dR_parseGraph(dR_Graph* net, gchar* path, dR_Node*** outnodes, gint* nu
             }
             node = dR_conv2dtranspose_parseAppendNode(net,input,num_prev_nodes,params,num_params,variables,num_variables);
         }
-        else if(strncmp(desc, "Pooling", 18)==0)
+        else if(strncmp(desc, "Pooling", strlen("Pooling"))==0)
         {
             if(num_prev_nodes!=1)
             {
@@ -337,7 +336,7 @@ dR_Node* dR_parseGraph(dR_Graph* net, gchar* path, dR_Node*** outnodes, gint* nu
             }
             node = dR_pooling_parseAppendNode(net,input,num_prev_nodes,params,num_params,variables,num_variables);
         }
-        else if(strncmp(desc, "FullyConnected", 18)==0)
+        else if(strncmp(desc, "FullyConnected", strlen("FullyConnected"))==0)
         {
             if(num_prev_nodes!=1)
             {
@@ -346,7 +345,7 @@ dR_Node* dR_parseGraph(dR_Graph* net, gchar* path, dR_Node*** outnodes, gint* nu
             }
             node = dR_fc_parseAppendNode(net,input,num_prev_nodes,params,num_params,variables,num_variables);
         }
-        else if(strncmp(desc, "PPFilter", 18)==0)
+        else if(strncmp(desc, "PPFilter", strlen("PPFilter"))==0)
         {
             if(num_prev_nodes!=2)
             {
@@ -355,7 +354,7 @@ dR_Node* dR_parseGraph(dR_Graph* net, gchar* path, dR_Node*** outnodes, gint* nu
             }
             node = dR_conv2duw_parseAppendNode(net,input,num_prev_nodes,params,num_params,variables,num_variables);
         }
-        else if(strncmp(desc, "MaskDependentFilter", 20)==0)
+        else if(strncmp(desc, "MaskDependentFilter", strlen("MaskDependentFilter"))==0)
         {
             if(num_prev_nodes!=2)
             {
@@ -364,7 +363,7 @@ dR_Node* dR_parseGraph(dR_Graph* net, gchar* path, dR_Node*** outnodes, gint* nu
             }
             node = dR_cdfilter_parseAppendNode(net,input,num_prev_nodes,params,num_params,variables,num_variables);
         }
-        else if(strncmp(desc, "LabelCreation", 18)==0)
+        else if(strncmp(desc, "LabelCreation", strlen("LabelCreation"))==0)
         {
             if(num_prev_nodes!=1)
             {
@@ -373,7 +372,7 @@ dR_Node* dR_parseGraph(dR_Graph* net, gchar* path, dR_Node*** outnodes, gint* nu
             }
             node = dR_lc_parseAppendNode(net,input,num_prev_nodes,params,num_params,variables,num_variables);
         }
-        else if(strncmp(desc, "Normalization", 18)==0)
+        else if(strncmp(desc, "Normalization", strlen("Normalization"))==0)
         {
             if(num_prev_nodes!=1)
             {
@@ -382,7 +381,7 @@ dR_Node* dR_parseGraph(dR_Graph* net, gchar* path, dR_Node*** outnodes, gint* nu
             }
             node = dR_norm_parseAppendNode(net,input,num_prev_nodes,params,num_params,variables,num_variables);
         }
-        else if(strncmp(desc, "Upscaling", 18)==0)
+        else if(strncmp(desc, "Upscaling", strlen("Upscaling"))==0)
         {
             if(num_prev_nodes!=1)
             {
@@ -391,7 +390,7 @@ dR_Node* dR_parseGraph(dR_Graph* net, gchar* path, dR_Node*** outnodes, gint* nu
             }
             node = dR_us_parseAppendNode(net,input,num_prev_nodes,params,num_params,variables,num_variables);
         }
-        else if(strncmp(desc, "RGB2Gray", 18)==0)
+        else if(strncmp(desc, "RGB2Gray", strlen("RGB2Gray"))==0)
         {
             if(num_prev_nodes!=1)
             {
@@ -400,7 +399,7 @@ dR_Node* dR_parseGraph(dR_Graph* net, gchar* path, dR_Node*** outnodes, gint* nu
             }
             node = dR_rgb2gray_parseAppendNode(net,input,num_prev_nodes,params,num_params,variables,num_variables);
         }
-        else if(strncmp(desc, "ResolveRoI", 18)==0)
+        else if(strncmp(desc, "ResolveRoI", strlen("ResolveRoI"))==0)
         {
             if(num_prev_nodes!=1)
             {
@@ -409,7 +408,7 @@ dR_Node* dR_parseGraph(dR_Graph* net, gchar* path, dR_Node*** outnodes, gint* nu
             }
             node = dR_resolveRoI_parseAppendNode(net,input,num_prev_nodes,params,num_params,variables,num_variables);
         }
-        else if(strncmp(desc, "Softmax", 18)==0)
+        else if(strncmp(desc, "Softmax", strlen("Softmax"))==0)
         {
             if(num_prev_nodes!=1)
             {
@@ -418,7 +417,7 @@ dR_Node* dR_parseGraph(dR_Graph* net, gchar* path, dR_Node*** outnodes, gint* nu
             }
             node = dR_softmax_parseAppendNode(net,input,num_prev_nodes,params,num_params,variables,num_variables);
         }
-        else if(strncmp(desc, "Slice", 18)==0)
+        else if(strncmp(desc, "Slice", strlen("Slice"))==0)
         {
             if(num_prev_nodes!=1)
             {
@@ -427,7 +426,7 @@ dR_Node* dR_parseGraph(dR_Graph* net, gchar* path, dR_Node*** outnodes, gint* nu
             }
             node = dR_slice_parseAppendNode(net,input,num_prev_nodes,params,num_params,variables,num_variables);
         }
-        else if(strncmp(desc, "Concat", 18)==0)
+        else if(strncmp(desc, "Concat", strlen("Concat"))==0)
         {
             if(num_prev_nodes<=1)
             {
@@ -436,7 +435,7 @@ dR_Node* dR_parseGraph(dR_Graph* net, gchar* path, dR_Node*** outnodes, gint* nu
             }
             node = dR_concat_parseAppendNode(net,input,num_prev_nodes,params,num_params,variables,num_variables);
         }
-        else if(strncmp(desc, "CropOrPad", 18)==0)
+        else if(strncmp(desc, "CropOrPad", strlen("CropOrPad"))==0)
         {
             if(num_prev_nodes!=1)
             {
@@ -445,7 +444,7 @@ dR_Node* dR_parseGraph(dR_Graph* net, gchar* path, dR_Node*** outnodes, gint* nu
             }
             node = dR_croporpad_parseAppendNode(net,input,num_prev_nodes,params,num_params,variables,num_variables);
         }
-        else if(strncmp(desc, "ElemWise2Op", 18)==0)
+        else if(strncmp(desc, "ElemWise2Op", strlen("ElemWise2Op"))==0)
         {
             if(num_prev_nodes!=2)
             {
@@ -454,7 +453,7 @@ dR_Node* dR_parseGraph(dR_Graph* net, gchar* path, dR_Node*** outnodes, gint* nu
             }
             node = dR_elemwise2op_parseAppendNode(net,input,num_prev_nodes,params,num_params,variables,num_variables);
         }
-        else if(strncmp(desc, "ElemWise1Op", 18)==0)
+        else if(strncmp(desc, "ElemWise1Op", strlen("ElemWise1Op"))==0)
         {
             if(num_prev_nodes!=1)
             {
@@ -463,7 +462,7 @@ dR_Node* dR_parseGraph(dR_Graph* net, gchar* path, dR_Node*** outnodes, gint* nu
             }
             node = dR_elemwise1op_parseAppendNode(net,input,num_prev_nodes,params,num_params,variables,num_variables);
         }
-        else if(strncmp(desc, "DataFeedNode", 18)==0)
+        else if(strncmp(desc, "DataFeedNode", strlen("DataFeedNode"))==0)
         {
             if(num_prev_nodes!=0)
             {
@@ -476,7 +475,7 @@ dR_Node* dR_parseGraph(dR_Graph* net, gchar* path, dR_Node*** outnodes, gint* nu
         }
         else
         {
-            g_print("Parsing Error: Node could not be identified!\n");
+            g_print("Parsing Error: Node could not be identified: %s!\n", desc);
             return NULL;
         }
         if(node==NULL)

@@ -117,7 +117,7 @@ if( LIB64 )
       $ENV{CUDA_PATH}/lib
       $ENV{CUDA_HOME}/lib
     DOC "OpenCL dynamic library path"
-    PATH_SUFFIXES x86_64 x64 x86_64/sdk
+    PATH_SUFFIXES /x86_64 /x64 /x86_64/sdk
     PATHS
     /usr/lib
     /usr/local/cuda/lib
@@ -130,6 +130,7 @@ else( )
       $ENV{OPENCL_ROOT}/lib
       $ENV{AMDAPPSDKROOT}/lib
       $ENV{CUDA_PATH}/lib
+      $ENV{CUDA_HOME}/lib
     DOC "OpenCL dynamic library path"
     PATH_SUFFIXES x86 Win32
     PATHS

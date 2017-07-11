@@ -74,6 +74,7 @@ FIND_PATH(OpenCV_ROOT_DIR
   NAMES 
   cv/include/cv.h     # windows
   include/opencv/cv.h # linux /opt/net
+  include/opencv2/cv.h # linux /opt/net
   include/cv/cv.h 
   include/cv.h 
   PATHS ${OpenCV_POSSIBLE_ROOT_DIRS})
@@ -81,9 +82,8 @@ FIND_PATH(OpenCV_ROOT_DIR
 # header include dir suffixes appended to OpenCV_ROOT_DIR
 SET(OpenCV_INCDIR_SUFFIXES
   include
-  include/cv
-  include/opencv
   include/opencv2
+  include/opencv
   cv/include
   cxcore/include
   cvaux/include
@@ -106,24 +106,24 @@ SET(OpenCV_LIBDIR_SUFFIXES
 
 # find incdir for each lib
 FIND_PATH(OpenCV_CV_INCLUDE_DIR
-  NAMES cv.h      
+  NAMES opencv/cv.h opencv2/cv.h     
   PATHS ${OpenCV_ROOT_DIR} 
   PATH_SUFFIXES ${OpenCV_INCDIR_SUFFIXES})
 
 FIND_PATH(OpenCV_CXCORE_INCLUDE_DIR   
-  NAMES cxcore.h
+  NAMES opencv/cxcore.h opencv2/cxcore.h
   PATHS ${OpenCV_ROOT_DIR} 
   PATH_SUFFIXES ${OpenCV_INCDIR_SUFFIXES})
 FIND_PATH(OpenCV_CVAUX_INCLUDE_DIR    
-  NAMES cvaux.h
+  NAMES opencv/cvaux.h opencv2/cvaux.h
   PATHS ${OpenCV_ROOT_DIR} 
   PATH_SUFFIXES ${OpenCV_INCDIR_SUFFIXES})
 FIND_PATH(OpenCV_HIGHGUI_INCLUDE_DIR  
-  NAMES highgui.h 
+  NAMES opencv/highgui.h opencv2/highgui.h
   PATHS ${OpenCV_ROOT_DIR} 
   PATH_SUFFIXES ${OpenCV_INCDIR_SUFFIXES})
 FIND_PATH(OpenCV_CVCAM_INCLUDE_DIR    
-  NAMES cvcam.h 
+  NAMES opencv/cvcam.h opencv2/cvcam.h 
   PATHS ${OpenCV_ROOT_DIR} 
   PATH_SUFFIXES ${OpenCV_INCDIR_SUFFIXES})
 
@@ -133,7 +133,7 @@ FIND_PATH(OpenCV_CVCAM_INCLUDE_DIR
 # fix for OpenCV 2.4.6.1 on Mac OSX
 #
 FIND_PATH(OpenCV_CORE_INCLUDE_DIR   
-  NAMES cxcore.h
+  NAMES opencv/cxcore.h opencv2/cxcore.h
   PATHS ${OpenCV_ROOT_DIR} 
   PATH_SUFFIXES ${OpenCV_INCDIR_SUFFIXES})
 
@@ -172,11 +172,11 @@ FIND_LIBRARY(OpenCV_TRS_LIBRARY
 
 
 FIND_LIBRARY(OpenCV_CORE_LIBRARY  
-  NAMES opencv_core
+  NAMES opencv_core opencv_core2413
   PATHS ${OpenCV_ROOT_DIR}  PATH_SUFFIXES ${OpenCV_LIBDIR_SUFFIXES})
 
 FIND_LIBRARY(OpenCV_HIGHGUI_LIBRARY  
-  NAMES opencv_highgui
+  NAMES opencv_highgui opencv_highgui2413
   PATHS ${OpenCV_ROOT_DIR}  PATH_SUFFIXES ${OpenCV_LIBDIR_SUFFIXES})
 
 
