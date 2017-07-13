@@ -120,14 +120,17 @@ Dependencies of the C library:
 <li> OpenCL 1.1
 <li> Glib 2.0 
 </ul>
-For the C part of the examples, libpng is required to load test images.
 
 Dependencies of the Python interface:
 <ul>
 <li> Numpy
 </ul>
 
-For building, CMake 2.8 is required.
+Misc:
+<ul>
+<li>For the C part of the examples, libpng is required to load test images.
+<li>For building, CMake 2.8 is required.
+</ul>
 
 <h4> Installation </h4>
 On Linux:
