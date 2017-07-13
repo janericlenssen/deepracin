@@ -1,7 +1,6 @@
 #include <deepRACIN.h>
 #include <stdio.h>
 #include <png.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
