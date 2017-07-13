@@ -106,7 +106,7 @@ int main(void)
 
     // Configure deepracin
     // Do not display debug information
-    net->config->debugInfo = FALSE;
+    net->config->debugInfo = TRUE;
     // Profile GPU runtime
     net->config->profilingGPU = TRUE;
     // Profile CPU runtime
@@ -127,7 +127,7 @@ int main(void)
     dR_setAsOutput(net,lastnode);
 
     // Print network to console
-    dR_printNetObject(net, NULL);
+    //dR_printNetObject(net, NULL);
 
     // Prepare network for execution - scheduling, buffer creation, kernel creation is done here
     dR_prepare(net);

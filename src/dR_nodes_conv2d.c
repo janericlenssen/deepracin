@@ -841,7 +841,7 @@ gboolean dR_conv2d_winograd_schedule(dR_Graph* net, dR_Node* layer){
         numberofwgs = NperDim*NperDim*(convlayer->shape.s3/z>convlayer->shape.s2/zInput?convlayer->shape.s3/z:convlayer->shape.s2/zInput);
         //int maxdepth = (convlayer->shape.s3/z>convlayer->shape.s2?convlayer->shape.s3/z:convlayer->shape.s2/zInput);
 
-        while(localMemoryConInput+localMemoryConFilter<(gint)lms&&numberofwgs<=(gint)mws&&NperDim*2<convlayer->ishape.s0&&NperDim*2<convlayer->ishape.s1){
+        while(localMemoryConInput+localMemoryConFilter<(gint)lms&&numberofwgs<=(gint)mws/2&&NperDim*2<convlayer->ishape.s0&&NperDim*2<convlayer->ishape.s1){
             NperDim+=1;
             localMemoryConInput = (16)*NperDim*NperDim*convlayer->shape.s2*4;
             numberofwgs = NperDim*NperDim*(convlayer->shape.s3/z>convlayer->shape.s2/zInput?convlayer->shape.s3/z:convlayer->shape.s2/zInput);
@@ -856,7 +856,13 @@ gboolean dR_conv2d_winograd_schedule(dR_Graph* net, dR_Node* layer){
         }
         localMemoryConInput = (16)*NperDim*NperDim*convlayer->shape.s2*4;
         numberofwgs = NperDim*NperDim*(convlayer->shape.s3/z>convlayer->shape.s2?convlayer->shape.s3/z:convlayer->shape.s2/zInput);
-
+		while(numberofwgs>(gint)mws/2)
+		{
+			zInput*=2;
+			z*=2;
+			localMemoryConFilter = 16*(convlayer->shape.s3/z)*4;
+			numberofwgs = NperDim*NperDim*(convlayer->shape.s3/z>convlayer->shape.s2/zInput?convlayer->shape.s3/z:convlayer->shape.s2/zInput);
+		}
         // Find dimensions of input that need to processed (>ishape but multiple of N)
         if(layer->oshape.s0%(NperDim*2)==0)
         {
@@ -876,15 +882,16 @@ gboolean dR_conv2d_winograd_schedule(dR_Graph* net, dR_Node* layer){
         {
             height = ((layer->oshape.s1/(NperDim*2))+1)*(NperDim*2);
         }
-
+		/*
         if(NperDim==1)
         {
-            while(numberofwgs<=(gint)mws&&z>1&&zInput>1){
+            while(numberofwgs<=(gint)mws/2&&z>1&&zInput>1){
                 z/=2;
                 zInput/=2;
                 numberofwgs = NperDim*NperDim*(convlayer->shape.s3/z>convlayer->shape.s2/zInput?convlayer->shape.s3/z:convlayer->shape.s2/zInput);
             }
         }
+		*/
         height = height / (2*NperDim);
         width = width / (2*NperDim);
     }
