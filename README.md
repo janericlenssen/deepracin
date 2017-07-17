@@ -129,7 +129,7 @@ Dependencies of the Python interface:
 Misc:
 <ul>
 <li>For the C part of the examples, libpng is required to load test images.
-<li>For building, CMake 2.8 is required.
+<li>For building, CMake 2.8 (3.4 on Windows) is required.
 </ul>
 
 <h4> Installation </h4>
