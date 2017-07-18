@@ -105,13 +105,13 @@ int main(void)
 
     // Configure deepracin
     // Do not display debug information
-    net->config->debugInfo = TRUE;
+    net->config->debugInfo = FALSE;
     // Profile GPU runtime
     net->config->profilingGPU = TRUE;
     // Profile CPU runtime
     net->config->profilingCPU = TRUE;
     // Give command line output
-    net->config->silent = FALSE;
+    net->config->silent = TRUE;
     // No Platform Hint - Choose first GPU available
     net->clConfig->clPlatformName = NULL;
     // Initialize OpenCL
@@ -126,7 +126,7 @@ int main(void)
     dR_setAsOutput(net,lastnode);
 
     // Print network to console
-    dR_printNetObject(net, NULL);
+    //dR_printNetObject(net, NULL);
 
     // Prepare network for execution - scheduling, buffer creation, kernel creation is done here
     dR_prepare(net);

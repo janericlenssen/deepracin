@@ -744,12 +744,14 @@ gboolean dR_clCreateCLContext(dR_Graph* net)
             g_print("Failed to get the platform info for the clContext.");
             return FALSE;
         }
-
-        g_print("Selected platform name not found: %s != %s", pbuf, net->clConfig->clPlatformName);
-        if (! net->clConfig->clPlatformName)
-            g_print("CL Platform name is empty!\n");
-        g_print("Could not find CL Platform: %s\n", net->clConfig->clPlatformName);
-        g_print("Fallback to CL Platform 0: %s\n", pbuf);
+		if(!net->config->silent)
+		{
+			g_print("Selected platform name not found: %s != %s", pbuf, net->clConfig->clPlatformName);
+		    if (! net->clConfig->clPlatformName)
+		        g_print("CL Platform name is empty!\n");
+		    g_print("Could not find CL Platform: %s\n", net->clConfig->clPlatformName);
+		    g_print("Fallback to CL Platform 0: %s\n", pbuf);
+		}
         net->clConfig->clPlatformName = g_strdup(pbuf);
 
     }
