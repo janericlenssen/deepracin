@@ -204,8 +204,10 @@ gboolean dR_prepare(dR_Graph* net){
 gboolean dR_apply(dR_Graph* net){
     dR_Node* current_layer;
 	GTimeVal result;
-    gint64 gstarttime = 0;
-    gint64 nstarttime = 0;
+    gint64 gstarttime_secs = 0;
+    gint64 nstarttime_secs = 0;
+	gint64 gstarttime = 0;
+	gint64 nstarttime = 0;
     if(!net->config->silent)
         g_print("Applying graph...\n");
     dR_list_resetIt(net->scheduledLayers);
@@ -215,6 +217,7 @@ gboolean dR_apply(dR_Graph* net){
 		GTimeVal result;
 		g_get_current_time (&result);
 		gstarttime = result.tv_usec;
+		gstarttime_secs = result.tv_sec;
         net->config->totalNodeCPUTime = 0.0;
     }
     while(current_layer){
@@ -222,6 +225,7 @@ gboolean dR_apply(dR_Graph* net){
         {
 			g_get_current_time (&result);
             nstarttime = result.tv_usec;
+			nstarttime_secs = result.tv_sec;
         }
         if(!current_layer->compute(net, current_layer))
         {
@@ -237,7 +241,7 @@ gboolean dR_apply(dR_Graph* net){
 			gdouble noderuntime;
             clFinish(net->clConfig->clCommandQueue);
 			g_get_current_time (&result);
-			noderuntime = (gdouble)(result.tv_usec - nstarttime)/1000.0;
+			noderuntime = ((gdouble)(result.tv_sec - nstarttime_secs)*1000.0) + ((gdouble)(result.tv_usec - nstarttime)/1000.0);
             net->config->totalNodeCPUTime+=noderuntime;
             g_print("CPU Profiling: Node %d took: %2.3fms \n",current_layer->layerID, noderuntime);
         }
@@ -252,7 +256,11 @@ gboolean dR_apply(dR_Graph* net){
     {
 		gdouble graphruntime;
 		g_get_current_time (&result);
-		graphruntime = (gdouble)(result.tv_usec - gstarttime) / 1000.0;
+		graphruntime = ((gdouble)(result.tv_sec - gstarttime_secs)*1000.0) + ((gdouble)(result.tv_usec - gstarttime) / 1000.0);
+		if (graphruntime < 0)
+		{
+			graphruntime = 1000.0 + graphruntime;
+		}
         g_print("CPU Profiling: Whole graph took: %2.3fms, Sum of all nodes: %2.3fms \n", graphruntime,net->config->totalNodeCPUTime);
     }
     if(!net->config->silent)
