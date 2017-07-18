@@ -43,8 +43,8 @@ add_library(${PROJECT_NAME} SHARED ${SOURCES})
 set_target_properties( ${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d" )
 
 # Definitions
-#add_definitions(-DKERNEL_PATH=""lib/deepracin/kernels/"")
-add_definitions(-DKERNEL_PATH="\\"${CMAKE_INSTALL_PREFIX}/lib/deepracin/kernels/\\"")
+cmake_policy(SET CMP0005 NEW) # Escape preprocessor makros automatically
+add_definitions(-DKERNEL_PATH="${CMAKE_INSTALL_PREFIX}/lib/deepracin/kernels/")
 
 # Link libraries
 target_link_libraries (${PROJECT_NAME} ${GLIB_LIBRARIES})

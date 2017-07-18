@@ -234,10 +234,10 @@ gboolean dR_apply(dR_Graph* net){
         }
         if(net->config->profilingCPU)
         {
-			gfloat noderuntime;
+			gdouble noderuntime;
             clFinish(net->clConfig->clCommandQueue);
 			g_get_current_time (&result);
-			noderuntime = (gfloat)(result.tv_usec - nstarttime)/1000.0;
+			noderuntime = (gdouble)(result.tv_usec - nstarttime)/1000.0;
             net->config->totalNodeCPUTime+=noderuntime;
             g_print("CPU Profiling: Node %d took: %2.3fms \n",current_layer->layerID, noderuntime);
         }
@@ -250,9 +250,9 @@ gboolean dR_apply(dR_Graph* net){
     }
     if(net->config->profilingCPU)
     {
-		gfloat graphruntime;
+		gdouble graphruntime;
 		g_get_current_time (&result);
-		graphruntime = (gfloat)(result.tv_usec - gstarttime)/1000.0;
+		graphruntime = (gdouble)(result.tv_usec - gstarttime) / 1000.0;
         g_print("CPU Profiling: Whole graph took: %2.3fms, Sum of all nodes: %2.3fms \n", graphruntime,net->config->totalNodeCPUTime);
     }
     if(!net->config->silent)

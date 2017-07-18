@@ -34,20 +34,20 @@ void read_image(char* path)
 
     if (!png_ptr)
     {
-        printf("[initialize_image_reading] read struct failed");
+        printf("[read_image] read struct failed");
         abort();
     }
     info_ptr = png_create_info_struct(png_ptr);
     if (!info_ptr)
     {
-        printf("[initialize_image_reading] png_create_info_struct failed");
+        printf("[read_image] png_create_info_struct failed");
         abort();
     }
     png_set_sig_bytes(png_ptr, 8);
     FILE *fp = fopen(path, "rb");
     if (setjmp(png_jmpbuf(png_ptr)))
     {
-        printf("[initialize_image_reading] init_io failed");
+        printf("[read_image] init_io failed");
         abort();
     }
     png_init_io(png_ptr, fp);  
@@ -126,7 +126,7 @@ int main(void)
     dR_setAsOutput(net,lastnode);
 
     // Print network to console
-    //dR_printNetObject(net, NULL);
+    dR_printNetObject(net, NULL);
 
     // Prepare network for execution - scheduling, buffer creation, kernel creation is done here
     dR_prepare(net);

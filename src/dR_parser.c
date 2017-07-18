@@ -553,6 +553,7 @@ dR_Node* dR_parseModel(dR_Graph* net, dR_Node* input, gchar* path, dR_Node** nod
                 params[numberofparams]= atof(p);
             }
         }
+		g_print("\n");
         numberofparams--;
         if(strncmp(layertype, "Conv2D", 6)==0)
         {

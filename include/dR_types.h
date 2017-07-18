@@ -12,6 +12,7 @@
 #endif
 #include <glib.h>
 #include <string.h>
+#include <stdlib.h>
 #
 
 typedef struct dR_Config dR_Config;
