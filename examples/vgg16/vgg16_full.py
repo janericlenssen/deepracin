@@ -81,7 +81,6 @@ with dr.Environment(preferred_platform_name) as env:
     conv5_3 = dr.Conv2d(conv5_2, filters.shape, [1, 1, 1, 1], 'relu', filters, biases)
     pool5 = dr.Pooling(conv5_3, 'max', [1, 2, 2, 1], [1, 2, 2, 1])
 
-    print('test')
 
     [filters, biases] = w['fc6'][0:2]
     fc6 = dr.Fully_Connected(pool5, filters.shape, 'relu', filters, biases)
@@ -92,10 +91,7 @@ with dr.Environment(preferred_platform_name) as env:
     [filters, biases] = w['fc8'][0:2]
     fc8 = dr.Fully_Connected(fc7, filters.shape, 'linear', filters, biases)
 
-    print('test')
     logits = dr.Softmax(fc8)
-
-    dr.Create_Labels(logits,label_creation_type='')
 
     # Mark output nodes (determines what dr.apply() returns)
     dr.mark_as_output(feed)
@@ -126,6 +122,6 @@ with dr.Environment(preferred_platform_name) as env:
         # Display fed data and inference result
         synset = [l.strip() for l in open('/media/jan/DataExt4/deepRacinModels/vgg16/synset.txt').readlines()]
 
-        print('Class: '+str(classid)+', '+synset[classid])
+        print('Class: {}, {}'.format(str(classid),synset[classid]))
         misc.imshow(feeddata[:,:,0:3])
 

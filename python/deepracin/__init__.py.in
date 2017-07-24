@@ -364,10 +364,6 @@ def Conv2d(input_node, shape, stride, activation, weights, biases=None):
         use_bias = False
     if not isinstance(activation,str):
         raise ValueError("DR Error: Activation parameter needs to be 'max' or 'average!")
-    #if not (isinstance(shape,(int,int,int,int)) or (isinstance(shape,numpy.ndarray) and shape.shape[0]==4)):
-    #    raise TypeError("DR Error: Shape parameter needs to be a tuple of 4 ints!")
-    #if not isinstance(stride,(int,int,int,int)):
-    #    raise TypeError("DR Error: Stride parameter needs to be a tuple of 4 ints!")
 
     # deepRacin expects [C,F,H,W] conv2d weights
     # transpose [H,W,C,F] -> [C,F,H,W]
@@ -413,14 +409,11 @@ def Conv2d_Transposed(input_node : Node, shape : (int, int, int, int), stride : 
 '''
 
 def Fully_Connected(input_node, shape, activation, weights, biases=None):
+    # type: (Node, (int,int), str, numpy.ndarray, numpy.ndarray) -> Node
     if biases is not None:
         use_bias = True
     else:
         use_bias = False
-    if not isinstance(activation,str):
-        raise ValueError("DR Error: Activation parameter needs to be 'max' or 'average!")
-    if not isinstance(shape,(int,int)):
-        raise TypeError("DR Error: Shape parameter needs to be a tuple of 2 ints!")
 
     # Description for python structures
     desc = 'FullyConnected'
@@ -433,10 +426,12 @@ def Fully_Connected(input_node, shape, activation, weights, biases=None):
     # Call deepRACIN
     onode = Node(lib.dR_FullyConnected(input_node.graph.ptr, input_node.ptr, Shape2(*shape), act_dict[activation],
                                        use_bias),input_node.graph, desc, params, variables)
+
     if weights is not None and biases is not None:
         lib.dR_FullyConnected_setVariables(onode.ptr, np.ctypeslib.as_ctypes(weights), np.ctypeslib.as_ctypes(biases))
     elif weights is not None and biases is None:
         lib.dR_FullyConnected_setVariables(onode.ptr, np.ctypeslib.as_ctypes(weights), 0)
+
     return onode
 
 def Mask_Dependent_Filter(input_node, filter_mask, shape, filters):

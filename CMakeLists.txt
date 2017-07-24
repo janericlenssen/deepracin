@@ -5,6 +5,7 @@ endif()
 
 project (deepracin)
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS 1)
 
 # Find files
 file(GLOB SOURCES src/*.c)

@@ -59,6 +59,7 @@ find_path(OPENCL_INCLUDE_DIRS
     $ENV{OPENCL_ROOT}/include
     $ENV{AMDAPPSDKROOT}/include
     $ENV{CUDA_PATH}/include
+    $ENV{CUDA_HOME}/include
   PATHS
     /usr/include
     /usr/local/include
@@ -121,6 +122,7 @@ if( LIB64 )
     PATHS
     /usr/lib
     /usr/local/cuda/lib
+    /usr/local/cuda/lib64
   )
 else( )
   find_library( OPENCL_LIBRARIES
