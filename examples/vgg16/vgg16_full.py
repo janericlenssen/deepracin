@@ -6,7 +6,6 @@ import numpy as np
 # Can be a substring of actual platform name (NVIDIA, AMD, INTEL, MALI, ADRENO, ...). If not set, first available device is chosen.
 preferred_platform_name = 'NVIDIA'
 
-
 with dr.Environment(preferred_platform_name) as env:
     # Properties
 
@@ -105,7 +104,7 @@ with dr.Environment(preferred_platform_name) as env:
     dr.print_graph(graph)
 
     # Store dR graph for loading in C or python
-    dr.save_graph(graph,'./deepRacinModels/')
+    #dr.save_graph(graph,'./deepRacinModels/')
 
     # Prepare graph for execution (setup and initialize)
     dr.prepare(graph)
