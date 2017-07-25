@@ -71,7 +71,23 @@ gboolean dR_serializeGraph(dR_Graph* net, gchar* path)
     gchar* folderName;
     folderName = g_strdup_printf("dr_graph_export");
     folderPath = g_build_filename(path,folderName, NULL);
-    g_mkdir(folderPath,0777);
+    /*if(g_access(path,F_OK)==-1)
+    {
+         g_print("Target folder %s does not exist. Folder is created...\n",path);
+         if(g_mkdir(path,0777)==-1)
+         
+    }
+    if(g_access(path,W_OK)==-1)
+    {
+         g_print("Error: Cant write to target folder %s. Permission denied!\n",path);
+         return 0;
+    }*/
+    g_mkdir(path,0777);
+    if(g_mkdir(folderPath,0700)==-1)
+    {
+        g_print("Error: Could not create folder %s. Maybe it already exists (-> rename or delete it) or more than the last folder in %s do not exist (-> create them manually or chose other path).\n",folderPath, path);
+        return 0;
+    }
     source = g_strdup_printf(
     "deepRACIN graph: %d nodes, %d feed nodes",net->allNodes->length,net->feed_layers->length);
 

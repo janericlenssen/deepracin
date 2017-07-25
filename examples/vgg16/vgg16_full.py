@@ -6,6 +6,7 @@ import numpy as np
 # Can be a substring of actual platform name (NVIDIA, AMD, INTEL, MALI, ADRENO, ...). If not set, first available device is chosen.
 preferred_platform_name = 'NVIDIA'
 
+
 with dr.Environment(preferred_platform_name) as env:
     # Properties
 
@@ -43,6 +44,7 @@ with dr.Environment(preferred_platform_name) as env:
                feed[0:224, 0:224, 2] - 103.939]
 
     concat = dr.Concat([b, g, r], 2)
+
 
     # CNN layers
     [filters, biases] = w['conv1_1'][0:2]
@@ -82,6 +84,7 @@ with dr.Environment(preferred_platform_name) as env:
     pool5 = dr.Pooling(conv5_3, 'max', [1, 2, 2, 1], [1, 2, 2, 1])
 
 
+
     [filters, biases] = w['fc6'][0:2]
     fc6 = dr.Fully_Connected(pool5, filters.shape, 'relu', filters, biases)
 
@@ -93,6 +96,7 @@ with dr.Environment(preferred_platform_name) as env:
 
     logits = dr.Softmax(fc8)
 
+
     # Mark output nodes (determines what dr.apply() returns)
     dr.mark_as_output(feed)
     dr.mark_as_output(logits)
@@ -101,7 +105,7 @@ with dr.Environment(preferred_platform_name) as env:
     dr.print_graph(graph)
 
     # Store dR graph for loading in C or python
-    # dr.save_graph(graph,'../../build/deepRacinModels/')
+    dr.save_graph(graph,'./deepRacinModels/')
 
     # Prepare graph for execution (setup and initialize)
     dr.prepare(graph)
@@ -123,5 +127,5 @@ with dr.Environment(preferred_platform_name) as env:
         synset = [l.strip() for l in open('/media/jan/DataExt4/deepRacinModels/vgg16/synset.txt').readlines()]
 
         print('Class: {}, {}'.format(str(classid),synset[classid]))
-        misc.imshow(feeddata[:,:,0:3])
+        #misc.imshow(feeddata[:,:,0:3])
 
