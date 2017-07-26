@@ -339,8 +339,8 @@ def load_graph_old(node,path):
     return outnode, outlist
 
 def save_graph(graph,path):
-    if not isinstance(path,str):
-        raise TypeError("DR Error: Save graph needs graph folder path!")
+    #if not isinstance(path,str):
+    #    raise TypeError("DR Error: Save graph needs graph folder path!")
     pathbuf = create_string_buffer(str.encode(path))
     res = lib.dR_saveGraph(graph.ptr, pathbuf)
     if not res:
