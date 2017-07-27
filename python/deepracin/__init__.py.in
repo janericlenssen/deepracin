@@ -698,8 +698,8 @@ def Normalization(input_node, normalization_type, target_mean=0.0, target_dev=1.
     params = [norm_dict[normalization_type], target_mean, target_dev]
 
     # Call deepRACIN
-    onode = Node(lib.dR_Normalization(input_node.graph.ptr, input_node.ptr, norm_dict[normalization_type], target_mean,
-                                      target_dev),input_node.graph, desc, params)
+    onode = Node(lib.dR_Normalization(input_node.graph.ptr, input_node.ptr, norm_dict[normalization_type], c_float(target_mean),
+                                      c_float(target_dev)),input_node.graph, desc, params)
     return onode
 
 def Pooling(input_node, pooling_type, shape, stride):
