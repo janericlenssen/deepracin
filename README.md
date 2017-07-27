@@ -135,8 +135,8 @@ Misc:
 <h4> Installation </h4>
 On Linux:
 <ol>
-<li> Install glib > 2.6, libpng and zlib (for examples)
-<li> Checkout git repository
+<li> Install glib > 2.6, OpenCL, libpng and zlib
+<li> Checkout deepRacin git repository
 <li> Navigate to checkout folder 
 <li> Create build dir, navigate there
 
@@ -158,7 +158,7 @@ sudo make install
 
 On Windows: (Overview, detailed version coming soon)
 <ol>
-<li> Download and compile glib > 2.6, libpng and zlib (for examples) with Visual Studio
+<li> Download and compile glib > 2.6, libpng and zlib with Visual Studio and install OpenCL
 <li> Checkout deepracin git repository
 <li> Use CMake to configure
 <li> Set all missing paths to OpenCL, glib and libpng
