@@ -162,7 +162,8 @@ On Windows: (Overview, detailed version coming soon)
 <li> Use CMake to configure
 <li> Set all missing paths to OpenCL, glib and libpng
 <li> Adjust Install Prefix
-<li> Generate Projects
+<li> Generate Project
+<li> Build INSTALL Target of Visual Studio Project
 </ol>
 
 <h2> Currently implemented graph nodes </h2>
