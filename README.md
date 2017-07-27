@@ -159,7 +159,7 @@ sudo make install
 On Windows: (Overview, detailed version coming soon)
 <ol>
 <li> Download and compile glib > 2.6, libpng and zlib with Visual Studio and install OpenCL
-<li> Checkout deepracin git repository
+<li> Checkout deepRacin git repository
 <li> Use CMake to configure
 <li> Set all missing paths to OpenCL, glib and libpng
 <li> Adjust Install Prefix
