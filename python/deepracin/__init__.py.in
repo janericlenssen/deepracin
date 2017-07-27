@@ -166,12 +166,15 @@ class Environment:
         return self
 
     def __exit__(self, type, value, traceback):
+	print("Cleaning up temp-path...")
         try:
             import shutil
             shutil.rmtree(self.tmp_path)  # delete directory
         except OSError as exc:
             if exc.errno != errno.ENOENT:  # ENOENT - no such file or directory
                 raise  # re-raise exception
+        print("done...")
+        print("Cleaning up Graphs...")
         for i,graph in enumerate(self.graphs):
             if i == len(self.graphs)-1:
                 lib.dR_cleanup(graph.ptr,True)

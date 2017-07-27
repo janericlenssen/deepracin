@@ -23,7 +23,7 @@ with dr.Environment(preferred_platform_name) as env:
 
     # If not set, a temporary folder will be created in location depending on system
     # Folder is used to store kernels, ptx, and (if model is exported) the exported model)
-    env.model_path = '/media/jan/DataExt4/deepRacinModels/test'
+    #env.model_path = '/media/jan/DataExt4/deepRacinModels/test'
 
     # Create empty graph
     # interface_layout must be set. Determines how all communication with dR is interpreted.
