@@ -155,7 +155,15 @@ sudo make install
 ```
 </ol>
 
-
+On Windows: (Overview, detailed version coming soon)
+<ol>
+<li> Download and compile glib > 2.6, libpng and zlib (for examples) with Visual Studio
+<li> Checkout deepracin git repository
+<li> Use CMake to configure
+<li> Set all missing paths to OpenCL, glib and libpng
+<li> Adjust Install Prefix
+<li> Generate Projects
+</ol>
 
 <h2> Currently implemented graph nodes </h2>
 <ul>
