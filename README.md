@@ -135,6 +135,7 @@ Misc:
 <h4> Installation </h4>
 On Linux:
 <ol>
+<li> Install glib > 2.6, libpng and zlib (for examples)
 <li> Checkout git repository
 <li> Navigate to checkout folder 
 <li> Create build dir, navigate there
