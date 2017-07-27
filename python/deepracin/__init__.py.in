@@ -53,14 +53,13 @@ act_dict = { 'linear' : 0,
 pool_dict = { 'max' : 0,
              'average': 1}
 
-us_dict = { 'max' : 0,
-             'average': 1}
+us_dict = { 'nearest_neighbor' : 0,
+             'linear': 1,
+             'bicubic': 2}
 
-lc_dict = { 'max' : 0,
-             'average': 1}
-
-norm_dict = { 'max' : 0,
-             'average': 1}
+norm_dict = { 'target_mean' : 0,
+             'target_stddev': 1,
+             'target_mean_stddev': 2}
 
 
 class Node:
@@ -672,6 +671,8 @@ def Upscaling(input_node, upscaling_type, scale_factor_x, scale_factor_y):
     # type: (Node, str, int, int) -> None
     # Description for python structures
     desc = 'Upscaling'
+    if us_dict['upscaling_type']>1:
+        raise NotImplementedError("DR Error: For Upscaling Node, currently only nearest_neighbor and linear supported!")
     params = [us_dict[upscaling_type], scale_factor_x, scale_factor_y]
 
     # Call deepRACIN
@@ -679,18 +680,18 @@ def Upscaling(input_node, upscaling_type, scale_factor_x, scale_factor_y):
                                   scale_factor_x, scale_factor_y),input_node.graph, desc, params)
     return onode
 
-def Create_Labels(input_node, label_creation_type):
+def Create_Labels(input_node):
     # type: (Node, str) -> None
     # Description for python structures
     desc = 'LabelCreation'
-    params = [lc_dict[label_creation_type]]
+    params = [2]
 
     # Call deepRACIN
-    onode = Node(lib.dR_LabelCreation(input_node.graph.ptr, input_node.ptr, lc_dict[label_creation_type],
+    onode = Node(lib.dR_LabelCreation(input_node.graph.ptr, input_node.ptr, 2,
                                       0.0, 0.0, 0.0),input_node.graph, desc, params)
     return onode
 
-def Normalization(input_node, normalization_type, target_mean, target_dev):
+def Normalization(input_node, normalization_type, target_mean=0.0, target_dev=1.0):
     # type: (Node, str, float, float) -> None
     # Description for python structures
     desc = 'Normalization'
