@@ -349,12 +349,16 @@ gboolean dR_fc_cleanupBuffers(dR_Graph* net, dR_Node* layer)
 
 gboolean dR_fc_cleanupLayer(dR_Graph* net, dR_Node* layer)
 {
-    if(net->prepared)
+    dR_FC_Data* fclayer = ((dR_FC_Data*)(layer->layer));
+    if(fclayer->hasVariables)
     {
-        g_free(((dR_FC_Data*)(layer->layer))->weights);
-        g_free(((dR_FC_Data*)(layer->layer))->biases);
-        g_free((dR_FC_Data*)(layer->layer));
+        g_free(fclayer->weights);
+        if(fclayer->useBias)
+        {
+            g_free(fclayer->biases);
+        }
     }
+    g_free((dR_FC_Data*)(layer->layer));
     return TRUE;
 }
 

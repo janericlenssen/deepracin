@@ -269,14 +269,15 @@ gboolean dR_apply(dR_Graph* net){
 }
 
 void dR_cleanup(dR_Graph* net, gboolean cleanupcl){
-    gboolean silent = net->config->silent;
-    if(!silent)
+    //gboolean silent = net->config->silent;
+    //if(!silent)
         g_print("Cleaning up deepRACIN...\n");
-    dR_cleanupBuffers(net);
-    if(cleanupcl)
+    if(net->prepared)
+        dR_cleanupBuffers(net);
+    if(cleanupcl && net->prepared)
         dR_cleanupCL(net);
     dR_cleanupNet(net);
-    if(!silent)
+    //if(!silent)
         g_print("Done.\n");
 }
 

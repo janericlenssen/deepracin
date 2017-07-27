@@ -457,46 +457,38 @@ void dR_cleanupNet(dR_Graph* net)
     dR_Node* current_layer;
     dR_Node* temp;
     dR_MemoryHandler* memhandle;
-    dR_list_resetIt(net->streamBufferHandlers);
-    memhandle = (dR_MemoryHandler*)dR_list_next(net->streamBufferHandlers);
-
-    while(memhandle)
+    if(net->prepared)
     {
-        g_free(memhandle);
+        dR_list_resetIt(net->streamBufferHandlers);
         memhandle = (dR_MemoryHandler*)dR_list_next(net->streamBufferHandlers);
-    }
 
-    dR_list_resetIt(net->scheduledLayers);
-    current_layer = (dR_Node*)dR_list_next(net->scheduledLayers);
+        while(memhandle)
+        {
+            g_free(memhandle);
+            memhandle = (dR_MemoryHandler*)dR_list_next(net->streamBufferHandlers);
+        }
+    }
+    dR_list_resetIt(net->allNodes);
+    current_layer = (dR_Node*)dR_list_next(net->allNodes);
     while(current_layer)
     {
         if(!current_layer->cleanupLayer(net,current_layer))
         {
             g_print("Layer cleanup failed for layer %d! \n",current_layer->layerID);
         }
-		g_free(current_layer);
-        current_layer = (dR_Node*)dR_list_next(net->scheduledLayers);
+        g_free(current_layer);
+        current_layer = (dR_Node*)dR_list_next(net->allNodes);
     }
-
-    dR_list_resetIt(net->feed_layers);
-    temp = (dR_Node*)dR_list_next(net->feed_layers);
-    while(temp)
+    if(net->prepared)
     {
-        if(!temp->cleanupLayer(net,temp))
-        {
-            g_print("Layer cleanup failed for layer %d! \n",temp->layerID);
-        }
-        g_free(temp);
-        temp = (dR_Node*)dR_list_next(net->feed_layers);
+        dR_list_cleanup(net->scheduledLayers);
+        dR_list_cleanup(net->streamBufferHandlers);
+        g_free(net->clConfig);
+        g_free(net->hostDebugBuffer);
     }
-
-    dR_list_cleanup(net->scheduledLayers);
-    dR_list_cleanup(net->streamBufferHandlers);
     dR_list_cleanup(net->output_layers);
     dR_list_cleanup(net->feed_layers);
     g_free(net->config);
-    g_free(net->clConfig);
-    g_free(net->hostDebugBuffer);
     g_free(net);
 }
 
