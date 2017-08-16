@@ -437,7 +437,7 @@ def Fully_Connected(input_node, shape, activation, weights, biases=None):
     return onode
 
 def Mask_Dependent_Filter(input_node, filter_mask, shape, filters):
-    # type: (Node, Node, (int,int,int), numpy.ndarray) -> None
+    # type: (Node, Node, (int,int,int), numpy.ndarray) -> Node
     if input_node.graph != filter_mask.graph:
         raise ValueError("DR Error: Inputs for Mask_Dependent_Filter are not in the same graph!")
 
@@ -453,7 +453,7 @@ def Mask_Dependent_Filter(input_node, filter_mask, shape, filters):
     return onode
 
 def Per_Pixel_Filter(input_node, input_filters, shape, stride):
-    # type: (Node, Node, (int,int,int, int), (int, int, int, int)) -> None
+    # type: (Node, Node, (int,int,int, int), (int, int, int, int)) -> Node
     # Description for python structures
     desc = 'PPFilter'
     params = [shape[0], shape[1], shape[2], shape[3], stride[0], stride[1], stride[2], stride[3]]
@@ -464,7 +464,7 @@ def Per_Pixel_Filter(input_node, input_filters, shape, stride):
     return onode
 
 def Add_Scalar(input_node, scalar):
-    # type: (Node, float) -> None
+    # type: (Node, float) -> Node
     # Description for python structures
     desc = 'ElemWise1Op'
     params = [elemwise_1op_dict['AddS'], scalar]
@@ -475,7 +475,7 @@ def Add_Scalar(input_node, scalar):
     return onode
 
 def Sub_Scalar(input_node, scalar):
-    # type: (Node, float) -> None
+    # type: (Node, float) -> Node
     # Description for python structures
     desc = 'ElemWise1Op'
     params = [elemwise_1op_dict['SubS'], scalar]
@@ -486,7 +486,7 @@ def Sub_Scalar(input_node, scalar):
     return onode
 
 def Mul_Scalar(input_node, scalar):
-    # type: (Node, float) -> None
+    # type: (Node, float) -> Node
     # Description for python structures
     desc = 'ElemWise1Op'
     params = [elemwise_1op_dict['MulS'], scalar]
@@ -497,7 +497,7 @@ def Mul_Scalar(input_node, scalar):
     return onode
 
 def Div_Scalar(input_node, scalar):
-    # type: (Node, float) -> None
+    # type: (Node, float) -> Node
     # Description for python structures
     desc = 'ElemWise1Op'
     params = [elemwise_1op_dict['DivS'], scalar]
@@ -508,7 +508,7 @@ def Div_Scalar(input_node, scalar):
     return onode
 
 def Log(input_node):
-    # type: (Node) -> None
+    # type: (Node) -> Node
     # Description for python structures
     scalar = 0.0
     desc = 'ElemWise1Op'
@@ -520,7 +520,7 @@ def Log(input_node):
     return onode
 
 def Exp(input_node):
-    # type: (Node) -> None
+    # type: (Node) -> Node
     scalar = 0.0
 
     # Description for python structures
@@ -533,7 +533,7 @@ def Exp(input_node):
     return onode
 
 def Sqrt(input_node):
-    # type: (Node) -> None
+    # type: (Node) -> Node
     scalar = 0.0
 
     # Description for python structures
@@ -546,7 +546,7 @@ def Sqrt(input_node):
     return onode
 
 def Fill(input_node, scalar):
-    # type: (Node, float) -> None
+    # type: (Node, float) -> Node
     # Description for python structures
     desc = 'ElemWise1Op'
     params = [elemwise_1op_dict['Fill'], scalar]
@@ -557,7 +557,7 @@ def Fill(input_node, scalar):
     return onode
 
 def Pow_Scalar(input_node, scalar):
-    # type: (Node, float) -> None
+    # type: (Node, float) -> Node
     # Description for python structures
     desc = 'ElemWise1Op'
     params = [elemwise_1op_dict['PowS'], scalar]
@@ -568,7 +568,7 @@ def Pow_Scalar(input_node, scalar):
     return onode
 
 def Add(input_node1, input_node2):
-    # type: (Node, Node) -> None
+    # type: (Node, Node) -> Node
     if input_node1.graph != input_node2.graph:
         raise ValueError("DR Error: Inputs for Add are not in the same graph!")
 
@@ -582,7 +582,7 @@ def Add(input_node1, input_node2):
     return onode
 
 def Sub(input_node1, input_node2):
-    # type: (Node, Node) -> None
+    # type: (Node, Node) -> Node
     if input_node1.graph != input_node2.graph:
         raise ValueError("DR Error: Inputs for Add are not in the same graph!")
 
@@ -596,7 +596,7 @@ def Sub(input_node1, input_node2):
     return onode
 
 def Mul(input_node1, input_node2):
-    # type: (Node, Node) -> None
+    # type: (Node, Node) -> Node
     if input_node1.graph != input_node2.graph:
         raise ValueError("DR Error: Inputs for Mul are not in the same graph!")
 
@@ -610,7 +610,7 @@ def Mul(input_node1, input_node2):
     return onode
 
 def Div(input_node1, input_node2):
-    # type: (Node, Node) -> None
+    # type: (Node, Node) -> Node
     if input_node1.graph != input_node2.graph:
         raise ValueError("DR Error: Inputs for Mul are not in the same graph!")
 
@@ -624,7 +624,7 @@ def Div(input_node1, input_node2):
     return onode
 
 def Pow(input_node1, input_node2):
-    # type: (Node, Node) -> None
+    # type: (Node, Node) -> Node
     if input_node1.graph != input_node2.graph:
         raise ValueError("DR Error: Inputs for Mul are not in the same graph!")
 
@@ -638,7 +638,7 @@ def Pow(input_node1, input_node2):
     return onode
 
 def Softmax(input_node):
-    # type: (Node) -> None
+    # type: (Node) -> Node
     # Description for python structures
     desc = 'Softmax'
     params = [' ']
@@ -648,7 +648,7 @@ def Softmax(input_node):
     return onode
 
 def Resolve_RoI(input_node, shape):
-    # type: (Node, (int, int, int)) -> None
+    # type: (Node, (int, int, int)) -> Node
     # Description for python structures
     desc = 'ResolveRoI'
     params = [shape[0], shape[1], shape[2]]
@@ -658,7 +658,7 @@ def Resolve_RoI(input_node, shape):
     return onode
 
 def RGB_to_gray(input_node):
-    # type: (Node) -> None
+    # type: (Node) -> Node
     # Description for python structures
     desc = 'RGB2Gray'
     params = [' ']
@@ -668,7 +668,7 @@ def RGB_to_gray(input_node):
     return onode
 
 def Upscaling(input_node, upscaling_type, scale_factor_x, scale_factor_y):
-    # type: (Node, str, int, int) -> None
+    # type: (Node, str, int, int) -> Node
     # Description for python structures
     desc = 'Upscaling'
     if us_dict['upscaling_type']>1:
@@ -677,22 +677,22 @@ def Upscaling(input_node, upscaling_type, scale_factor_x, scale_factor_y):
 
     # Call deepRACIN
     onode = Node(lib.dR_Upscaling(input_node.graph.ptr, input_node.ptr, us_dict[upscaling_type],
-                                  scale_factor_x, scale_factor_y),input_node.graph, desc, params)
+                                  c_float(scale_factor_x), c_float(scale_factor_y)),input_node.graph, desc, params)
     return onode
 
 def Create_Labels(input_node):
-    # type: (Node, str) -> None
+    # type: (Node, str) -> Node
     # Description for python structures
     desc = 'LabelCreation'
     params = [2]
 
     # Call deepRACIN
     onode = Node(lib.dR_LabelCreation(input_node.graph.ptr, input_node.ptr, 2,
-                                      0.0, 0.0, 0.0),input_node.graph, desc, params)
+                                      c_float(0.0), c_float(0.0), c_float(0.0)),input_node.graph, desc, params)
     return onode
 
 def Normalization(input_node, normalization_type, target_mean=0.0, target_dev=1.0):
-    # type: (Node, str, float, float) -> None
+    # type: (Node, str, float, float) -> Node
     # Description for python structures
     desc = 'Normalization'
     params = [norm_dict[normalization_type], target_mean, target_dev]
@@ -703,7 +703,7 @@ def Normalization(input_node, normalization_type, target_mean=0.0, target_dev=1.
     return onode
 
 def Pooling(input_node, pooling_type, shape, stride):
-    # type: (Node, str, (int, int, int, int), (int, int, int, int)) -> None
+    # type: (Node, str, (int, int, int, int), (int, int, int, int)) -> Node
     # Description for python structures
     desc = 'Pooling'
     params = [pool_dict[pooling_type],shape[0],shape[1],shape[2],shape[3],stride[0],stride[1],stride[2],stride[3]]
@@ -714,7 +714,7 @@ def Pooling(input_node, pooling_type, shape, stride):
     return onode
 
 def Slice(input_node, origin, shape):
-    # type: (Node, (int, int, int), (int, int, int)) -> None
+    # type: (Node, (int, int, int), (int, int, int)) -> Node
     dr_shape = shape
     dr_origin = origin
     if input_node.graph.layout == 'WHC':
@@ -737,7 +737,7 @@ def Slice(input_node, origin, shape):
     return onode
 
 def Crop_Or_Pad(input_node, shape):
-    # type: (Node, (int, int, int)) -> None
+    # type: (Node, (int, int, int)) -> Node
     dr_shape = shape
     if input_node.graph.layout == 'WHC':
         dr_shape = [shape[0],shape[1],shape[2],0]
@@ -756,7 +756,7 @@ def Crop_Or_Pad(input_node, shape):
 
 
 def Concat(input_nodes,  concat_dim, layout='HWC'):
-    # type: (list, int) -> None
+    # type: (list, int) -> Node
     n = len(input_nodes)
     if not n > 1:
         raise ValueError("DR Error: Concat with one or less nodes not allowed!")
