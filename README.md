@@ -6,7 +6,7 @@
 <li>Runs on Linux, Windows (and MacOS systems, not tested)
 <li>Tested on Nvidia, AMD, Intel and mobile GPUs: Mali (OpenCL 1.1 required)
 </ul>
-<b>Note:</b> This library is under ongoing development and in alpha status. While the library should run on all OS and GPUs mentioned above in theory, it is not tested on all configurations.
+<b>Note:</b> This library is under ongoing development and in alpha status. While the library should run on all OS and GPUs that support OpenCL 1.1, it is not tested on all configurations.
  
 If you have questions, feedback, suggestions or if you want to contribute, feel free to contact me!
 
@@ -161,7 +161,7 @@ On Windows: (Overview, detailed version coming soon)
 <li> Download and compile glib > 2.6, libpng and zlib with Visual Studio and install OpenCL
 <li> Checkout deepRacin git repository
 <li> Use CMake to configure
-<li> Set all missing paths to OpenCL, glib and libpng
+<li> Set all missing paths to OpenCL, glib, zlib and libpng
 <li> Adjust Install Prefix
 <li> Generate Project
 <li> Build INSTALL Target of the generated Visual Studio Project
