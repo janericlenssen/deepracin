@@ -1129,7 +1129,7 @@ gboolean dR_uploadArray(dR_Graph* net, gchar* name, void * hostMem, size_t offse
         totalGPU = (double)(endGPU - startGPU) / 1e6; // Convert nanoseconds to msecs
         if (totalGPU >= 0.000001)
         {
-            g_print("\nProfiling: Upload time GPU for array %s: %5.2fms (%3.2fGB/s)\n", name, totalGPU, (((float)numBytes) / 1024 / 1024 / 1024) / (totalGPU/1000) );
+            g_print("Profiling: Upload time GPU for array %s: %5.2fms (%3.2fGB/s)\n", name, totalGPU, (((float)numBytes) / 1024 / 1024 / 1024) / (totalGPU/1000) );
         }
         if (clReleaseEvent(*net->clConfig->clEvent) != CL_SUCCESS)
         {
