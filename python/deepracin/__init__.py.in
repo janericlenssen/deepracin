@@ -671,13 +671,13 @@ def Upscaling(input_node, upscaling_type, scale_factor_x, scale_factor_y):
     # type: (Node, str, int, int) -> Node
     # Description for python structures
     desc = 'Upscaling'
-    if us_dict['upscaling_type']>1:
+    if us_dict[upscaling_type]>1:
         raise NotImplementedError("DR Error: For Upscaling Node, currently only nearest_neighbor and linear supported!")
     params = [us_dict[upscaling_type], scale_factor_x, scale_factor_y]
 
     # Call deepRACIN
     onode = Node(lib.dR_Upscaling(input_node.graph.ptr, input_node.ptr, us_dict[upscaling_type],
-                                  c_float(scale_factor_x), c_float(scale_factor_y)),input_node.graph, desc, params)
+                                  c_int(scale_factor_x), c_int(scale_factor_y)),input_node.graph, desc, params)
     return onode
 
 def Create_Labels(input_node):
@@ -751,7 +751,7 @@ def Crop_Or_Pad(input_node, shape):
     params = [dr_shape[0],dr_shape[1],dr_shape[2]]
 
     # Call deepRACIN
-    onode = Node(lib.dR_Slice(input_node.graph.ptr, input_node.ptr, Shape4(*dr_shape)),input_node.graph, desc, params)
+    onode = Node(lib.dR_CropOrPad(input_node.graph.ptr, input_node.ptr, Shape4(*dr_shape)),input_node.graph, desc, params)
     return onode
 
 
