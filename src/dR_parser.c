@@ -82,10 +82,9 @@ gboolean dR_serializeGraph(dR_Graph* net, gchar* path)
          g_print("Error: Cant write to target folder %s. Permission denied!\n",path);
          return 0;
     }*/
-    g_mkdir(path,0777);
-    if(g_mkdir(folderPath,0700)==-1)
+    if(g_mkdir_with_parents(folderPath,0777)==-1)
     {
-        g_print("Error: Could not create folder %s. Maybe it already exists (-> rename or delete it) or more than the last folder in %s do not exist (-> create them manually or chose other path).\n",folderPath, path);
+        g_print("Error: Could not create folder %s. Maybe it already exists (-> rename or delete it).\n",folderPath, path);
         return 0;
     }
     source = g_strdup_printf(

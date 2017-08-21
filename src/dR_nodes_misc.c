@@ -1410,7 +1410,7 @@ gboolean dR_norm_compute(dR_Graph* net, dR_Node* layer){
     }
     if(normlayer->type == tNormDev || normlayer->type == tNormMeanDev)
     {
-        cl_float valuetomul = 1.0/(gdev/targetDev);
+        cl_float valuetomul = 1.0f/(gdev/targetDev);
         net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_float), (void *)&valuetomul);          paramid++;
     }
     if (dR_openCLError(net, "Setting kernel args failed.", "Normalization Kernel"))
