@@ -4,9 +4,9 @@
 #include <assert.h>
 
 dR_Graph* dR_NewGraph(){
-    dR_Graph* a = g_malloc(sizeof(dR_Graph));
-    dR_ClConfig* clConfig = g_malloc(sizeof(dR_ClConfig));
-    dR_Config* config = g_malloc(sizeof(dR_Config));
+    dR_Graph* a = (dR_Graph*) g_malloc(sizeof(dR_Graph));
+    dR_ClConfig* clConfig = (dR_ClConfig*) g_malloc(sizeof(dR_ClConfig));
+    dR_Config* config = (dR_Config*) g_malloc(sizeof(dR_Config));
 
     a->clConfig = clConfig;
     // Init clConfig
