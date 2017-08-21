@@ -195,7 +195,7 @@ dR_Node* dR_parseGraph(dR_Graph* net, gchar* path, dR_Node*** outnodes, gint* nu
          g_print("dR_parseGraph can only fill an empty graph! Given graph not empty!\n");
          return 0;
     }
-    net->config->modelPath = path;
+    net->config->modelPath = g_strdup(path);
 
     filepath = g_build_filename(path, "graph.dr", NULL);
 
