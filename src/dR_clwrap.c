@@ -746,7 +746,7 @@ gboolean dR_clCreateCLContext(dR_Graph* net)
         }
 		if(!net->config->silent)
 		{
-			g_print("Selected platform name not found: %s != %s", pbuf, net->clConfig->clPlatformName);
+			g_print("Selected platform name not found: %s != %s\n", pbuf, net->clConfig->clPlatformName);
 		    if (! net->clConfig->clPlatformName)
 		        g_print("CL Platform name is empty!\n");
 		    g_print("Could not find CL Platform: %s\n", net->clConfig->clPlatformName);
