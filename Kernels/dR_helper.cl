@@ -388,6 +388,7 @@ __kernel void getSumDev(
 
     //Initialize with neutral element
     lsum[lid] = 0.0f;
+    gidOfLastValidElement = gidOfLastValidElement+((int)get_global_id(2)*(int) get_global_size(0)*(int)get_global_size(1));
 
 
     if (! (gx >= gWidth || gy >= gHeight || gid > gidOfLastValidElement))
