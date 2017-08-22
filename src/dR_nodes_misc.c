@@ -1277,7 +1277,10 @@ gboolean dR_norm_compute(dR_Graph* net, dR_Node* layer){
             sum += normlayer->resultHost[i];
         }
         gavg = sum / (cl_float)(normlayer->ishape.s0 * normlayer->ishape.s1 * normlayer->ishape.s2);
-
+	    if(net->config->debugInfo)
+        {        
+            g_print("Average: %f\n",gavg);
+        }    
     }
 
     if(normlayer->type == tNormDev || normlayer->type == tNormMeanDev)
@@ -1389,7 +1392,10 @@ gboolean dR_norm_compute(dR_Graph* net, dR_Node* layer){
             sum += normlayer->resultHost[i];
         }
         gdev = sqrt(sum / (cl_float)(normlayer->ishape.s0 * normlayer->ishape.s1 * normlayer->ishape.s2));
-
+	    if(net->config->debugInfo)
+        {
+            g_print("Stddev: %f\n",gdev);
+        }
     }
     // Normalize
 

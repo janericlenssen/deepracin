@@ -549,7 +549,7 @@ gchar* dR_concat_createKernelName(dR_Node* layer)
     gint maxsize = 100;
     gint i;
     gchar* string = g_malloc(sizeof(char)*maxsize);
-    length += g_snprintf(string+length,maxsize-length,"concat_%din%d", concatnode->n, concatnode->concatDim);
+    length += g_snprintf(string+length,maxsize-length,"concat_%din%d_%d", concatnode->n, concatnode->concatDim,layer->layerID);
     for(i = 0; i<concatnode->n;i++)
     {
         length += g_snprintf(string+length,maxsize-length,"_%d",concatnode->inputSizesInConcatDim[i]);
