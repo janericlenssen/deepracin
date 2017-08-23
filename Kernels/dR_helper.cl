@@ -33,6 +33,37 @@ float sampleZeroPaddedFloat(
 * \param[in] gImage The input image
 * \param[in] x x-Coordinate of pixel to read
 * \param[in] y y-Coordinate of pixel to read
+* \param[in] width Width of the image
+* \param[in] height Height of the image
+* \author jan
+*/
+float sampleRepPaddedFloat(
+    const __global float * gInputImage,
+    int offset,
+    int x,
+    int y,
+    int width,
+    int height
+    )
+{
+    if(x<0)
+        x = 0;
+    if(x>=width)
+        x = width-1;
+    if(y<0)
+        y = 0;
+    if(y>=height)
+        y = height-1;
+    return gInputImage[offset + (y*width+x)];
+
+}
+
+
+/**
+* \brief Copy the assigned parts from global to local memory
+* \param[in] gImage The input image
+* \param[in] x x-Coordinate of pixel to read
+* \param[in] y y-Coordinate of pixel to read
 * \param[in] z z-Coordinate of pixel to read
 * \param[in] width Width of the image
 * \param[in] height Height of the image

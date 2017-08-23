@@ -242,9 +242,14 @@ __kernel void conv2dwinograd2(
         // Store Output
 
         gO[index] = m[0];
-        gO[index+1] = m[1];
-        gO[index+bW] = m[2];
-        gO[index+bW+1] = m[3];
+        if(ox+1<bW)
+            gO[index+1] = m[1];
+        if(oy+1<bH)
+        {
+            gO[index+bW] = m[2];
+            if(ox+1<bW)
+                gO[index+bW+1] = m[3];
+        }
 
     }
 }
