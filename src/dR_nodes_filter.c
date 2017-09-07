@@ -8,10 +8,12 @@
 
 // Mandatory
 
-dR_Node* dR_MaskDependentFilter(dR_Graph* net, dR_Node* inputImage, dR_Node* inputFilterMask, dR_Shape3 sh){
+dR_Node* dR_MaskDependentFilter(dR_Graph* net, dR_Node* inputImage, dR_Node* inputFilterMask, dR_Shape3* sh){
     dR_MDFilter_Data* conv2d = g_malloc(sizeof(dR_MDFilter_Data));
     dR_Node* l = g_malloc(sizeof(dR_Node));
-    conv2d->shape = sh;
+    conv2d->shape.s0 = sh->s0;
+    conv2d->shape.s1 = sh->s1;
+    conv2d->shape.s2 = sh->s2;
     l->layer = conv2d;
     l->type = tMaskDependentFilter;
 
@@ -77,8 +79,9 @@ dR_Node* dR_cdfilter_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numIN
     gint numNodeInputs = 2;
     gint numNodeParams = 3;
     gint numNodeVariables = 1;
-    dR_Shape3 shape;
+    dR_Shape3* shape;
     dR_Node* out;
+    shape = g_malloc(sizeof(dR_Shape3));
     if(numINodes!=1)
     {
         g_print("Parsing Error: MaskDependentFilter Node needs %d InputNodes but got %d!\n",numNodeInputs,numNodeVariables);
@@ -89,11 +92,12 @@ dR_Node* dR_cdfilter_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numIN
         g_print("Parsing Error: MaskDependentFilter Node needs %d Parameters and %d Variables!\n",numNodeParams,numNodeVariables);
         return NULL;
     }
-    shape.s0 = atoi(params[0]);
-    shape.s1 = atoi(params[1]);
-    shape.s2 = atoi(params[2]);
+    shape->s0 = atoi(params[0]);
+    shape->s1 = atoi(params[1]);
+    shape->s2 = atoi(params[2]);
     out = dR_MaskDependentFilter(net, iNodes[0], iNodes[1], shape);
     dR_MaskDependentFilter_setVariables(out,variables[0],NULL);
+    g_free(shape);
     return out;
 }
 
@@ -553,11 +557,17 @@ gchar* dR_cdfilter_printLayer(dR_Node* layer)
 
 // Mandatory
 
-dR_Node* dR_PerPixelFilter(dR_Graph* net, dR_Node* inputLayer, dR_Node* inputFilter, dR_Shape4 sh, dR_Shape4 st){
+dR_Node* dR_PerPixelFilter(dR_Graph* net, dR_Node* inputLayer, dR_Node* inputFilter, dR_Shape4* sh, dR_Shape4* st){
     dR_PPFilter_Data* conv2d = g_malloc(sizeof(dR_PPFilter_Data));
     dR_Node* l = g_malloc(sizeof(dR_Node));
-    conv2d->shape = sh;
-    conv2d->stride = st;
+    conv2d->shape.s0 = sh->s0;
+    conv2d->shape.s1 = sh->s1;
+    conv2d->shape.s2 = sh->s2;
+    conv2d->shape.s3 = sh->s3;
+    conv2d->stride.s0 = st->s0;
+    conv2d->stride.s1 = st->s1;
+    conv2d->stride.s2 = st->s2;
+    conv2d->stride.s3 = st->s3;
     l->layer = conv2d;
     l->type = tPPFilter;
 
@@ -626,8 +636,11 @@ dR_Node* dR_conv2duw_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numIN
     gint numNodeInputs = 2;
     gint numNodeParams = 8;
     gint numNodeVariables = 0;
-    dR_Shape4 shape;
-    dR_Shape4 stride;
+    dR_Shape4* shape;
+    dR_Shape4* stride;
+    dR_Node* out;
+    shape = g_malloc(sizeof(dR_Shape4));
+    stride = g_malloc(sizeof(dR_Shape4));
     if(numINodes!=1)
     {
         g_print("Parsing Error: PPFilter Node needs %d InputNodes but got %d!\n",numNodeInputs,numNodeVariables);
@@ -638,15 +651,18 @@ dR_Node* dR_conv2duw_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numIN
         g_print("Parsing Error: PPFilter Node needs %d Parameters and %d!\n",numNodeParams,numNodeVariables);
         return NULL;
     }
-    shape.s0 = atoi(params[1]);
-    shape.s1 = atoi(params[2]);
-    shape.s2 = atoi(params[3]);
-    shape.s3 = atoi(params[4]);
-    stride.s0 = atoi(params[5]);
-    stride.s1 = atoi(params[6]);
-    stride.s2 = atoi(params[7]);
-    stride.s3 = atoi(params[8]);
-    return dR_PerPixelFilter(net, iNodes[0], iNodes[1], shape, stride);
+    shape->s0 = atoi(params[1]);
+    shape->s1 = atoi(params[2]);
+    shape->s2 = atoi(params[3]);
+    shape->s3 = atoi(params[4]);
+    stride->s0 = atoi(params[5]);
+    stride->s1 = atoi(params[6]);
+    stride->s2 = atoi(params[7]);
+    stride->s3 = atoi(params[8]);
+    out = dR_PerPixelFilter(net, iNodes[0], iNodes[1], shape, stride);
+    g_free(shape);
+    g_free(stride);
+    return out;
 }
 
 gboolean dR_conv2duw_schedule(dR_Graph* net, dR_Node* layer){

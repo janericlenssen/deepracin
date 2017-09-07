@@ -67,7 +67,7 @@ extern "C"{
 * \returns The appended graph node
 
 */
-dR_Node* dR_Conv2d(dR_Graph* net, dR_Node* inputnode, dR_Shape4 filtershape, dR_Shape4 stride, dR_ActivationType activation, gboolean useBias);
+dR_Node* dR_Conv2d(dR_Graph* net, dR_Node* inputnode, dR_Shape4* filtershape, dR_Shape4* stride, dR_ActivationType activation, gboolean useBias);
 
 /**
 * \brief Feeds variables (weights and biases) to a convolutional layer

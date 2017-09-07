@@ -27,7 +27,7 @@ struct dR_FC_Data {
 #ifdef __cplusplus
 extern "C"{
 #endif
-dR_Node* dR_FullyConnected(dR_Graph* net, dR_Node* inputLayer, dR_Shape2 shape, dR_ActivationType activation, gboolean useBias);
+dR_Node* dR_FullyConnected(dR_Graph* net, dR_Node* inputLayer, dR_Shape2* shape, dR_ActivationType activation, gboolean useBias);
 
 void dR_FullyConnected_setVariables(dR_Node* layer, gfloat* weights, gfloat* bias);
 

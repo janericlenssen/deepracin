@@ -281,10 +281,11 @@ void dR_cleanup(dR_Graph* net, gboolean cleanupcl){
         g_print("Done.\n");
 }
 
-
+/*
+ * deprecated
 dR_Node* dR_loadModelFile(dR_Graph* net, dR_Node* input, gchar* path, dR_Node** nodelist, gint* numnodes){
     return dR_parseModel(net, input, path, nodelist, numnodes);
-}
+}*/
 
 
 

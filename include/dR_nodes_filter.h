@@ -58,7 +58,7 @@ extern "C"{
 * \returns The appended graph node
 
 */
-dR_Node* dR_MaskDependentFilter(dR_Graph* net, dR_Node* inputImage, dR_Node* inputFilterMask, dR_Shape3 shape);
+dR_Node* dR_MaskDependentFilter(dR_Graph* net, dR_Node* inputImage, dR_Node* inputFilterMask, dR_Shape3* shape);
 
 void        dR_MaskDependentFilter_setVariables(dR_Node* layer, gfloat* weights, gfloat* bias);
 #ifdef __cplusplus
@@ -158,7 +158,7 @@ extern "C"{
 * \returns The appended graph node
 
 */
-    dR_Node* dR_PerPixelFilter(dR_Graph* net, dR_Node* inputImage, dR_Node* inputFilter, dR_Shape4 shape, dR_Shape4 stride);
+    dR_Node* dR_PerPixelFilter(dR_Graph* net, dR_Node* inputImage, dR_Node* inputFilter, dR_Shape4* shape, dR_Shape4* stride);
     #ifdef __cplusplus
 }
 #endif

@@ -198,7 +198,7 @@ void dR_cleanup(dR_Graph* net, gboolean cleanupcl);
 * \returns The last node of the appended subgraph
 
 */
-dR_Node* dR_loadModelFile(dR_Graph* net, dR_Node* input, gchar* path, dR_Node** nodelist, gint* numnodes);
+//dR_Node* dR_loadModelFile(dR_Graph* net, dR_Node* input, gchar* path, dR_Node** nodelist, gint* numnodes);
 
 
 gboolean dR_saveGraph(dR_Graph* net, gchar* path);

@@ -15,11 +15,13 @@ dR_Graph* dR_appendLayer(dR_Graph* net, dR_Node* l){
     return net;
 }
 
-dR_Node* dR_Datafeednode(dR_Graph* net, dR_Shape3 shape)
+dR_Node* dR_Datafeednode(dR_Graph* net, dR_Shape3* shape)
 {
     dR_DataFeedNode_Data* datafeednode = g_malloc(sizeof(dR_DataFeedNode_Data));
     dR_Node* l = g_malloc(sizeof(dR_Node));
-    datafeednode->shape = shape;
+    datafeednode->shape.s0 = shape->s0;
+    datafeednode->shape.s1 = shape->s1;
+    datafeednode->shape.s2 = shape->s2;
 
     l->layer = datafeednode;
     l->type = tDataFeedNode;
@@ -64,7 +66,9 @@ dR_Node* dR_datafeednode_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint n
     gint numNodeInputs = 0;
     gint numNodeParams = 3;
     gint numNodeVariables = 0;
-    dR_Shape3 shape;
+    dR_Shape3* shape;
+    dR_Node* out;
+    shape = g_malloc(sizeof(dR_Shape3));
     if(numINodes!=0)
     {
         g_print("Parsing Error: DataFeedNode Node needs %d InputNodes but got %d!\n",numNodeInputs,numNodeVariables);
@@ -75,10 +79,12 @@ dR_Node* dR_datafeednode_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint n
         g_print("Parsing Error: DataFeedNode Node needs %d Parameters and %d Variables!\n",numNodeParams,numNodeVariables);
         return NULL;
     }
-    shape.s0 = atoi(params[0]);
-    shape.s1 = atoi(params[1]);
-    shape.s2 = atoi(params[2]);
-    return dR_Datafeednode(net, shape);
+    shape->s0 = atoi(params[0]);
+    shape->s1 = atoi(params[1]);
+    shape->s2 = atoi(params[2]);
+    out = dR_Datafeednode(net, shape);
+    g_free(shape);
+    return out;
 }
 
 gchar* dR_datafeednode_printLayer(dR_Node* layer)

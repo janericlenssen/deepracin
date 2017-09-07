@@ -208,7 +208,8 @@ def feed_node(graph, shape):
         raise NotImplementedError("DR Error: Graphs's layout "+graph.layout+" not supported!")
     desc = 'DataFeedNode'
     params = [dr_shape[0],dr_shape[1],dr_shape[2]]
-    node = Node(lib.dR_Datafeednode(graph.ptr, Shape3(*dr_shape)),graph,desc,params)
+    sh = Shape3(dr_shape[0],dr_shape[1],dr_shape[2])
+    node = Node(lib.dR_Datafeednode(graph.ptr, pointer(sh)),graph,desc,params)
     graph.feed_nodes.append(node)
     return node
 
@@ -379,9 +380,10 @@ def Conv2d(input_node, shape, stride, activation, weights, biases=None):
         variables = [weights,biases]
     else:
         variables = [weights]
-
+    sh = Shape4(shape[0],shape[1],shape[2],shape[3])
+    st = Shape4(stride[0],stride[1],stride[2],stride[3])
     # Call deepRACIN
-    onode = Node(lib.dR_Conv2d(input_node.graph.ptr, input_node.ptr, Shape4(*shape), Shape4(*stride),
+    onode = Node(lib.dR_Conv2d(input_node.graph.ptr, input_node.ptr, pointer(sh), pointer(st),
                                act_dict[activation], use_bias),input_node.graph, desc, params, variables)
     if weights is not None and biases is not None:
         lib.dR_Conv2d_setVariables(onode.ptr, np.ctypeslib.as_ctypes(weights), np.ctypeslib.as_ctypes(biases))
@@ -425,8 +427,9 @@ def Fully_Connected(input_node, shape, activation, weights, biases=None):
     else:
         variables = [weights]
 
+    sh = Shape2(shape[0],shape[1])
     # Call deepRACIN
-    onode = Node(lib.dR_FullyConnected(input_node.graph.ptr, input_node.ptr, Shape2(*shape), act_dict[activation],
+    onode = Node(lib.dR_FullyConnected(input_node.graph.ptr, input_node.ptr, pointer(sh), act_dict[activation],
                                        use_bias),input_node.graph, desc, params, variables)
 
     if weights is not None and biases is not None:
@@ -446,9 +449,10 @@ def Mask_Dependent_Filter(input_node, filter_mask, shape, filters):
     params = [shape[0],shape[1],shape[2]]
     variables = [filters]
 
+    sh = Shape3(shape[0],shape[1],shape[2])
     # Call deepRACIN
     onode = Node(lib.dR_MaskDependentFilter(input_node.graph.ptr, input_node.ptr,filter_mask.ptr,
-                                            Shape3(*shape)),input_node.graph, desc, params, variables)
+                                            pointer(sh)),input_node.graph, desc, params, variables)
     lib.dR_MaskDependentFilter_setVariables(input_node.graph.ptr, onode, np.ctypeslib.as_ctypes(filters), 0)
     return onode
 
@@ -458,9 +462,11 @@ def Per_Pixel_Filter(input_node, input_filters, shape, stride):
     desc = 'PPFilter'
     params = [shape[0], shape[1], shape[2], shape[3], stride[0], stride[1], stride[2], stride[3]]
 
+    sh = Shape4(shape[0],shape[1],shape[2],shape[3])
+    st = Shape4(stride[0],stride[1],stride[2],stride[3])
     # Call deepRACIN
-    onode = Node(lib.dR_PerPixelFilter(input_node.graph.ptr, input_node.ptr,input_filters.ptr, Shape4(*shape),
-                                       Shape4(*stride)),input_node.graph, desc, params)
+    onode = Node(lib.dR_PerPixelFilter(input_node.graph.ptr, input_node.ptr,input_filters.ptr, pointer(st),
+                                       pointer(st)),input_node.graph, desc, params)
     return onode
 
 def Add_Scalar(input_node, scalar):
@@ -653,8 +659,9 @@ def Resolve_RoI(input_node, shape):
     desc = 'ResolveRoI'
     params = [shape[0], shape[1], shape[2]]
 
+    sh = Shape3(shape[0],shape[1],shape[2])
     # Call deepRACIN
-    onode = Node(lib.dR_ResolveRoI(input_node.graph.ptr, input_node.ptr, Shape3(*shape)),input_node.graph, desc, params)
+    onode = Node(lib.dR_ResolveRoI(input_node.graph.ptr, input_node.ptr, pointer(sh)),input_node.graph, desc, params)
     return onode
 
 def RGB_to_gray(input_node):
@@ -708,8 +715,10 @@ def Pooling(input_node, pooling_type, shape, stride):
     desc = 'Pooling'
     params = [pool_dict[pooling_type],shape[0],shape[1],shape[2],shape[3],stride[0],stride[1],stride[2],stride[3]]
 
+    sh = Shape4(shape[0],shape[1],shape[2],shape[3])
+    st = Shape4(stride[0],stride[1],stride[2],stride[3])
     # Call deepRACIN
-    onode = Node(lib.dR_Pooling(input_node.graph.ptr, input_node.ptr, Shape4(*shape), Shape4(*stride),
+    onode = Node(lib.dR_Pooling(input_node.graph.ptr, input_node.ptr, pointer(sh), pointer(st),
                                 pool_dict[pooling_type]),input_node.graph, desc, params)
     return onode
 
@@ -731,8 +740,10 @@ def Slice(input_node, origin, shape):
     desc = 'Slice'
     params = [dr_origin[0],dr_origin[1],dr_origin[2],dr_origin[3],dr_shape[0],dr_shape[1],dr_shape[2],dr_shape[3]]
 
+    sh = Shape3(shape[0],shape[1],shape[2])
+    orig = Shape3(origin[0],origin[1],origin[2])
     # Call deepRACIN
-    onode = Node(lib.dR_Slice(input_node.graph.ptr, input_node.ptr, Shape4(*dr_origin), Shape4(*dr_shape)),
+    onode = Node(lib.dR_Slice(input_node.graph.ptr, input_node.ptr, pointer(orig), pointer(sh)),
                  input_node.graph, desc, params)
     return onode
 
@@ -750,8 +761,9 @@ def Crop_Or_Pad(input_node, shape):
     desc = 'CropOrPad'
     params = [dr_shape[0],dr_shape[1],dr_shape[2]]
 
+    sh = Shape4(shape[0],shape[1],shape[2],shape[3])
     # Call deepRACIN
-    onode = Node(lib.dR_CropOrPad(input_node.graph.ptr, input_node.ptr, Shape4(*dr_shape)),input_node.graph, desc, params)
+    onode = Node(lib.dR_CropOrPad(input_node.graph.ptr, input_node.ptr, pointer(sh)),input_node.graph, desc, params)
     return onode
 
 

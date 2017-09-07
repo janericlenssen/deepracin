@@ -36,7 +36,7 @@ gboolean dR_fillBuffers(dR_Graph* net);
 #ifdef __cplusplus
 extern "C"{
 #endif
-dR_Node* dR_Datafeednode(dR_Graph* graph, dR_Shape3 shape);
+dR_Node* dR_Datafeednode(dR_Graph* graph, dR_Shape3* shape);
 #ifdef __cplusplus
 }
 #endif

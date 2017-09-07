@@ -32,7 +32,7 @@ extern "C"{
 * \returns The appended graph nodes
 
 */
-dR_Node* dR_Slice(dR_Graph* net, dR_Node* inputLayer, dR_Shape4 origin, dR_Shape4 shape);
+dR_Node* dR_Slice(dR_Graph* net, dR_Node* inputLayer, dR_Shape4* origin, dR_Shape4* shape);
 #ifdef __cplusplus
 }
 #endif
@@ -165,7 +165,7 @@ extern "C"{
 * \returns The appended graph nodes
 
 */
-dR_Node* dR_CropOrPad(dR_Graph* net, dR_Node* inputLayer, dR_Shape3 targetshape);
+dR_Node* dR_CropOrPad(dR_Graph* net, dR_Node* inputLayer, dR_Shape3* targetshape);
 #ifdef __cplusplus
 }
 #endif

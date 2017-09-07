@@ -7,12 +7,14 @@
 // Resolve RoI //
 // //////////////
 
-dR_Node* dR_ResolveRoI(dR_Graph* net, dR_Node* inputLayer, dR_Shape3 shape){
+dR_Node* dR_ResolveRoI(dR_Graph* net, dR_Node* inputLayer, dR_Shape3* shape){
     dR_ResolveRoI_Data* resolveRoI = g_malloc(sizeof(dR_ResolveRoI_Data));
     dR_Node* l = g_malloc(sizeof(dR_Node));
     l->layer = resolveRoI;
     l->type = tResolveRoI;
-    resolveRoI->shape = shape;
+    resolveRoI->shape.s0 = shape->s0;
+    resolveRoI->shape.s0 = shape->s1;
+    resolveRoI->shape.s0 = shape->s2;
 
     l->compute = dR_resolveRoI_compute;
     l->schedule = dR_resolveRoI_schedule;
@@ -73,7 +75,8 @@ dR_Node* dR_resolveRoI_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint num
     gint numNodeParams = 3;
     gint numNodeVariables = 0;
     dR_Node* out;
-    dR_Shape3 shape;
+    dR_Shape3* shape;
+    shape = g_malloc(sizeof(dR_Shape3));
     if(numINodes!=1)
     {
         g_print("Parsing Error: ResolveRoI Node needs %d InputNodes but got %d!\n",numNodeInputs,numNodeVariables);
@@ -84,10 +87,11 @@ dR_Node* dR_resolveRoI_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint num
         g_print("Parsing Error: ResolveRoI Node needs %d Parameters and %d Variables!\n",numNodeParams,numNodeVariables);
         return NULL;
     }
-    shape.s0 = atoi(params[0]);
-    shape.s1 = atoi(params[1]);
-    shape.s2 = atoi(params[2]);
+    shape->s0 = atoi(params[0]);
+    shape->s1 = atoi(params[1]);
+    shape->s2 = atoi(params[2]);
     out = dR_ResolveRoI(net, iNodes[0], shape);
+    g_free(shape);
     return out;
 }
 

@@ -25,7 +25,7 @@ struct dR_Pooling_Data {
 #ifdef __cplusplus
 extern "C"{
 #endif
-dR_Node* dR_Pooling(dR_Graph* net, dR_Node* inputLayer, dR_Shape4 shape, dR_Shape4 stride, dR_PoolingType poolingtype);
+dR_Node* dR_Pooling(dR_Graph* net, dR_Node* inputLayer, dR_Shape4* shape, dR_Shape4* stride, dR_PoolingType poolingtype);
 #ifdef __cplusplus
 }
 #endif

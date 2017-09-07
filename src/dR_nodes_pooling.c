@@ -2,11 +2,17 @@
 #include "dR_core.h"
 // Mandatory
 
-dR_Node* dR_Pooling(dR_Graph* net, dR_Node* inputLayer, dR_Shape4 sh, dR_Shape4 st, dR_PoolingType type){
+dR_Node* dR_Pooling(dR_Graph* net, dR_Node* inputLayer, dR_Shape4* sh, dR_Shape4* st, dR_PoolingType type){
     dR_Pooling_Data* pool = g_malloc(sizeof(dR_Pooling_Data));
     dR_Node* l = g_malloc(sizeof(dR_Node));
-    pool->shape = sh;
-    pool->stride = st;
+    pool->shape.s0 = sh->s0;
+    pool->shape.s1 = sh->s1;
+    pool->shape.s2 = sh->s2;
+    pool->shape.s3 = sh->s3;
+    pool->stride.s0 = st->s0;
+    pool->stride.s1 = st->s1;
+    pool->stride.s2 = st->s2;
+    pool->stride.s3 = st->s3;
     pool->poolingType = type;
     l->layer = pool;
     l->type = tPooling;
@@ -78,8 +84,10 @@ dR_Node* dR_pooling_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numINo
     gint numNodeParams = 9;
     gint numNodeVariables = 0;
     dR_Node* out;
-    dR_Shape4 shape;
-    dR_Shape4 stride;
+    dR_Shape4* shape;
+    dR_Shape4* stride;
+    stride = g_malloc(sizeof(dR_Shape4));
+    shape = g_malloc(sizeof(dR_Shape4));
     if(numINodes!=1)
     {
         g_print("Parsing Error: Pooling Node needs %d InputNodes but got %d!\n",numNodeInputs,numNodeVariables);
@@ -90,15 +98,17 @@ dR_Node* dR_pooling_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numINo
         g_print("Parsing Error: Pooling Node needs %d Parameters and %d Variables!\n",numNodeParams,numNodeVariables);
         return NULL;
     }
-    shape.s0 = atoi(params[1]);
-    shape.s1 = atoi(params[2]);
-    shape.s2 = atoi(params[3]);
-    shape.s3 = atoi(params[4]);
-    stride.s0 = atoi(params[5]);
-    stride.s1 = atoi(params[6]);
-    stride.s2 = atoi(params[7]);
-    stride.s3 = atoi(params[8]);
+    shape->s0 = atoi(params[1]);
+    shape->s1 = atoi(params[2]);
+    shape->s2 = atoi(params[3]);
+    shape->s3 = atoi(params[4]);
+    stride->s0 = atoi(params[5]);
+    stride->s1 = atoi(params[6]);
+    stride->s2 = atoi(params[7]);
+    stride->s3 = atoi(params[8]);
     out = dR_Pooling(net, iNodes[0], shape, stride, atoi(params[0]));
+    g_free(shape);
+    g_free(stride);
     return out;
 }
 

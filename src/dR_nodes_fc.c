@@ -3,10 +3,11 @@
 
 // Mandatory
 
-dR_Node* dR_FullyConnected(dR_Graph* net, dR_Node* inputLayer, dR_Shape2 sh, dR_ActivationType acttype, gboolean useB){
+dR_Node* dR_FullyConnected(dR_Graph* net, dR_Node* inputLayer, dR_Shape2* sh, dR_ActivationType acttype, gboolean useB){
     dR_FC_Data* fc = g_malloc(sizeof(dR_FC_Data));
     dR_Node* l = g_malloc(sizeof(dR_Node));
-    fc->shape = sh;
+    fc->shape.s0 = sh->s0;
+    fc->shape.s1 = sh->s1;
     fc->activation = acttype;
     fc->useBias = useB;
     fc->hasVariables = FALSE;
@@ -87,8 +88,9 @@ dR_Node* dR_fc_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numINodes, 
     gint numNodeInputs = 1;
     gint numNodeParams = 4;
     gint numNodeVariables = 2;
-    dR_Shape2 shape;
+    dR_Shape2* shape;
     dR_Node* out;
+    shape = g_malloc(sizeof(dR_Shape2));
     if(numINodes!=1)
     {
         g_print("Parsing Error: FullyConnected Node needs %d InputNodes but got %d!\n",numNodeInputs,numNodeVariables);
@@ -99,11 +101,12 @@ dR_Node* dR_fc_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numINodes, 
         g_print("Parsing Error: FullyConnected Node needs %d Parameters and %d or %d Variables!\n",numNodeParams,numNodeVariables-1,numNodeVariables);
         return NULL;
     }
-    shape.s0 = atoi(params[2]);
-    shape.s1 = atoi(params[3]);
+    shape->s0 = atoi(params[2]);
+    shape->s1 = atoi(params[3]);
 
     out = dR_FullyConnected(net, iNodes[0], shape ,atoi(params[0]), atoi(params[1]));
     dR_FullyConnected_setVariables(out,variables[0],atoi(params[1])?variables[1]:NULL);
+    g_free(shape);
     return out;
 }
 

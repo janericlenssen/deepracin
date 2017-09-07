@@ -37,7 +37,7 @@ extern "C"{
 * \returns The appended graph node
 
 */
-dR_Node* dR_ResolveRoI(dR_Graph* net, dR_Node* inputLayer, dR_Shape3 shape);
+dR_Node* dR_ResolveRoI(dR_Graph* net, dR_Node* inputLayer, dR_Shape3* shape);
 #ifdef __cplusplus
 }
 #endif

@@ -84,7 +84,7 @@ gboolean dR_serializeGraph(dR_Graph* net, gchar* path)
     }*/
     if(g_mkdir_with_parents(folderPath,0777)==-1)
     {
-        g_print("Error: Could not create folder %s. Maybe it already exists (-> rename or delete it).\n",folderPath, path);
+        g_print("Error: Could not create folder %s. Maybe it already exists (-> rename or delete it).\n",folderPath);
         return 0;
     }
     source = g_strdup_printf(
@@ -515,6 +515,7 @@ dR_Node* dR_parseGraph(dR_Graph* net, gchar* path, dR_Node*** outnodes, gint* nu
 
 
 // Deprecated
+/*
 dR_Node* dR_parseModel(dR_Graph* net, dR_Node* input, gchar* path, dR_Node** nodelist, gint* numnodes)
 {
     char netfilepath[256];
@@ -701,6 +702,7 @@ dR_Node* dR_parseModel(dR_Graph* net, dR_Node* input, gchar* path, dR_Node** nod
     fclose(fp);
     return last_layer;
 }
+*/
 
 void dR_printSchedule(dR_Graph* net)
 {

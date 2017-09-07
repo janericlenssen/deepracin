@@ -9,11 +9,17 @@
 
 // Mandatory
 
-dR_Node* dR_Conv2d(dR_Graph* net, dR_Node* inputLayer, dR_Shape4 sh, dR_Shape4 st, dR_ActivationType acttype, gboolean useB){
+dR_Node* dR_Conv2d(dR_Graph* net, dR_Node* inputLayer, dR_Shape4* sh, dR_Shape4* st, dR_ActivationType acttype, gboolean useB){
     dR_Conv2d_Data* conv2d = g_malloc(sizeof(dR_Conv2d_Data));
     dR_Node* l = g_malloc(sizeof(dR_Node));
-    conv2d->shape = sh;
-    conv2d->stride = st;
+    conv2d->shape.s0 = sh->s0;
+    conv2d->shape.s1 = sh->s1;
+    conv2d->shape.s2 = sh->s2;
+    conv2d->shape.s3 = sh->s3;
+    conv2d->stride.s0 = st->s0;
+    conv2d->stride.s1 = st->s1;
+    conv2d->stride.s2 = st->s2;
+    conv2d->stride.s3 = st->s3;
     conv2d->activation = acttype;
     conv2d->useBias = useB;
     conv2d->hasVariables = FALSE;
@@ -28,7 +34,7 @@ dR_Node* dR_Conv2d(dR_Graph* net, dR_Node* inputLayer, dR_Shape4 sh, dR_Shape4 s
     l->parseAppendNode = dR_conv2d_parseAppendNode;
 
     //If filter is 3x3 and stride 1, use Winograd implementation
-    if(sh.s0==3 && sh.s1==3 && st.s1==1 && st.s2==1)
+    if(sh->s0==3 && sh->s1==3 && st->s1==1 && st->s2==1)
     {
         l->compute = dR_conv2d_winograd_compute;
         l->schedule = dR_conv2d_winograd_schedule;
@@ -46,7 +52,7 @@ dR_Node* dR_Conv2d(dR_Graph* net, dR_Node* inputLayer, dR_Shape4 sh, dR_Shape4 s
         l->createKernelName = NULL;
     }
     // If filter is 1x1, use special conv2d_1x1 algorithm ("local fully connected")
-    else if(sh.s0==1 && sh.s1==1 && st.s1==1 && st.s2==1)
+    else if(sh->s0==1 && sh->s1==1 && st->s1==1 && st->s2==1)
     //else if(FALSE)
     {
         l->compute = dR_conv2d_1x1_compute;
@@ -171,9 +177,11 @@ dR_Node* dR_conv2d_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numINod
     gint numNodeInputs = 1;
     gint numNodeParams = 10;
     gint numNodeVariables = 2;
-    dR_Shape4 shape;
-    dR_Shape4 stride;
+    dR_Shape4* shape;
+    dR_Shape4* stride;
     dR_Node* out;
+    shape = g_malloc(sizeof(dR_Shape4));
+    stride = g_malloc(sizeof(dR_Shape4));
     if(numINodes!=1)
     {
         g_print("Parsing Error: Conv2d Node needs %d InputNodes but got %d!\n",numNodeInputs,numNodeVariables);
@@ -184,16 +192,18 @@ dR_Node* dR_conv2d_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numINod
         g_print("Parsing Error: Conv2d Node needs %d Parameters and %d or %d Variables!\n",numNodeParams,numNodeVariables-1,numNodeVariables);
         return NULL;
     }
-    shape.s0 = atoi(params[2]);
-    shape.s1 = atoi(params[3]);
-    shape.s2 = atoi(params[4]);
-    shape.s3 = atoi(params[5]);
-    stride.s0 = atoi(params[6]);
-    stride.s1 = atoi(params[7]);
-    stride.s2 = atoi(params[8]);
-    stride.s3 = atoi(params[9]);
+    shape->s0 = atoi(params[2]);
+    shape->s1 = atoi(params[3]);
+    shape->s2 = atoi(params[4]);
+    shape->s3 = atoi(params[5]);
+    stride->s0 = atoi(params[6]);
+    stride->s1 = atoi(params[7]);
+    stride->s2 = atoi(params[8]);
+    stride->s3 = atoi(params[9]);
     out = dR_Conv2d(net, iNodes[0], shape, stride ,atoi(params[0]), atoi(params[1]));
     dR_Conv2d_setVariables(out,variables[0],atoi(params[1])?variables[1]:NULL);
+    g_free(shape);
+    g_free(stride);
     return out;
 }
 

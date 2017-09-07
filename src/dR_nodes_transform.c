@@ -5,11 +5,17 @@
 // Extract Slice Layer //
 // //////////////////////
 
-dR_Node* dR_Slice(dR_Graph* net, dR_Node* inputLayer, dR_Shape4 origin, dR_Shape4 shape){
+dR_Node* dR_Slice(dR_Graph* net, dR_Node* inputLayer, dR_Shape4* origin, dR_Shape4* shape){
     dR_Slice_Data* slicenode = g_malloc(sizeof(dR_Slice_Data));
     dR_Node* l = g_malloc(sizeof(dR_Node));
-    slicenode->origin=origin;
-    slicenode->oshape=shape;
+    slicenode->origin.s0=origin->s0;
+    slicenode->origin.s1=origin->s1;
+    slicenode->origin.s2=origin->s2;
+    slicenode->origin.s3=origin->s3;
+    slicenode->oshape.s0=shape->s0;
+    slicenode->oshape.s1=shape->s1;
+    slicenode->oshape.s2=shape->s2;
+    slicenode->oshape.s3=shape->s3;
     l->layer = slicenode;
     l->type = tSlice;
 
@@ -77,8 +83,10 @@ dR_Node* dR_slice_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numINode
     gint numNodeParams = 8;
     gint numNodeVariables = 0;
     dR_Node* out;
-    dR_Shape4 shape;
-    dR_Shape4 origin;
+    dR_Shape4* shape;
+    dR_Shape4* origin;
+    shape = g_malloc(sizeof(dR_Shape4));
+    origin = g_malloc(sizeof(dR_Shape4));
     if(numINodes!=1)
     {
         g_print("Parsing Error: Slice Node needs %d InputNodes but got %d!\n",numNodeInputs,numINodes);
@@ -89,15 +97,17 @@ dR_Node* dR_slice_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numINode
         g_print("Parsing Error: Slice Node needs %d Parameters and %d Variables!\n",numNodeParams,numNodeVariables);
         return NULL;
     }
-    origin.s0 = atoi(params[0]);
-    origin.s1 = atoi(params[1]);
-    origin.s2 = atoi(params[2]);
-    origin.s3 = atoi(params[3]);
-    shape.s0 = atoi(params[4]);
-    shape.s1 = atoi(params[5]);
-    shape.s2 = atoi(params[6]);
-    shape.s3 = atoi(params[7]);
+    origin->s0 = atoi(params[0]);
+    origin->s1 = atoi(params[1]);
+    origin->s2 = atoi(params[2]);
+    origin->s3 = atoi(params[3]);
+    shape->s0 = atoi(params[4]);
+    shape->s1 = atoi(params[5]);
+    shape->s2 = atoi(params[6]);
+    shape->s3 = atoi(params[7]);
     out = dR_Slice(net, iNodes[0], origin, shape);
+    g_free(origin);
+    g_free(shape);
     return out;
 }
 
@@ -563,10 +573,11 @@ gchar* dR_concat_createKernelName(dR_Node* layer)
 // Crop or Pad Node //
 // ///////////////////
 
-dR_Node* dR_CropOrPad(dR_Graph* net, dR_Node* inputLayer, dR_Shape3 shape){
+dR_Node* dR_CropOrPad(dR_Graph* net, dR_Node* inputLayer, dR_Shape3* shape){
     dR_CropOrPad_Data* croporpad = g_malloc(sizeof(dR_CropOrPad_Data));
     dR_Node* l = g_malloc(sizeof(dR_Node));
-    croporpad->oshape=shape;
+    croporpad->oshape.s0=shape->s0;
+    croporpad->oshape.s1=shape->s1;
     l->layer = croporpad;
     l->type = tCropOrPad;
 
@@ -629,7 +640,8 @@ dR_Node* dR_croporpad_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numI
     gint numNodeParams = 3;
     gint numNodeVariables = 0;
     dR_Node* out;
-    dR_Shape3 shape;
+    dR_Shape3* shape;
+    shape = g_malloc(sizeof(dR_Shape3));
     if(numINodes!=1)
     {
         g_print("Parsing Error: CropOrPad Node needs %d InputNodes but got %d!\n",numNodeInputs,numNodeVariables);
@@ -640,10 +652,11 @@ dR_Node* dR_croporpad_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numI
         g_print("Parsing Error: CropOrPad Node needs %d Parameters and %d Variables!\n",numNodeParams,numNodeVariables);
         return NULL;
     }
-    shape.s0 = atoi(params[0]);
-    shape.s1 = atoi(params[1]);
-    shape.s2 = atoi(params[2]);
+    shape->s0 = atoi(params[0]);
+    shape->s1 = atoi(params[1]);
+    shape->s2 = atoi(params[2]);
     out = dR_CropOrPad(net, iNodes[0], shape);
+    g_free(shape);
     return out;
 }
 

@@ -12,7 +12,7 @@
 * \param path Path to the model folder
 
 */
-dR_Node* dR_parseModel(dR_Graph* net, dR_Node* input, gchar* path, dR_Node** nodelist, gint* numnodes);
+//dR_Node* dR_parseModel(dR_Graph* net, dR_Node* input, gchar* path, dR_Node** nodelist, gint* numnodes);
 
 
 /**
