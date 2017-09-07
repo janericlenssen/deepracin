@@ -46,6 +46,15 @@ gint dR_getOutputBuffers(dR_Graph* graph, cl_mem** outptr);
 */
 void dR_feedData(dR_Graph* graph, dR_Node* feednode, gfloat* data, gint offset, gint numfloats);
 
+/**
+* \brief Gives the input shape of a feed node.
+*
+* \author jan eric lenssen
+*
+* \param[in] node The feed node whose output shape is requested.
+
+*/
+dR_Shape3* dR_getFeedNodeInputShape(dR_Node* node);
 
 /**
 * \brief Sets an existing OpenCL buffer as source for a data feed node. Needs to be called before graph preparation.
@@ -260,7 +269,7 @@ void dR_config(dR_Graph* net,
 
 
 /**
-* \brief Gives the output shape of a node. Only works after calling dR_prepare() on associated graph.
+* \brief Gives the output shape of a node. Only works after calling dR_prepare() on the associated graph.
 *
 * \author jan eric lenssen
 *
@@ -268,6 +277,9 @@ void dR_config(dR_Graph* net,
 
 */
 dR_Shape3* dR_getOutputShape(dR_Node* node);
+
+
+
 
 #ifdef __cplusplus
 }

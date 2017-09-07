@@ -339,3 +339,14 @@ dR_Shape3* dR_getOutputShape(dR_Node* node)
 {
     return &node->oshape;
 }
+
+dR_Shape3* dR_getFeedNodeInputShape(dR_Node* node)
+{
+    if (node->type!=tDataFeedNode)
+    {
+        g_print("Error: dR_getFeedNodeInputShape only works on feed nodes!\n");
+        return NULL;
+    }
+    dR_DataFeedNode_Data* dfnode = (dR_DataFeedNode_Data*)(node->layer);
+    return &dfnode->shape;
+}
