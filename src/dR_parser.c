@@ -168,6 +168,7 @@ gboolean dR_serializeGraph(dR_Graph* net, gchar* path)
     g_free(source);
     g_free(filePath);
     g_free(folderPath);
+    return TRUE;
 }
 
 dR_Node* dR_parseGraph(dR_Graph* net, gchar* path, dR_Node*** outnodes, gint* numnodes, dR_Node*** outfeednodes, gint* numfeednodes)
