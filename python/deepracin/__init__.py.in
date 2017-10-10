@@ -18,7 +18,7 @@ else:
     exit()
 lib = cdll.LoadLibrary(filename)
 
-
+# Structure Definitions
 class Shape2(Structure):
     _fields_ = [("s0", c_int), ("s1", c_int)]
 
@@ -29,6 +29,194 @@ class Shape3(Structure):
 
 class Shape4(Structure):
     _fields_ = [("s0", c_int), ("s1", c_int), ("s2", c_int), ("s3", c_int)]
+
+
+# deepRacin C function definitions
+
+# dR_NewGraph
+func = lib.dR_NewGraph
+func.restype = c_void_p
+
+# dR_cleanup
+func = lib.dR_cleanup
+func.argtypes = [c_void_p,c_bool]
+func.restype = c_void_p
+
+# dR_Datafeednode
+func = lib.dR_Datafeednode
+func.argtypes = [c_void_p,c_void_p]
+func.restype = c_void_p
+
+# dR_config
+func = lib.dR_config
+func.argtypes = [c_void_p, c_char_p, c_bool, c_bool, c_bool, c_bool, c_char_p]
+func.restype = None
+
+# dR_initCL
+func = lib.dR_initCL
+func.argtypes = [c_void_p]
+func.restype = c_bool
+
+# dR_getClEnvironmentFrom (not implemented)
+#func = lib.dR_getClEnvironmentFrom
+#func.argtypes = [c_void_p,c_void_p]
+#func.restype = None
+
+# dR_prepare
+func = lib.dR_prepare
+func.argtypes = [c_void_p]
+func.restype = c_bool
+
+# dR_getOutputShape
+func = lib.dR_getOutputShape
+func.argtypes = [c_void_p]
+func.restype = c_void_p
+
+# dR_apply
+func = lib.dR_apply
+func.argtypes = [c_void_p]
+func.restype = c_bool
+
+# dR_getOutputBuffers
+func = lib.dR_getOutputBuffers
+func.argtypes = [c_void_p,c_void_p]
+func.restype = c_int
+
+# dR_downloadArray
+func = lib.dR_downloadArray
+func.argtypes = [c_void_p, c_char_p, c_void_p, c_int, c_int, c_void_p]
+func.restype = c_bool
+
+# dR_setAsOutput
+func = lib.dR_setAsOutput
+func.argtypes = [c_void_p,c_void_p]
+func.restype = c_bool
+
+# dR_feedData
+func = lib.dR_feedData
+func.argtypes = [c_void_p,c_void_p, c_void_p, c_int, c_int]
+func.restype = None
+
+# dR_loadGraph
+func = lib.dR_loadGraph
+func.argtypes = [c_void_p,c_void_p, c_char_p, c_void_p, c_void_p]
+func.restype = c_void_p
+
+# dR_saveGraph
+func = lib.dR_saveGraph
+func.argtypes = [c_void_p,c_char_p]
+func.restype = c_bool
+
+# dR_printNetObject
+func = lib.dR_printNetObject
+func.argtypes = [c_void_p,c_char_p]
+func.restype = None
+
+# dR_Conv2d
+func = lib.dR_Conv2d
+func.argtypes = [c_void_p, c_void_p, c_void_p, c_void_p, c_int, c_bool]
+func.restype = c_void_p
+
+# dR_Conv2d_setVariables
+func = lib.dR_Conv2d_setVariables
+func.argtypes = [c_void_p, c_void_p, c_void_p]
+func.restype = None
+
+# dR_Conv2dTransposed (not implemented)
+#func = lib.dR_Conv2dTransposed
+#func.argtypes = [c_void_p, c_void_p, c_void_p, c_void_p, c_int, c_bool]
+#func.restype = c_void_p
+
+# dR_Conv2dtransposed_setVariables (not implemented)
+#func = lib.dR_Conv2dtransposed_setVariables
+#func.argtypes = [c_void_p, c_void_p, c_void_p]
+#func.restype = None
+
+# dR_FullyConnected
+func = lib.dR_FullyConnected
+func.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_bool]
+func.restype = c_void_p
+
+# dR_FullyConnected_setVariables
+func = lib.dR_FullyConnected_setVariables
+func.argtypes = [c_void_p, c_void_p, c_void_p]
+func.restype = None
+
+# dR_MaskDependentFilter
+func = lib.dR_MaskDependentFilter
+func.argtypes = [c_void_p, c_void_p, c_void_p, c_void_p]
+func.restype = c_void_p
+
+# dR_MaskDependentFilter_setVariables
+func = lib.dR_MaskDependentFilter_setVariables
+func.argtypes = [c_void_p, c_void_p, c_void_p]
+func.restype = None
+
+# dR_PerPixelFilter
+func = lib.dR_PerPixelFilter
+func.argtypes = [c_void_p, c_void_p, c_void_p, c_void_p, c_void_p]
+func.restype = c_void_p
+
+# dR_ElemWise1Operation
+func = lib.dR_ElemWise1Operation
+func.argtypes = [c_void_p, c_void_p, c_int, c_float]
+func.restype = c_void_p
+
+# dR_ElemWise2Operation
+func = lib.dR_ElemWise2Operation
+func.argtypes = [c_void_p, c_void_p, c_void_p, c_int]
+func.restype = c_void_p
+
+# dR_Softmax
+func = lib.dR_Softmax
+func.argtypes = [c_void_p, c_void_p]
+func.restype = c_void_p
+
+# dR_ResolveRoI
+func = lib.dR_ResolveRoI
+func.argtypes = [c_void_p, c_void_p, c_void_p]
+func.restype = c_void_p
+
+# dR_RGB2gray
+func = lib.dR_RGB2gray
+func.argtypes = [c_void_p, c_void_p]
+func.restype = c_void_p
+
+# dR_Upscaling
+func = lib.dR_Upscaling
+func.argtypes = [c_void_p, c_void_p, c_int, c_int, c_int]
+func.restype = c_void_p
+
+# dR_LabelCreation
+func = lib.dR_LabelCreation
+func.argtypes = [c_void_p, c_void_p, c_int, c_float, c_float, c_float]
+func.restype = c_void_p
+
+# dR_Normalization
+func = lib.dR_Normalization
+func.argtypes = [c_void_p, c_void_p, c_int, c_float, c_float]
+func.restype = c_void_p
+
+# dR_Pooling
+func = lib.dR_Pooling
+func.argtypes = [c_void_p,c_void_p, c_void_p, c_void_p, c_int]
+func.restype = c_void_p
+
+# dR_Slice
+func = lib.dR_Slice
+func.argtypes = [c_void_p,c_void_p, c_void_p, c_void_p]
+func.restype = c_void_p
+
+# dR_CropOrPad
+func = lib.dR_CropOrPad
+func.argtypes = [c_void_p, c_void_p, c_void_p]
+func.restype = c_void_p
+
+# dR_Concat
+func = lib.dR_Concat
+func.argtypes = [c_void_p, c_void_p, c_int, c_int]
+func.restype = c_void_p
+
 
 
 elemwise_2op_dict = { 'Add' : 0,
@@ -176,9 +364,9 @@ class Environment:
         for i,graph in enumerate(self.graphs):
             if i == len(self.graphs)-1:
                 print("Cleaning up Graph...")
-                lib.dR_cleanup(graph.ptr,True)
+                lib.dR_cleanup(c_void_p(graph.ptr),True)
             else:
-                lib.dR_cleanup(graph.ptr,False)
+                lib.dR_cleanup(c_void_p(graph.ptr),False)
         return
 
     # Create a new graph
@@ -209,7 +397,7 @@ def feed_node(graph, shape):
     desc = 'DataFeedNode'
     params = [dr_shape[0],dr_shape[1],dr_shape[2]]
     sh = Shape3(dr_shape[0],dr_shape[1],dr_shape[2])
-    node = Node(lib.dR_Datafeednode(graph.ptr, pointer(sh)),graph,desc,params)
+    node = Node(lib.dR_Datafeednode(c_void_p(graph.ptr), pointer(sh)),graph,desc,params)
     graph.feed_nodes.append(node)
     return node
 
@@ -230,23 +418,23 @@ def prepare(graph):
 
         model_dir = create_string_buffer(str.encode(model_path))
 
-        lib.dR_config(graph.ptr,platformname,c_bool(env.silent),c_bool(env.debuginfo),c_bool(env.profileGPU),c_bool(env.profileCPU),model_dir)
-        ret &= lib.dR_initCL(graph.ptr)
+        lib.dR_config(c_void_p(graph.ptr),platformname,c_bool(env.silent),c_bool(env.debuginfo),c_bool(env.profileGPU),c_bool(env.profileCPU),model_dir)
+        ret &= lib.dR_initCL(c_void_p(graph.ptr))
         env.graph_with_cl_context = graph.id
 
         if not ret:
             raise RuntimeError("DR Error: deepRACIN initCL failed!")
     else:
-        lib.dR_getClEnvironmentFrom(graph.ptr, env.graphs[env.graph_with_cl_context].ptr)
+        lib.dR_getClEnvironmentFrom(c_void_p(graph.ptr), env.graphs[env.graph_with_cl_context].ptr)
 
-    ret &= lib.dR_prepare(graph.ptr)
+    ret &= lib.dR_prepare(c_void_p(graph.ptr))
     for node in graph.outnodes:
         ArrayType = c_int*3
-        shape = cast(lib.dR_getOutputShape(node.ptr), POINTER(ArrayType)).contents
+        shape = cast(lib.dR_getOutputShape(c_void_p(node.ptr)), POINTER(ArrayType)).contents
         node.out_shape = [shape[0],shape[1],shape[2]]
     for feednode in graph.feed_nodes:
         ArrayType = c_int*3
-        shape = cast(lib.dR_getOutputShape(feednode.ptr), POINTER(ArrayType)).contents
+        shape = cast(lib.dR_getOutputShape(c_void_p(feednode.ptr)), POINTER(ArrayType)).contents
         feednode.shape = [shape[0],shape[1],shape[2]]
     if not ret:
         raise RuntimeError("DR Error: deepRACIN prepare failed!")
@@ -254,17 +442,17 @@ def prepare(graph):
 
 # Runs the graph - after that, data can be fetched from output arrays
 def apply(graph):
-    ret = lib.dR_apply(graph.ptr)
+    ret = lib.dR_apply(c_void_p(graph.ptr))
     if not ret:
         raise RuntimeError("DR Error: deepRACIN apply failed!")
     memptr = (c_void_p * graph.num_outputs)()
-    lib.dR_getOutputBuffers(graph.ptr, memptr)
+    lib.dR_getOutputBuffers(c_void_p(graph.ptr), memptr)
     out = []
     for i in range(graph.num_outputs):
         out_shape = graph.outnodes[i].out_shape
 
         dataptr = (c_float * (out_shape[0]*out_shape[1]*out_shape[2]))()
-        lib.dR_downloadArray(graph.ptr, "output"+str(i), memptr[i], 0, out_shape[0]*out_shape[1]*out_shape[2]*4, dataptr)
+        lib.dR_downloadArray(c_void_p(graph.ptr), "output"+str(i), memptr[i], 0, out_shape[0]*out_shape[1]*out_shape[2]*4, dataptr)
         #arr = np.ctypeslib.as_array(dataptr)
         arr = np.frombuffer(dataptr, dtype=np.float32)
         arr = arr.reshape([out_shape[2],out_shape[1],out_shape[0]])
@@ -278,7 +466,7 @@ def apply(graph):
 
 
 def mark_as_output(node):
-    lib.dR_setAsOutput(node.graph.ptr, node.ptr)
+    lib.dR_setAsOutput(c_void_p(node.graph.ptr), c_void_p(node.ptr))
     node.graph.num_outputs += 1
     node.graph.outnodes.append(node)
     return
@@ -305,7 +493,7 @@ def feed_data(node, data):
 
     d = np.ctypeslib.as_ctypes(data)
     l = dr_shape[0]*dr_shape[1]*dr_shape[2]
-    lib.dR_feedData(node.graph.ptr, node.ptr, d, 0, l)
+    lib.dR_feedData(c_void_p(node.graph.ptr), c_void_p(node.ptr), d, 0, l)
     return
 
 def load_graph(graph,path):
@@ -345,13 +533,13 @@ def save_graph(graph,path):
     #if not isinstance(path,str):
     #    raise TypeError("DR Error: Save graph needs graph folder path!")
     pathbuf = create_string_buffer(str.encode(path))
-    res = lib.dR_saveGraph(graph.ptr, pathbuf)
+    res = lib.dR_saveGraph(c_void_p(graph.ptr), pathbuf)
     if not res:
         raise RuntimeError("DR Error: Model could not be saved!")
     return
 
 def print_graph(graph):
-    lib.dR_printNetObject(graph.ptr, None)
+    lib.dR_printNetObject(c_void_p(graph.ptr), None)
 
 # Specific Node Functions
 
@@ -383,12 +571,12 @@ def Conv2d(input_node, shape, stride, activation, weights, biases=None):
     sh = Shape4(shape[0],shape[1],shape[2],shape[3])
     st = Shape4(stride[0],stride[1],stride[2],stride[3])
     # Call deepRACIN
-    onode = Node(lib.dR_Conv2d(input_node.graph.ptr, input_node.ptr, pointer(sh), pointer(st),
+    onode = Node(lib.dR_Conv2d(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr), pointer(sh), pointer(st),
                                act_dict[activation], use_bias),input_node.graph, desc, params, variables)
     if weights is not None and biases is not None:
-        lib.dR_Conv2d_setVariables(onode.ptr, np.ctypeslib.as_ctypes(weights), np.ctypeslib.as_ctypes(biases))
+        lib.dR_Conv2d_setVariables(c_void_p(onode.ptr), np.ctypeslib.as_ctypes(weights), np.ctypeslib.as_ctypes(biases))
     elif weights is not None and biases is None:
-        lib.dR_Conv2d_setVariables(onode.ptr, np.ctypeslib.as_ctypes(weights), None)
+        lib.dR_Conv2d_setVariables(c_void_p(onode.ptr), np.ctypeslib.as_ctypes(weights), None)
     return onode
 
 
@@ -404,11 +592,11 @@ def Conv2d_Transposed(input_node : Node, shape : (int, int, int, int), stride : 
         use_bias = True
     else:
         use_bias = False
-    onode =  Node(lib.dR_Conv2dTransposed(input_node.graph.ptr, input_node.ptr, Shape4(*shape), Shape4(*stride), act_dict[activation], use_bias),input_node.graph)
+    onode =  Node(lib.dR_Conv2dTransposed(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr), Shape4(*shape), Shape4(*stride), act_dict[activation], use_bias),input_node.graph)
     if weights is not None and biases is not None:
-        lib.dR_Conv2dtransposed_setVariables(onode.ptr, np.ctypeslib.as_ctypes(weights), np.ctypeslib.as_ctypes(biases))
+        lib.dR_Conv2dtransposed_setVariables(c_void_p(onode.ptr), np.ctypeslib.as_ctypes(weights), np.ctypeslib.as_ctypes(biases))
     elif weights is not None and biases is None:
-        lib.dR_Conv2dtransposed_setVariables(onode.ptr, np.ctypeslib.as_ctypes(weights), 0)
+        lib.dR_Conv2dtransposed_setVariables(c_void_p(onode.ptr), np.ctypeslib.as_ctypes(weights), 0)
     return onode
 '''
 
@@ -429,13 +617,13 @@ def Fully_Connected(input_node, shape, activation, weights, biases=None):
 
     sh = Shape2(shape[0],shape[1])
     # Call deepRACIN
-    onode = Node(lib.dR_FullyConnected(input_node.graph.ptr, input_node.ptr, pointer(sh), act_dict[activation],
+    onode = Node(lib.dR_FullyConnected(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr), pointer(sh), act_dict[activation],
                                        use_bias),input_node.graph, desc, params, variables)
 
     if weights is not None and biases is not None:
-        lib.dR_FullyConnected_setVariables(onode.ptr, np.ctypeslib.as_ctypes(weights), np.ctypeslib.as_ctypes(biases))
+        lib.dR_FullyConnected_setVariables(c_void_p(onode.ptr), np.ctypeslib.as_ctypes(weights), np.ctypeslib.as_ctypes(biases))
     elif weights is not None and biases is None:
-        lib.dR_FullyConnected_setVariables(onode.ptr, np.ctypeslib.as_ctypes(weights), 0)
+        lib.dR_FullyConnected_setVariables(c_void_p(onode.ptr), np.ctypeslib.as_ctypes(weights), 0)
 
     return onode
 
@@ -451,9 +639,9 @@ def Mask_Dependent_Filter(input_node, filter_mask, shape, filters):
 
     sh = Shape3(shape[0],shape[1],shape[2])
     # Call deepRACIN
-    onode = Node(lib.dR_MaskDependentFilter(input_node.graph.ptr, input_node.ptr,filter_mask.ptr,
+    onode = Node(lib.dR_MaskDependentFilter(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr),filter_mask.ptr,
                                             pointer(sh)),input_node.graph, desc, params, variables)
-    lib.dR_MaskDependentFilter_setVariables(input_node.graph.ptr, onode, np.ctypeslib.as_ctypes(filters), 0)
+    lib.dR_MaskDependentFilter_setVariables(c_void_p(onode.ptr), np.ctypeslib.as_ctypes(filters), None)
     return onode
 
 def Per_Pixel_Filter(input_node, input_filters, shape, stride):
@@ -465,7 +653,7 @@ def Per_Pixel_Filter(input_node, input_filters, shape, stride):
     sh = Shape4(shape[0],shape[1],shape[2],shape[3])
     st = Shape4(stride[0],stride[1],stride[2],stride[3])
     # Call deepRACIN
-    onode = Node(lib.dR_PerPixelFilter(input_node.graph.ptr, input_node.ptr,input_filters.ptr, pointer(st),
+    onode = Node(lib.dR_PerPixelFilter(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr),input_filters.ptr, pointer(st),
                                        pointer(st)),input_node.graph, desc, params)
     return onode
 
@@ -476,7 +664,7 @@ def Add_Scalar(input_node, scalar):
     params = [elemwise_1op_dict['AddS'], scalar]
 
     # Call deepRACIN
-    onode = Node(lib.dR_ElemWise1Operation(input_node.graph.ptr, input_node.ptr,elemwise_1op_dict['AddS'],
+    onode = Node(lib.dR_ElemWise1Operation(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr),elemwise_1op_dict['AddS'],
                                            c_float(scalar)),input_node.graph, desc, params)
     return onode
 
@@ -487,7 +675,7 @@ def Sub_Scalar(input_node, scalar):
     params = [elemwise_1op_dict['SubS'], scalar]
 
     # Call deepRACIN
-    onode = Node(lib.dR_ElemWise1Operation(input_node.graph.ptr, input_node.ptr,elemwise_1op_dict['SubS'],
+    onode = Node(lib.dR_ElemWise1Operation(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr),elemwise_1op_dict['SubS'],
                                            c_float(scalar)),input_node.graph, desc, params)
     return onode
 
@@ -498,7 +686,7 @@ def Mul_Scalar(input_node, scalar):
     params = [elemwise_1op_dict['MulS'], scalar]
 
     # Call deepRACIN
-    onode = Node(lib.dR_ElemWise1Operation(input_node.graph.ptr, input_node.ptr,elemwise_1op_dict['MulS'],
+    onode = Node(lib.dR_ElemWise1Operation(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr),elemwise_1op_dict['MulS'],
                                            c_float(scalar)),input_node.graph, desc, params)
     return onode
 
@@ -509,7 +697,7 @@ def Div_Scalar(input_node, scalar):
     params = [elemwise_1op_dict['DivS'], scalar]
 
     # Call deepRACIN
-    onode = Node(lib.dR_ElemWise1Operation(input_node.graph.ptr, input_node.ptr,elemwise_1op_dict['DivS'],
+    onode = Node(lib.dR_ElemWise1Operation(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr),elemwise_1op_dict['DivS'],
                                            c_float(scalar)),input_node.graph, desc, params)
     return onode
 
@@ -521,7 +709,7 @@ def Log(input_node):
     params = [elemwise_1op_dict['Log']]
 
     # Call deepRACIN
-    onode = Node(lib.dR_ElemWise1Operation(input_node.graph.ptr, input_node.ptr,elemwise_1op_dict['Log'],
+    onode = Node(lib.dR_ElemWise1Operation(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr),elemwise_1op_dict['Log'],
                                            c_float(scalar)),input_node.graph, desc, params)
     return onode
 
@@ -534,7 +722,7 @@ def Exp(input_node):
     params = [elemwise_1op_dict['Exp']]
 
     # Call deepRACIN
-    onode = Node(lib.dR_ElemWise1Operation(input_node.graph.ptr, input_node.ptr,elemwise_1op_dict['Exp'],
+    onode = Node(lib.dR_ElemWise1Operation(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr),elemwise_1op_dict['Exp'],
                                            c_float(scalar)),input_node.graph, desc, params)
     return onode
 
@@ -547,7 +735,7 @@ def Sqrt(input_node):
     params = [elemwise_1op_dict['Sqrt']]
 
     # Call deepRACIN
-    onode = Node(lib.dR_ElemWise1Operation(input_node.graph.ptr, input_node.ptr,elemwise_1op_dict['Sqrt'],
+    onode = Node(lib.dR_ElemWise1Operation(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr),elemwise_1op_dict['Sqrt'],
                                            c_float(scalar)),input_node.graph, desc, params)
     return onode
 
@@ -558,7 +746,7 @@ def Fill(input_node, scalar):
     params = [elemwise_1op_dict['Fill'], scalar]
 
     # Call deepRACIN
-    onode = Node(lib.dR_ElemWise1Operation(input_node.graph.ptr, input_node.ptr,elemwise_1op_dict['Fill'],
+    onode = Node(lib.dR_ElemWise1Operation(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr),elemwise_1op_dict['Fill'],
                                            c_float(scalar)),input_node.graph, desc, params)
     return onode
 
@@ -569,7 +757,7 @@ def Pow_Scalar(input_node, scalar):
     params = [elemwise_1op_dict['PowS'], scalar]
 
     # Call deepRACIN
-    onode = Node(lib.dR_ElemWise1Operation(input_node.graph.ptr, input_node.ptr,elemwise_1op_dict['PowS'],
+    onode = Node(lib.dR_ElemWise1Operation(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr),elemwise_1op_dict['PowS'],
                                            c_float(scalar)),input_node.graph, desc, params)
     return onode
 
@@ -583,7 +771,7 @@ def Add(input_node1, input_node2):
     params = [elemwise_2op_dict['Add']]
 
     # Call deepRACIN
-    onode = Node(lib.dR_ElemWise2Operation(input_node1.graph.ptr, input_node1.ptr, input_node2.ptr,
+    onode = Node(lib.dR_ElemWise2Operation(c_void_p(input_node.graph.ptr), c_void_p(input_node1.ptr), c_void_p(input_node2.ptr),
                                            elemwise_1op_dict['Add']), input_node1.graph, desc, params)
     return onode
 
@@ -597,7 +785,7 @@ def Sub(input_node1, input_node2):
     params = [elemwise_2op_dict['Sub']]
 
     # Call deepRACIN
-    onode = Node(lib.dR_ElemWise2Operation(input_node1.graph.ptr, input_node1.ptr, input_node2.ptr,
+    onode = Node(lib.dR_ElemWise2Operation(c_void_p(input_node.graph.ptr), c_void_p(input_node1.ptr), c_void_p(input_node2.ptr),
                                            elemwise_1op_dict['Sub']), input_node1.graph, desc, params)
     return onode
 
@@ -611,7 +799,7 @@ def Mul(input_node1, input_node2):
     params = [elemwise_2op_dict['Mul']]
 
     # Call deepRACIN
-    onode = Node(lib.dR_ElemWise2Operation(input_node1.graph.ptr, input_node1.ptr, input_node2.ptr,
+    onode = Node(lib.dR_ElemWise2Operation(c_void_p(input_node.graph.ptr), c_void_p(input_node1.ptr), c_void_p(input_node2.ptr),
                                            elemwise_1op_dict['Mul']), input_node1.graph, desc, params)
     return onode
 
@@ -625,7 +813,7 @@ def Div(input_node1, input_node2):
     params = [elemwise_2op_dict['Div']]
 
     # Call deepRACIN
-    onode = Node(lib.dR_ElemWise2Operation(input_node1.graph.ptr, input_node1.ptr, input_node2.ptr,
+    onode = Node(lib.dR_ElemWise2Operation(c_void_p(input_node.graph.ptr), c_void_p(input_node1.ptr), c_void_p(input_node2.ptr),
                                            elemwise_1op_dict['Div']), input_node1.graph, desc, params)
     return onode
 
@@ -639,7 +827,7 @@ def Pow(input_node1, input_node2):
     params = [elemwise_2op_dict['Pow']]
 
     # Call deepRACIN
-    onode = Node(lib.dR_ElemWise2Operation(input_node1.graph.ptr, input_node1.ptr, input_node2.ptr,
+    onode = Node(lib.dR_ElemWise2Operation(c_void_p(input_node.graph.ptr), c_void_p(input_node1.ptr), c_void_p(input_node2.ptr),
                                            elemwise_1op_dict['Pow']), input_node1.graph, desc, params)
     return onode
 
@@ -650,7 +838,7 @@ def Softmax(input_node):
     params = [' ']
 
     # Call deepRACIN
-    onode = Node(lib.dR_Softmax(input_node.graph.ptr, input_node.ptr),input_node.graph, desc, params)
+    onode = Node(lib.dR_Softmax(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr)),input_node.graph, desc, params)
     return onode
 
 def Resolve_RoI(input_node, shape):
@@ -661,7 +849,7 @@ def Resolve_RoI(input_node, shape):
 
     sh = Shape3(shape[0],shape[1],shape[2])
     # Call deepRACIN
-    onode = Node(lib.dR_ResolveRoI(input_node.graph.ptr, input_node.ptr, pointer(sh)),input_node.graph, desc, params)
+    onode = Node(lib.dR_ResolveRoI(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr), pointer(sh)),input_node.graph, desc, params)
     return onode
 
 def RGB_to_gray(input_node):
@@ -671,7 +859,7 @@ def RGB_to_gray(input_node):
     params = [' ']
 
     # Call deepRACIN
-    onode = Node(lib.dR_RGB2gray(input_node.graph.ptr, input_node.ptr),input_node.graph, desc, params)
+    onode = Node(lib.dR_RGB2gray(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr)),input_node.graph, desc, params)
     return onode
 
 def Upscaling(input_node, upscaling_type, scale_factor_x, scale_factor_y):
@@ -683,7 +871,7 @@ def Upscaling(input_node, upscaling_type, scale_factor_x, scale_factor_y):
     params = [us_dict[upscaling_type], scale_factor_x, scale_factor_y]
 
     # Call deepRACIN
-    onode = Node(lib.dR_Upscaling(input_node.graph.ptr, input_node.ptr, us_dict[upscaling_type],
+    onode = Node(lib.dR_Upscaling(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr), us_dict[upscaling_type],
                                   c_int(scale_factor_x), c_int(scale_factor_y)),input_node.graph, desc, params)
     return onode
 
@@ -694,7 +882,7 @@ def Create_Labels(input_node):
     params = [2]
 
     # Call deepRACIN
-    onode = Node(lib.dR_LabelCreation(input_node.graph.ptr, input_node.ptr, 2,
+    onode = Node(lib.dR_LabelCreation(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr), 2,
                                       c_float(0.0), c_float(0.0), c_float(0.0)),input_node.graph, desc, params)
     return onode
 
@@ -705,7 +893,7 @@ def Normalization(input_node, normalization_type, target_mean=0.0, target_dev=1.
     params = [norm_dict[normalization_type], target_mean, target_dev]
 
     # Call deepRACIN
-    onode = Node(lib.dR_Normalization(input_node.graph.ptr, input_node.ptr, norm_dict[normalization_type], c_float(target_mean),
+    onode = Node(lib.dR_Normalization(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr), norm_dict[normalization_type], c_float(target_mean),
                                       c_float(target_dev)),input_node.graph, desc, params)
     return onode
 
@@ -718,7 +906,7 @@ def Pooling(input_node, pooling_type, shape, stride):
     sh = Shape4(shape[0],shape[1],shape[2],shape[3])
     st = Shape4(stride[0],stride[1],stride[2],stride[3])
     # Call deepRACIN
-    onode = Node(lib.dR_Pooling(input_node.graph.ptr, input_node.ptr, pointer(sh), pointer(st),
+    onode = Node(lib.dR_Pooling(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr), pointer(sh), pointer(st),
                                 pool_dict[pooling_type]),input_node.graph, desc, params)
     return onode
 
@@ -743,7 +931,7 @@ def Slice(input_node, origin, shape):
     sh = Shape3(shape[0],shape[1],shape[2])
     orig = Shape3(origin[0],origin[1],origin[2])
     # Call deepRACIN
-    onode = Node(lib.dR_Slice(input_node.graph.ptr, input_node.ptr, pointer(orig), pointer(sh)),
+    onode = Node(lib.dR_Slice(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr), pointer(orig), pointer(sh)),
                  input_node.graph, desc, params)
     return onode
 
@@ -763,7 +951,7 @@ def Crop_Or_Pad(input_node, shape):
 
     sh = Shape4(shape[0],shape[1],shape[2],shape[3])
     # Call deepRACIN
-    onode = Node(lib.dR_CropOrPad(input_node.graph.ptr, input_node.ptr, pointer(sh)),input_node.graph, desc, params)
+    onode = Node(lib.dR_CropOrPad(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr), pointer(sh)),input_node.graph, desc, params)
     return onode
 
 
@@ -792,7 +980,7 @@ def Concat(input_nodes,  concat_dim, layout='HWC'):
     params = [n,dr_dim]
 
     # Call deepRACIN
-    onode = Node(lib.dR_Concat(graph.ptr, nodeptr, n, dr_dim),graph, desc, params)
+    onode = Node(lib.dR_Concat(c_void_p(graph.ptr), nodeptr, n, dr_dim),graph, desc, params)
     return onode
 
 
