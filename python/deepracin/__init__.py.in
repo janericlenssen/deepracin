@@ -949,7 +949,7 @@ def Crop_Or_Pad(input_node, shape):
     desc = 'CropOrPad'
     params = [dr_shape[0],dr_shape[1],dr_shape[2]]
 
-    sh = Shape4(shape[0],shape[1],shape[2],shape[3])
+    sh = Shape3(shape[0],shape[1],shape[2])
     # Call deepRACIN
     onode = Node(lib.dR_CropOrPad(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr), pointer(sh)),input_node.graph, desc, params)
     return onode
