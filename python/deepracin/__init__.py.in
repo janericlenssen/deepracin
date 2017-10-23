@@ -450,9 +450,9 @@ def apply(graph):
     out = []
     for i in range(graph.num_outputs):
         out_shape = graph.outnodes[i].out_shape
-
+        strbuf = create_string_buffer(str.encode("output"+str(i)))
         dataptr = (c_float * (out_shape[0]*out_shape[1]*out_shape[2]))()
-        lib.dR_downloadArray(c_void_p(graph.ptr), "output"+str(i), memptr[i], 0, out_shape[0]*out_shape[1]*out_shape[2]*4, dataptr)
+        lib.dR_downloadArray(c_void_p(graph.ptr), strbuf, memptr[i], 0, out_shape[0]*out_shape[1]*out_shape[2]*4, dataptr)
         #arr = np.ctypeslib.as_array(dataptr)
         arr = np.frombuffer(dataptr, dtype=np.float32)
         arr = arr.reshape([out_shape[2],out_shape[1],out_shape[0]])
