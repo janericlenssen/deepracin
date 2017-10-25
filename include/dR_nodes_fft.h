@@ -30,9 +30,6 @@ extern "C"{
 
 */
 dR_Node* dR_FFT(dR_Graph* net, dR_Node* inputNode1);
-#ifdef __cplusplus
-}
-#endif
 
 /**
 * \brief The compute function. All non-initialization compute functionality has to be called here. Set kernel parameters and enqueue kernels.
@@ -85,6 +82,6 @@ gchar*      dR_fft_serializeNode(dR_Node* layer, gchar* params[], gint* numParam
 
 dR_Node*    dR_fft_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numINodes, gchar** params, gint numParams, gfloat** variables, gint numVariables);
 
-gchar* dR_elemwise2op_printLayer(dR_Node* layer);
+gchar* dR_fft_printLayer(dR_Node* layer);
 
 #endif
