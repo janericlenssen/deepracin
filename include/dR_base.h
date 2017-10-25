@@ -9,5 +9,6 @@
 #include "dR_nodes_math.h"
 #include "dR_nodes_filter.h"
 #include "dR_nodes_transform.h"
+#include "dR_nodes_fft.h"
 
 #endif // DR_BASE_H

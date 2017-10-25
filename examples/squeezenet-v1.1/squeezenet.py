@@ -38,6 +38,7 @@ with dr.Environment(preferred_platform_name) as env:
     # Feed node - Will be fed with data for each graph application
     feed = dr.feed_node(graph, shape=(224, 224, 3))
 
+
     r, g, b = [feed[0:224, 0:224, 0] - 123.68,
                feed[0:224, 0:224, 1] - 116.779,
                feed[0:224, 0:224, 2] - 103.939]

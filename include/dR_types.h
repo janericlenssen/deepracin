@@ -90,7 +90,8 @@ enum dR_LayerType {
     tConcat,
     tCropOrPad,
     tElemWise2Op,
-    tElemWise1Op
+    tElemWise1Op,
+    tFFT
 };
 typedef enum dR_LayerType dR_LayerType;
 
@@ -111,7 +112,7 @@ struct dR_DataFeedNode_Data {
 
 
 struct dR_Node {
-    dR_Shape3                   oshape;          // Actual Size of Input Image
+    dR_Shape3                   oshape;
     gint32                      layerID;
     dR_List*                    previous_layers;
     dR_List*                    next_layers;
