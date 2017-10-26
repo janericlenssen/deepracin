@@ -811,7 +811,6 @@ gboolean dR_conv2d_winograd_schedule(dR_Graph* net, dR_Node* layer){
     cl_ulong lms;
 	size_t mws;
     gint numberofwgs;
-    gint localMemoryConFilter;
     gint localMemoryConInput;
     gint width, height;
     gint z=1;
@@ -831,7 +830,6 @@ gboolean dR_conv2d_winograd_schedule(dR_Graph* net, dR_Node* layer){
     }
     if(!convlayer->winogradWide)
     {
-        localMemoryConFilter = 1;
 
 
         localMemoryConInput = (16)*NperDim*NperDim*convlayer->shape.s2*4;
@@ -840,11 +838,13 @@ gboolean dR_conv2d_winograd_schedule(dR_Graph* net, dR_Node* layer){
         if(!net->config->silent&&net->config->debugInfo)
             g_print("Local Memory Size: %d \nMax Workgroup Size: %d \n", (gint)lms, (gint)mws);
 
-        while(localMemoryConInput+localMemoryConFilter>=(gint)lms)
+        if(localMemoryConInput>(gint)lms)
         {
-            z*=2;
-            localMemoryConFilter = 16*(convlayer->shape.s3/z)*4;
+            g_print("Not enough Local Memory for Winograd Convolution with %d input features!\n", convlayer->shape.s2);
+            return FALSE;
         }
+
+
 
 
         while(convlayer->shape.s3/z<convlayer->shape.s2/zInput)
@@ -855,7 +855,7 @@ gboolean dR_conv2d_winograd_schedule(dR_Graph* net, dR_Node* layer){
         numberofwgs = NperDim*NperDim*(convlayer->shape.s3/z>convlayer->shape.s2/zInput?convlayer->shape.s3/z:convlayer->shape.s2/zInput);
         //int maxdepth = (convlayer->shape.s3/z>convlayer->shape.s2?convlayer->shape.s3/z:convlayer->shape.s2/zInput);
 
-        while(localMemoryConInput+localMemoryConFilter<(gint)lms&&numberofwgs<=(gint)mws/2&&NperDim*2<convlayer->ishape.s0&&NperDim*2<convlayer->ishape.s1){
+        while(localMemoryConInput<(gint)lms&&numberofwgs<=(gint)mws/2&&NperDim*2<convlayer->ishape.s0&&NperDim*2<convlayer->ishape.s1){
             NperDim+=1;
             localMemoryConInput = (16)*NperDim*NperDim*convlayer->shape.s2*4;
             numberofwgs = NperDim*NperDim*(convlayer->shape.s3/z>convlayer->shape.s2/zInput?convlayer->shape.s3/z:convlayer->shape.s2/zInput);
@@ -873,8 +873,7 @@ gboolean dR_conv2d_winograd_schedule(dR_Graph* net, dR_Node* layer){
 		while(numberofwgs>(gint)mws/2)
 		{
 			zInput*=2;
-			z*=2;
-			localMemoryConFilter = 16*(convlayer->shape.s3/z)*4;
+            z*=2;
 			numberofwgs = NperDim*NperDim*(convlayer->shape.s3/z>convlayer->shape.s2/zInput?convlayer->shape.s3/z:convlayer->shape.s2/zInput);
 		}
         // Find dimensions of input that need to processed (>ishape but multiple of N)
@@ -911,18 +910,11 @@ gboolean dR_conv2d_winograd_schedule(dR_Graph* net, dR_Node* layer){
     }
     else
     {
-        localMemoryConFilter = 16*convlayer->shape.s2*(convlayer->shape.s3/z)*4;
         localMemoryConInput = (16)*NperDim*convlayer->shape.s2*4;
 
         // Find N based on memory constraints and wasted space
         if(!net->config->silent&&net->config->debugInfo)
             g_print("Local Memory Size: %d \nMax Workgroup Size: %d \n", (gint)lms, (gint)mws);
-
-        while(localMemoryConInput+localMemoryConFilter>=(gint)lms)
-        {
-            z*=2;
-            localMemoryConFilter = 16*(convlayer->shape.s3/z)*4;
-        }
 
 
         while(convlayer->shape.s3/z<convlayer->shape.s2/zInput)
@@ -933,7 +925,7 @@ gboolean dR_conv2d_winograd_schedule(dR_Graph* net, dR_Node* layer){
         numberofwgs = NperDim*(convlayer->shape.s3/z>convlayer->shape.s2/zInput?convlayer->shape.s3/z:convlayer->shape.s2/zInput);
         //int maxdepth = (convlayer->shape.s3/z>convlayer->shape.s2?convlayer->shape.s3/z:convlayer->shape.s2/zInput);
 
-        while(localMemoryConInput+localMemoryConFilter<(gint)lms&&numberofwgs<=(gint)mws&&NperDim*2<convlayer->ishape.s0&&NperDim*2<convlayer->ishape.s1){
+        while(localMemoryConInput<(gint)lms&&numberofwgs<=(gint)mws&&NperDim*2<convlayer->ishape.s0&&NperDim*2<convlayer->ishape.s1){
             NperDim+=1;
             localMemoryConInput = (16)*NperDim*convlayer->shape.s2*4;
             numberofwgs = NperDim*(convlayer->shape.s3/z>convlayer->shape.s2/zInput?convlayer->shape.s3/z:convlayer->shape.s2/zInput);
@@ -980,7 +972,6 @@ gboolean dR_conv2d_winograd_schedule(dR_Graph* net, dR_Node* layer){
     convlayer->numberOfDepthPartitions = z;
     convlayer->numberOfDepthPartitionsInput = zInput;
     convlayer->lmemInputSize = localMemoryConInput/4;
-    convlayer->lmemFilterSize = localMemoryConFilter/4;
 
     if(!net->config->silent&&net->config->debugInfo)
         g_print("Wide: %s \n", convlayer->winogradWide?"True":"False");
@@ -1004,7 +995,7 @@ gboolean dR_conv2d_winograd_schedule(dR_Graph* net, dR_Node* layer){
         g_print("Input partitions: %d \n", convlayer->numberOfDepthPartitionsInput);
 
     if(!net->config->silent&&net->config->debugInfo)
-        g_print("Used Local Memory: %d \n", localMemoryConInput+localMemoryConFilter);
+        g_print("Used Local Memory: %d \n", localMemoryConInput);
 
     if(!net->config->silent&&net->config->debugInfo)
         g_print("Scheduled Conv2D Layer \n");
@@ -1051,7 +1042,6 @@ gboolean dR_conv2d_winograd_compute(dR_Graph* net, dR_Node* layer){
             lMemImageSize = (16)*convlayer->winogradN*convlayer->shape.s2;
         else
             lMemImageSize = 16*convlayer->winogradN*convlayer->shape.s2;
-        lMemFilterSize = 1;
         globalWorkSize[0] = convlayer->winogradN*convlayer->globalWorkSizeX*convlayer->globalWorkSizeY;
         globalWorkSize[1] = maxDepth*convlayer->numberOfDepthPartitions;
         globalWorkSize[2] = 1;
@@ -1070,7 +1060,6 @@ gboolean dR_conv2d_winograd_compute(dR_Graph* net, dR_Node* layer){
         localWorkSize[1] = maxDepth;
         localWorkSize[2] = 1;
         lMemImageSize = convlayer->lmemInputSize;
-        lMemFilterSize = convlayer->lmemFilterSize;
         globalWorkSize[0] = convlayer->winogradNperDim*convlayer->globalWorkSizeX*convlayer->globalWorkSizeY;
         globalWorkSize[1] = maxDepth*convlayer->numberOfDepthPartitions;
         globalWorkSize[2] = 1;
@@ -1118,7 +1107,6 @@ gboolean dR_conv2d_winograd_compute(dR_Graph* net, dR_Node* layer){
     net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_mem), (void *)input);                        paramid++;
     net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_mem), (void *)&convlayer->weightsBuf);       paramid++;
     net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_mem), (void *)layer->outputBuf->bufptr);     paramid++;
-    net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, lMemFilterSize * sizeof(cl_float), NULL);              paramid++;
     net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, lMemImageSize  * sizeof(cl_float), NULL);              paramid++;
     net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_int), (void *)&activation);                  paramid++;
     net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_int), (void *)&usebias);                     paramid++;

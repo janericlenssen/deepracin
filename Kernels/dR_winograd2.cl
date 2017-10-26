@@ -25,7 +25,6 @@ __kernel void conv2dwinograd2(
     const __global float * gI,
     const __global float * gTransformedFilters,
     __global  float * gO,
-    __local float* lTransformedFilters,
     __local float* lInput,
     int activation,     // 0 linear, 1 relu
     int bias,           // 0 no bias, 1 bias
