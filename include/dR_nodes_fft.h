@@ -30,7 +30,9 @@ extern "C"{
 
 */
 dR_Node* dR_FFT(dR_Graph* net, dR_Node* inputNode1);
-
+#ifdef __cplusplus		
+}		
+#endif		
 /**
 * \brief The compute function. All non-initialization compute functionality has to be called here. Set kernel parameters and enqueue kernels.
 
