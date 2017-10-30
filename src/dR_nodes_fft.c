@@ -7,12 +7,17 @@
 
 dR_Node* dR_FFT(dR_Graph* net, dR_Node* inputNode1)
 {
+    // allocate memory for dR_Shape3 (3 dimensional vector)
     dR_FFT_Data* fft = g_malloc(sizeof(dR_FFT_Data));
+    // allocate memory for a node
     dR_Node* l = g_malloc(sizeof(dR_Node));
 
+    // set all attributes of fft node
+    // dR_Shape3
     l->layer = fft;
+    // node type
     l->type = tFFT;
-
+    // set functions (implemented in this file) for this node
     l->compute = dR_fft_compute;
     l->schedule = dR_fft_schedule;
     l->propagateShape = dR_fft_propagateShape;
@@ -24,11 +29,28 @@ dR_Node* dR_FFT(dR_Graph* net, dR_Node* inputNode1)
     l->cleanupLayer = dR_fft_cleanupLayer;
     l->serializeNode = dR_fft_serializeNode;
     l->parseAppendNode = dR_fft_parseAppendNode;
-    l->printLayer = dR_fft_printLayer;
 
     l->generateKernel = NULL;
     l->createKernelName = NULL;
     l->setVariables = NULL;
+    l->printLayer = dR_fft_printLayer;
+
+    if (inputNode1)
+    {
+      // create empty list for previous nodes
+      l->previous_layers = dR_list_createEmptyList();
+      // append the input of this node to the list
+      dR_list_append(l->previous_layers,inputNode1);
+      // create empty list for following nodes
+      l->next_layers = dR_list_createEmptyList();
+      // append the current (fft) node as the following node of the previous node
+      dR_list_append(inputNode1->next_layers,l);
+    }
+    else
+    {
+        g_print("Error: FFT node needs 1 appropriate Inputnode");
+    }
+    // append node to graph
     dR_appendLayer(net, l);
     return l;
 }
