@@ -75,7 +75,7 @@ gchar* dR_fft_serializeNode(dR_Node* layer, gchar* params[], gint* numParams, gf
 
 dR_Node* dR_fft_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numINodes, gchar** params, gint numParams, gfloat** variables, gint numVariables)
 {
-    gint numNodeInputs = 2;
+    gint numNodeInputs = 1;
     gint numNodeParams = 1;
     gint numNodeVariables = 0;
     dR_Node* out;
@@ -103,6 +103,10 @@ gboolean dR_fft_schedule(dR_Graph* net, dR_Node* layer){
 
 
 gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
+
+    // call compute functionality
+    // set kernel parameters and enqueue kernels
+
     size_t globalWorkSize[3];
     int paramid = 0;
     cl_mem* input1, *input2;
@@ -130,23 +134,29 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
 
 gboolean dR_fft_propagateShape(dR_Graph* net, dR_Node* layer)
 {
+    // compute output shape of node
+    // output of fft is complex number with re + im, 2 dim vector
+    // input for fft is one single 3 dim vector
     dR_FFT_Data* fft = (dR_FFT_Data*)(layer->layer);
     dR_Node* lastlayer;
-    if(layer->previous_layers->length!=2)
+    // check if previous layer gives correct output for fft
+    if(layer->previous_layers->length!=1)
     {
         if(!net->config->silent)
-            g_print("Elem-wise 2-operation Node with id %d has %d inputs but needs 2!\n",layer->layerID,layer->previous_layers->length);
+            g_print("FFT Node with id %d has %d inputs but needs 1!\n",layer->layerID,layer->previous_layers->length);
         return FALSE;
     }
-    dR_list_resetIt(layer->previous_layers);
+    dR_list_resetIt(layer->previous_layers); // to NULL
+    // store last node
     lastlayer = dR_list_next(layer->previous_layers);
+    // transfer output of previous node to fft node
     fft->ishape.s0 = lastlayer->oshape.s0;
     fft->ishape.s1 = lastlayer->oshape.s1;
     fft->ishape.s2 = lastlayer->oshape.s2;
 
     lastlayer = dR_list_next(layer->previous_layers);
     if(fft->ishape.s0!=lastlayer->oshape.s0||fft->ishape.s1!=lastlayer->oshape.s1||fft->ishape.s2!=lastlayer->oshape.s2)
-    {
+    { // why check the above statement ?
         if(!net->config->silent)
         {
             g_print("Elem-wise 2-operation Node needs 2 input nodes with the same shape!\n");
@@ -168,27 +178,10 @@ gint32 dR_fft_getRequiredOutputBufferSize(dR_Node* layer)
 
 gboolean dR_fft_createKernel(dR_Graph* net, dR_Node* layer)
 {
+    //call all Opencl kernel creation routines required
     dR_FFT_Data* fft = (dR_FFT_Data*)(layer->layer);
     gboolean ret=FALSE;
-    /*
-    switch(fft->op){
-    case tAdd:
-        ret = dR_createKernel(net,"elemWiseAdd",&(layer->clKernel));
-        break;
-    case tSub:
-        ret = dR_createKernel(net,"elemWiseSub",&(layer->clKernel));
-        break;
-    case tMul:
-        ret = dR_createKernel(net,"elemWiseMul",&(layer->clKernel));
-        break;
-    case tDiv:
-        ret = dR_createKernel(net,"elemWiseDiv",&(layer->clKernel));
-        break;
-    case tPow:
-        ret = dR_createKernel(net,"elemWisePow",&(layer->clKernel));
-        break;
-    }
-    */
+    ret = dR_createKernel(net,"fft",&(layer->clKernel));
     return ret;
 }
 
@@ -221,6 +214,7 @@ gboolean dR_fft_cleanupBuffers(dR_Graph* net, dR_Node* layer)
 
 gboolean dR_fft_cleanupLayer(dR_Graph* net, dR_Node* layer)
 {
+    // free all memory that was reserved for node
     if(net->prepared)
         g_free((dR_FFT_Data*)(layer->layer));
     return TRUE;
@@ -229,32 +223,9 @@ gboolean dR_fft_cleanupLayer(dR_Graph* net, dR_Node* layer)
 
 gchar* dR_fft_printLayer(dR_Node* layer)
 {
+    // print node
     dR_FFT_Data* fft = (dR_FFT_Data*)(layer->layer);
     gchar* out;
-    gchar* op;
-    /*
-    switch(fft->op){
-    case tAdd:
-        op = "Add";
-        break;
-    case tSub:
-        op = "Sub";
-        break;
-    case tMul:
-        op = "Mul";
-        break;
-    case tDiv:
-        op = "Div";
-        break;
-    case tPow:
-        op = "Pow";
-        break;
-    default:
-        op = "Error";
-    }
-    out = g_strdup_printf("%s%d%s%s%s",
-            "Element-wise 2 input operation node: ",layer->layerID,
-            "\n Operation: ", op,"\n");
-    */
+
     return out;
 }
