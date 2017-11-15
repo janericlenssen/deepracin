@@ -99,7 +99,7 @@ func.restype = None
 
 # dR_loadGraph
 func = lib.dR_loadGraph
-func.argtypes = [c_void_p,c_void_p, c_char_p, c_void_p, c_void_p]
+func.argtypes = [c_void_p, c_char_p, c_void_p, c_void_p, c_void_p, c_void_p]
 func.restype = c_void_p
 
 # dR_saveGraph
