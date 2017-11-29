@@ -48,10 +48,11 @@ dR_Node* dR_FFT(dR_Graph* net, dR_Node* inputNode1)
     }
     else
     {
-        g_print("Error: FFT node needs 1 appropriate Inputnode");
+        g_print("Error: FFT node needs an appropriate Inputnode");
     }
     // append node to graph
     dR_appendLayer(net, l);
+    // return pointer to node
     return l;
 }
 
@@ -109,20 +110,17 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
 
     size_t globalWorkSize[3];
     int paramid = 0;
-    cl_mem* input1, *input2;
+    cl_mem* input1;
     dR_list_resetIt(layer->previous_layers);
     input1 = ((dR_Node*)dR_list_next(layer->previous_layers))->outputBuf->bufptr;
-    input2 = ((dR_Node*)dR_list_next(layer->previous_layers))->outputBuf->bufptr;
     globalWorkSize[0] = layer->oshape.s0;
     globalWorkSize[1] = layer->oshape.s1;
     globalWorkSize[2] = layer->oshape.s2;
 
-
     net->clConfig->clError = clSetKernelArg(layer->clKernel, paramid, sizeof(cl_mem), (void *)input1);                      paramid++;
-    net->clConfig->clError = clSetKernelArg(layer->clKernel, paramid, sizeof(cl_mem), (void *)input2);                      paramid++;
     net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_mem), (void *)layer->outputBuf->bufptr);          paramid++;
 
-    if (dR_openCLError(net, "Setting kernel args failed.", "Element-wise 2-operation Kernel"))
+    if (dR_openCLError(net, "Setting kernel args failed.", "FFT Kernel"))
         return FALSE;
     // execute kernel
      net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, layer->clKernel, 3, NULL, globalWorkSize,
@@ -135,8 +133,8 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
 gboolean dR_fft_propagateShape(dR_Graph* net, dR_Node* layer)
 {
     // compute output shape of node
-    // output of fft is complex number with re + im, 2 dim vector
-    // input for fft is one single 3 dim vector
+    // output of fft is complex number with re + im
+    // input for fft is a picture (2D array) which can have a few levels (determined by dR_Shape)
     dR_FFT_Data* fft = (dR_FFT_Data*)(layer->layer);
     dR_Node* lastlayer;
     // check if previous layer gives correct output for fft
@@ -149,17 +147,17 @@ gboolean dR_fft_propagateShape(dR_Graph* net, dR_Node* layer)
     dR_list_resetIt(layer->previous_layers); // to NULL
     // store last node
     lastlayer = dR_list_next(layer->previous_layers);
-    // transfer output of previous node to fft node
+    // transfer output shape of previous node to fft node
     fft->ishape.s0 = lastlayer->oshape.s0;
     fft->ishape.s1 = lastlayer->oshape.s1;
     fft->ishape.s2 = lastlayer->oshape.s2;
 
     lastlayer = dR_list_next(layer->previous_layers);
     if(fft->ishape.s0!=lastlayer->oshape.s0||fft->ishape.s1!=lastlayer->oshape.s1||fft->ishape.s2!=lastlayer->oshape.s2)
-    { // why check the above statement ?
+    {
         if(!net->config->silent)
         {
-            g_print("Elem-wise 2-operation Node needs 2 input nodes with the same shape!\n");
+            g_print("FFT Node needs 1 input node with the same shape!\n");
             g_print("[%d, %d, %d] and [%d, %d, %d] not matching!\n",
                     fft->ishape.s0,fft->ishape.s1,fft->ishape.s2,lastlayer->oshape.s0,lastlayer->oshape.s1,lastlayer->oshape.s2);
         }
@@ -220,12 +218,12 @@ gboolean dR_fft_cleanupLayer(dR_Graph* net, dR_Node* layer)
     return TRUE;
 }
 
-
 gchar* dR_fft_printLayer(dR_Node* layer)
 {
     // print node
     dR_FFT_Data* fft = (dR_FFT_Data*)(layer->layer);
     gchar* out;
-
+    out = g_strdup_printf("%s%d%s",
+            "FFT input operation node: ",layer->layerID, "\n");
     return out;
 }
