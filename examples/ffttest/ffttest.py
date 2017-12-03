@@ -35,7 +35,7 @@ feed_node = dr.feed_node(graph, shape=(4, 4, 1))
 ###
 
 # create FFT node
-#		ffttest = dr.FFT(graph, feed_node) # AttributeError: 'module' object has no attribute 'FFT'
+		ffttest = dr.FFT(graph, feed_node) # AttributeError: 'module' object has no attribute 'FFT'
 #		test = dr.ElemWise2Operation(graph, feed_node, feed_node, Add)
   
 # Mark output nodes (determines what dr.apply() returns)
