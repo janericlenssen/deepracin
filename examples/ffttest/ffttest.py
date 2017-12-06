@@ -28,15 +28,14 @@ graph = env.create_graph(interface_layout='CHW')
 
 # Fill graph
 # Feed node - Will be fed with data for each graph application
-feed_node = dr.feed_node(graph, shape=(4, 4, 1))
+feed_node = dr.feed_node(graph, shape=(1, 4, 4))
 
 ###
 
 ###
 
 # create FFT node
-ffttest = dr.FFT(feed_node) # AttributeError: 'module' object has no attribute 'FFT'
-#		test = dr.ElemWise2Operation(graph, feed_node, feed_node, Add)
+ffttest = dr.FFT(feed_node)
 
 # Mark output nodes (determines what dr.apply() returns)
 dr.mark_as_output(ffttest)
@@ -56,7 +55,7 @@ for path in image_paths:
         # Feed Input
         img = io.imread(path)
         data = np.array(img).astype(np.float32)
-        #dr.feed_data(feed_node,data) # data array  does not match node's dimension
+        dr.feed_data(feed_node,data)
 
         # Apply graph - returns one numpy array for each node marked as output
         feeddata = dr.apply(graph)

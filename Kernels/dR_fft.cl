@@ -40,8 +40,8 @@
 
 */
 
-/* Test function pass: copies the input and returns it */
-__kernel void pass(
+/* Test function: copies the input and returns it */
+__kernel void fft(
     const __global float * gInput,
     __global float * outputArr
     )
@@ -52,5 +52,5 @@ __kernel void pass(
     int gz = (int) get_global_id(2);
     int gid = mad24(gz, (int)get_global_size(0)*(int)get_global_size(1), mad24(gy, (int)get_global_size(0), gx));
 
-    outputArr[gid] = gInput[gid]
+    outputArr[gid] = gInput[gid];
 }

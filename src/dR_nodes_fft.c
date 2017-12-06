@@ -162,7 +162,7 @@ gboolean dR_fft_propagateShape(dR_Graph* net, dR_Node* layer)
         }
         return FALSE;
     }
-    
+
     layer->oshape.s0 = fft->ishape.s0;
     layer->oshape.s1 = fft->ishape.s1;
     layer->oshape.s2 = fft->ishape.s2;
