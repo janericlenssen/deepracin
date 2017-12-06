@@ -35,11 +35,11 @@ feed_node = dr.feed_node(graph, shape=(4, 4, 1))
 ###
 
 # create FFT node
-		ffttest = dr.FFT(graph, feed_node) # AttributeError: 'module' object has no attribute 'FFT'
+ffttest = dr.FFT(feed_node) # AttributeError: 'module' object has no attribute 'FFT'
 #		test = dr.ElemWise2Operation(graph, feed_node, feed_node, Add)
-  
+
 # Mark output nodes (determines what dr.apply() returns)
-dr.mark_as_output(feed_node)
+dr.mark_as_output(ffttest)
 
 # Print graph to console
 dr.print_graph(graph)
@@ -55,11 +55,10 @@ for path in image_paths:
 
         # Feed Input
         img = io.imread(path)
-        data = np.array(img).astype(np.float32) 
+        data = np.array(img).astype(np.float32)
         #dr.feed_data(feed_node,data) # data array  does not match node's dimension
 
         # Apply graph - returns one numpy array for each node marked as output
         feeddata = dr.apply(graph)
 	io.imshow(img)
 	#io.show()
-

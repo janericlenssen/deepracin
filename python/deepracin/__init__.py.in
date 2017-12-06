@@ -167,6 +167,11 @@ func = lib.dR_ElemWise2Operation
 func.argtypes = [c_void_p, c_void_p, c_void_p, c_int]
 func.restype = c_void_p
 
+# dR_FFT
+func = lib.dR_FFT
+func.argtypes = [c_void_p, c_void_p]
+func.restype = c_void_p
+
 # dR_Softmax
 func = lib.dR_Softmax
 func.argtypes = [c_void_p, c_void_p]
@@ -333,7 +338,7 @@ class Graph:
         self.feed_nodes = []
         self.model_path = None
         self.env = env
-        
+
 
 
 class Environment:
@@ -954,6 +959,15 @@ def Crop_Or_Pad(input_node, shape):
     onode = Node(lib.dR_CropOrPad(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr), pointer(sh)),input_node.graph, desc, params)
     return onode
 
+def FFT(input_node):
+    # type: (Node) -> Node
+    # Description for python structures
+    desc = 'FFT'
+    params = [' ']
+
+    # Call deepRACIN
+    onode = Node(lib.dR_FFT(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr)),input_node.graph, desc, params)
+    return onode
 
 def Concat(input_nodes,  concat_dim, layout='HWC'):
     # type: (list, int) -> Node

@@ -152,7 +152,6 @@ gboolean dR_fft_propagateShape(dR_Graph* net, dR_Node* layer)
     fft->ishape.s1 = lastlayer->oshape.s1;
     fft->ishape.s2 = lastlayer->oshape.s2;
 
-    lastlayer = dR_list_next(layer->previous_layers);
     if(fft->ishape.s0!=lastlayer->oshape.s0||fft->ishape.s1!=lastlayer->oshape.s1||fft->ishape.s2!=lastlayer->oshape.s2)
     {
         if(!net->config->silent)
@@ -163,6 +162,7 @@ gboolean dR_fft_propagateShape(dR_Graph* net, dR_Node* layer)
         }
         return FALSE;
     }
+    
     layer->oshape.s0 = fft->ishape.s0;
     layer->oshape.s1 = fft->ishape.s1;
     layer->oshape.s2 = fft->ishape.s2;
