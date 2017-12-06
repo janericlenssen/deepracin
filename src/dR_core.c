@@ -211,7 +211,7 @@ gboolean dR_propagateShapesAndSchedule(dR_Graph* net){
 }
 
 gboolean dR_estimateAndAllocateBuffers(dR_Graph* net){
-	
+
     dR_List* memoryBufList = dR_list_createEmptyList();
     dR_List* freeMemoryBufs = dR_list_createEmptyList();
     dR_Node* current_layer;
@@ -376,7 +376,8 @@ gboolean dR_generateAndCompileKernels(dR_Graph* net)
         "dR_math.cl",
         "dR_transform.cl",
         "dR_winograd2.cl",
-        "dR_conv2d1x1.cl"
+        "dR_conv2d1x1.cl",
+        "dR_fft.cl"
     };
     gint numberoffiles = 6;
     gboolean ret;

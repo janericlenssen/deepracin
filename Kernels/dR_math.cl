@@ -340,3 +340,19 @@ __kernel void fill(
     int gid = mad24(gz, (int)get_global_size(0)*(int)get_global_size(1), mad24(gy, (int)get_global_size(0), gx));
     outputArr[gid] = scalar;
 }
+
+/* FFT */
+
+__kernel void fft(
+    const __global float * gInput,
+    __global float * outputArr
+    )
+{
+    /* Each work item has a three dimensional identifier */
+    int gx = (int) get_global_id(0);
+    int gy = (int) get_global_id(1);
+    int gz = (int) get_global_id(2);
+    int gid = mad24(gz, (int)get_global_size(0)*(int)get_global_size(1), mad24(gy, (int)get_global_size(0), gx));
+
+    outputArr[gid] = gInput[gid];
+}

@@ -24,18 +24,26 @@ with dr.Environment(preferred_platform_name) as env:
     env.model_path = 'model/'
 
 # Create empty graph
-graph = env.create_graph(interface_layout='CHW')
+graph = env.create_graph(interface_layout='HWC')
 
 # Fill graph
 # Feed node - Will be fed with data for each graph application
-feed_node = dr.feed_node(graph, shape=(1, 4, 4))
+#feed_node = dr.feed_node(graph, shape=(497, 303, 1))
+
+feed_node = dr.feed_node(graph, shape=(224, 224, 3))
+
+r, g, b = [feed_node[0:224, 0:224, 0] - 123.68,
+            feed_node[0:224, 0:224, 1] - 116.779,
+            feed_node[0:224, 0:224, 2] - 103.939]
+
+concat = dr.Concat([b, g, r], 2)
 
 ###
 
 ###
 
 # create FFT node
-ffttest = dr.FFT(feed_node)
+ffttest = dr.FFT(concat)
 
 # Mark output nodes (determines what dr.apply() returns)
 dr.mark_as_output(ffttest)
@@ -48,16 +56,16 @@ dr.save_graph(graph,env.model_path)
 
 dr.prepare(graph)
 
-image_paths = ['4by4black.png']
+image_paths = ['tiger.png']
 
 for path in image_paths:
 
-        # Feed Input
-        img = io.imread(path)
-        data = np.array(img).astype(np.float32)
-        dr.feed_data(feed_node,data)
+    # Feed Input
+    img = io.imread(path)
+    data = np.array(img).astype(np.float32)
+    dr.feed_data(feed_node,data)
 
-        # Apply graph - returns one numpy array for each node marked as output
-        feeddata = dr.apply(graph)
-	io.imshow(img)
-	#io.show()
+    # Apply graph - returns one numpy array for each node marked as output
+    fftout = dr.apply(graph)
+    #io.imshow(ffttest)
+    #io.show()
