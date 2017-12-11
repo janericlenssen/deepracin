@@ -341,18 +341,66 @@ __kernel void fill(
     outputArr[gid] = scalar;
 }
 
-/* FFT */
+/* --------------FFT-------------- */
+/* Out of place */
+/* */
+
+/* complex numbers definitions https://stackoverflow.com/questions/10016125/complex-number-support-in-opencl */
+
+/*
+ * Return Real (Imaginary) component of complex number:
+ */
+inline float real(float2 a){
+     return a.x;
+}
+inline float imag(float2 a){
+     return a.y;
+}
+
+/*
+ * Complex multiplication
+ */
+#define MUL(a, b, tmp) { tmp = a; a.x = tmp.x*b.x - tmp.y*b.y; a.y = tmp.x*b.y + tmp.y*b.x; }
+/*
+inline cfloat  cmult(float2 a, float2 b){
+    return (float2)( a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
+}
+*/
+
+#define DFT2( a, b, tmp) { tmp = a - b; a += b; b = tmp; }
+
+// Return cos(alpha)+I*sin(alpha)
+float2 exp_alpha(float alpha)
+{
+  float cs,sn;
+  sn = sincos(alpha,&cs);
+  return (float2)(cs,sn);
+}
 
 __kernel void fft(
     const __global float * gInput,
     __global float * outputArr
     )
 {
-    /* Each work item has a three dimensional identifier */
-    int gx = (int) get_global_id(0);
-    int gy = (int) get_global_id(1);
-    int gz = (int) get_global_id(2);
-    int gid = mad24(gz, (int)get_global_size(0)*(int)get_global_size(1), mad24(gy, (int)get_global_size(0), gx));
+    /* For RGB do */
+    /*  Bit reverse rows  */
+    /*  FFT on rows */
+    /*  Bit reverse columns */
+    /*  FFT on columns */
+
+    /* Input size N, for 1D FFT N/2 threads, each thread doing one DFT2 */
+    /* Input size X*Y, for 2D FFT
+     * 1) rows: Y*(X/2) work items at once
+     * 2) columns: X*(Y/2) work items at once
+     */
+
+     /* Each work item has a three dimensional identifier */
+     int gx = (int) get_global_id(0);
+     int gy = (int) get_global_id(1);
+     int gz = (int) get_global_id(2);
+     int gid = mad24(gz, (int)get_global_size(0)*(int)get_global_size(1), mad24(gy, (int)get_global_size(0), gx));
+
+
 
     outputArr[gid] = gInput[gid];
 }
