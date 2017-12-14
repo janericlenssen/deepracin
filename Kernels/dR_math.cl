@@ -341,15 +341,13 @@ __kernel void fill(
     outputArr[gid] = scalar;
 }
 
-/* --------------FFT-------------- */
-/* Out of place */
-/* */
+/* --------------FFT: Out of place-------------- */
 
 /* complex numbers definitions https://stackoverflow.com/questions/10016125/complex-number-support-in-opencl */
-
-/*
- * Return Real (Imaginary) component of complex number:
- */
+#ifndef M_PI
+#define M_PI 3.1416
+#endif
+/* Return Real (Imaginary) component of complex number */
 inline float real(float2 a){
      return a.x;
 }
@@ -357,9 +355,7 @@ inline float imag(float2 a){
      return a.y;
 }
 
-/*
- * Complex multiplication
- */
+/* Complex multiplication */
 #define MUL(a, b, tmp) { tmp = a; a.x = tmp.x*b.x - tmp.y*b.y; a.y = tmp.x*b.y + tmp.y*b.x; }
 /*
 inline cfloat  cmult(float2 a, float2 b){
@@ -367,9 +363,10 @@ inline cfloat  cmult(float2 a, float2 b){
 }
 */
 
+/* Butterfly operation */
 #define DFT2( a, b, tmp) { tmp = a - b; a += b; b = tmp; }
 
-// Return cos(alpha)+I*sin(alpha)
+/* Return cos(alpha)+I*sin(alpha) */
 float2 exp_alpha(float alpha)
 {
   float cs,sn;
@@ -377,9 +374,17 @@ float2 exp_alpha(float alpha)
   return (float2)(cs,sn);
 }
 
+/* Dimensions of input */
+/*
+#define X 4
+#define Y 4
+#define Z 3 // 3 for RGB
+*/
+//static const unsigned char BitReverseTable[4] = { 0x0, 0x2, 0x1, 0x3 };
+
 __kernel void fft(
     const __global float * gInput,
-    __global float * outputArr
+    __global float2 * outputArr
     )
 {
     /* For RGB do */
@@ -388,19 +393,135 @@ __kernel void fft(
     /*  Bit reverse columns */
     /*  FFT on columns */
 
-    /* Input size N, for 1D FFT N/2 threads, each thread doing one DFT2 */
-    /* Input size X*Y, for 2D FFT
-     * 1) rows: Y*(X/2) work items at once
-     * 2) columns: X*(Y/2) work items at once
+    /* Input size N, for 1D FFT N/2 threads, each thread doing one DFT2
+     * Input size X*Y*Z, for Z times 2D FFT, Z = 3 for RGB
+     * Output size X*Y*6
+     * 1) rows: Y*(X/2)*Z work items at once
+     * 2) columns: X*(Y/2)*Z work items at once
      */
 
-     /* Each work item has a three dimensional identifier */
-     int gx = (int) get_global_id(0);
-     int gy = (int) get_global_id(1);
-     int gz = (int) get_global_id(2);
-     int gid = mad24(gz, (int)get_global_size(0)*(int)get_global_size(1), mad24(gy, (int)get_global_size(0), gx));
+    /* Each work item has a three dimensional identifier */
+    int gx = (int) get_global_id(0);
+    int gy = (int) get_global_id(1);
+    int gz = (int) get_global_id(2);
+    int width = (int) get_global_size(0);
+    int height = (int) get_global_size(1);
+    int depth = (int) get_global_size(2);
+    int gid = height*(width/2)*gz + (width/2)*gy + gx;
 
+    /* For Z = 1,2,3 store rows in bitreverse order */
+    /*
+    int lookup = BitReverseTable[gid - (gy*width)];
+    int newindex = gy*width + lookup;
 
+    outputArr[ newindex ] = gInput[gid];
+    */
 
-    outputArr[gid] = gInput[gid];
+    /* first stage: rows */
+    /* Caluclate log2(X) */
+
+    //int log_x = log2((int)get_global_size(0));
+
+    /*
+    for (int stage = 1; stage <= log_x; stage++ )
+    {
+      int m = pow(2,stage);
+      float2 twiddle_base = exp_alpha((2*M_PI)/m);
+
+      float2 top = outputArr[gid];
+      float2 bottom = outputArr[gid + m/2];
+    }
+    */
+
+    /* rows, insert barrier between invocations */
+    for(int p = 1; p <= width; p *= 2)
+    {
+        int k = gid & (p-1); // index in input sequence, in 0..P-1
+
+        float2 u0 = gInput[gid];
+        float2 u1 = gInput[gid+t];
+
+        float2 twiddle = 1; //pow_theta(k,p);
+
+        float2 tmp;
+
+        MUL(u1,twiddle,tmp);
+
+        DFT2(u0,u1,tmp);
+
+        int j = (gid<<1) - k; // = ((i-k)<<1)+k
+
+        out[j] = u0;
+
+        out[j+p] = u1;
+    }
+
+    /* inser barrier here */
+
+    /* collumns may need different work items */
+
+    /*
+    for(int p = 1; p <= width; p *= 2)
+    {
+      fft_radix2_second_stage(outputArr, p)
+    }
+    */
+
+}
+
+/* helper function */
+
+// void fft_radix2_first_stage(__global const float * in,__global float2 * out, int p)
+// {
+//   /* id of current thread */
+//   int i = gx;
+//   /* nr of all threads */
+//   int t = width;
+//
+//   int k = i & (p-1); // index in input sequence, in 0..P-1
+//
+//   float2 u0 = in[i];
+//   float2 u1 = in[i+t];
+//
+//   float2 twiddle = pow_theta(k,p);
+//
+//   float2 tmp;
+//
+//   MUL(u1,twiddle,tmp);
+//
+//   DFT2(u0,u1,tmp);
+//
+//   int j = (i<<1) - k; // = ((i-k)<<1)+k
+//
+//   out[j] = u0;
+//
+//   out[j+p] = u1;
+// }
+
+/* helper function */
+void fft_radix2_second_stage(__global float2 * out, int p)
+{
+  /* id of current thread */
+  int i = gx;
+  /* nr of all threads */
+  int t = width;
+
+  int k = i & (p-1); // index in input sequence, in 0..P-1
+
+  float2 u0 = out[i];
+  float2 u1 = out[i+t];
+
+  float2 twiddle = pow_theta(k,p);
+
+  float2 tmp;
+
+  MUL(u1,twiddle,tmp);
+
+  DFT2(u0,u1,tmp);
+
+  int j = (i<<1) - k; // = ((i-k)<<1)+k
+
+  out[j] = u0;
+
+  out[j+p] = u1;
 }
