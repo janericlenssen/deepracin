@@ -384,7 +384,8 @@ float2 exp_alpha(float alpha)
 
 __kernel void fft(
     const __global float * gInput,
-    __global float2 * outputArr
+    __global float * intermedBuf,
+    __global float * outputArr
     )
 {
     /* For RGB do */

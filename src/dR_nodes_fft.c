@@ -118,6 +118,11 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
     globalWorkSize[2] = layer->oshape.s2;
 
     net->clConfig->clError = clSetKernelArg(layer->clKernel, paramid, sizeof(cl_mem), (void *)input1);                      paramid++;
+
+    /* for intermediate Buffer */
+    dR_FFT_Data* fft = ((dR_FFT_Data*)(layer->layer));
+    net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_mem), (void *)fft->intermedBuf);          paramid++;
+
     net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_mem), (void *)layer->outputBuf->bufptr);          paramid++;
 
     if (dR_openCLError(net, "Setting kernel args failed.", "FFT Kernel"))
@@ -171,7 +176,8 @@ gboolean dR_fft_propagateShape(dR_Graph* net, dR_Node* layer)
 
 gint32 dR_fft_getRequiredOutputBufferSize(dR_Node* layer)
 {
-    return layer->oshape.s0*layer->oshape.s1*layer->oshape.s2;
+    /* input elements * 2 = output, complex numbers in output*/
+    return layer->oshape.s0*layer->oshape.s1*layer->oshape.s2 * 2;
 }
 
 gboolean dR_fft_createKernel(dR_Graph* net, dR_Node* layer)
@@ -186,11 +192,15 @@ gboolean dR_fft_createKernel(dR_Graph* net, dR_Node* layer)
 
 gboolean dR_fft_allocateBuffers(dR_Graph* net, dR_Node* layer)
 {
-    // Nothing to do
-    // Warnings shut up, please
-    net = net;
-    layer = layer;
-    return TRUE;
+    /* create buffer for fft intermediate steps */
+    gboolean ret = TRUE;
+    if(!net->prepared)
+    {
+        dR_FFT_Data* fft = ((dR_FFT_Data*)(layer->layer));
+        /* *2 to store real and imag part of complex number */
+        fft->intermedBuf = g_malloc(fft->ishape.s0*fft->ishape.s1*fft->ishape.s2*sizeof(gfloat) * 2 );
+    }
+    return ret;
 }
 
 gboolean dR_fft_fillBuffers(dR_Graph* net, dR_Node* layer)
@@ -206,14 +216,20 @@ gboolean dR_fft_cleanupBuffers(dR_Graph* net, dR_Node* layer)
 {
     gboolean ret = TRUE;
     if(net->prepared)
+    {
+        dR_FFT_Data* fft = ((dR_FFT_Data*)(layer->layer));
+        ret &= dR_cleanupKernel((fft->intermedBuf));
         ret &= dR_cleanupKernel((layer->clKernel));
+    }
     return ret;
 }
 
 gboolean dR_fft_cleanupLayer(dR_Graph* net, dR_Node* layer)
 {
+    dR_FFT_Data* fft = ((dR_FFT_Data*)(layer->layer));
     // free all memory that was reserved for node
     if(net->prepared)
+        g_free(fft->intermedBuf);
         g_free((dR_FFT_Data*)(layer->layer));
     return TRUE;
 }
