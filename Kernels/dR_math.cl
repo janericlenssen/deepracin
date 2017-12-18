@@ -381,6 +381,12 @@ float2 exp_alpha(float alpha)
 #define Z 3 // 3 for RGB
 */
 //static const unsigned char BitReverseTable[4] = { 0x0, 0x2, 0x1, 0x3 };
+/* Input size N, for 1D FFT N/2 threads, each thread doing one DFT2
+ * Input size X*Y*Z, for Z times 2D FFT, Z = 3 for RGB
+ * Output size X*Y*6
+ * 1) rows: Y*(X/2)*Z work items at once
+ * 2) columns: X*(Y/2)*Z work items at once
+ */
 
 __kernel void fft(
     const __global float * gInput,
@@ -394,13 +400,6 @@ __kernel void fft(
     /*  Bit reverse columns */
     /*  FFT on columns */
 
-    /* Input size N, for 1D FFT N/2 threads, each thread doing one DFT2
-     * Input size X*Y*Z, for Z times 2D FFT, Z = 3 for RGB
-     * Output size X*Y*6
-     * 1) rows: Y*(X/2)*Z work items at once
-     * 2) columns: X*(Y/2)*Z work items at once
-     */
-
     /* Each work item has a three dimensional identifier */
     int gx = (int) get_global_id(0);
     int gy = (int) get_global_id(1);
@@ -409,120 +408,139 @@ __kernel void fft(
     int height = (int) get_global_size(1);
     int depth = (int) get_global_size(2);
     int gid = height*(width/2)*gz + (width/2)*gy + gx;
+    /* offset for scaling down (and up) of indices to 1D FFT indices */
+    int offset = gid - (width/2)*height*gz - (width/2)*gy;
+    int offset_xy = width*(height/2);
+    int img_offset = width*height*3;
 
-    /* For Z = 1,2,3 store rows in bitreverse order */
-    /*
-    int lookup = BitReverseTable[gid - (gy*width)];
-    int newindex = gy*width + lookup;
-
-    outputArr[ newindex ] = gInput[gid];
-    */
-
-    /* first stage: rows */
-    /* Caluclate log2(X) */
-
-    //int log_x = log2((int)get_global_size(0));
-
-    /*
-    for (int stage = 1; stage <= log_x; stage++ )
-    {
-      int m = pow(2,stage);
-      float2 twiddle_base = exp_alpha((2*M_PI)/m);
-
-      float2 top = outputArr[gid];
-      float2 bottom = outputArr[gid + m/2];
-    }
-    */
-
-    /* rows, insert barrier between invocations */
+    int even_odd = 0;
+    /* FFT for rows */
+    /* insert barrier between loop invocations */
     for(int p = 1; p <= width; p *= 2)
     {
-        int k = gid & (p-1); // index in input sequence, in 0..P-1
-
-        float2 u0 = gInput[gid];
-        float2 u1 = gInput[gid+t];
-
-        float2 twiddle = 1; //pow_theta(k,p);
-
-        float2 tmp;
-
-        MUL(u1,twiddle,tmp);
-
-        DFT2(u0,u1,tmp);
-
-        int j = (gid<<1) - k; // = ((i-k)<<1)+k
-
-        out[j] = u0;
-
-        out[j+p] = u1;
+      if (p == 1)
+      {
+        fft_rows(gInput, outputArr, gid, offset, img_offset, p);
+      }
+      else
+      {
+        if (even_odd % 2) // odd
+        {
+          fft_rows(outputArr, intermedBuf, gid, offset, img_offset, p);
+        }
+        else // even
+        {
+          fft_rows(intermedBuf, outputArr, gid, offset, img_offset, p);
+        }
+      }
+      even_odd++;
     }
-
-    /* inser barrier here */
-
+    /* insert barrier */
+    /* TODO: store info about whether rows FFT ended on outputArr or intermedBuf */
+    int even_odd2 = 0;
+    for(int p = 1; p <= width; p *= 2)
+    {
+      if (even_odd2 % 2) // odd
+      {
+        fft_columns(outputArr, intermedBuf, gid, offset, img_offset, p, offset_xy);
+      }
+      else // even
+      {
+        fft_columns(intermedBuf, outputArr, gid, offset, img_offset, p, offset_xy);
+      }
+      even_odd2++;
+    }
     /* collumns may need different work items */
-
-    /*
-    for(int p = 1; p <= width; p *= 2)
-    {
-      fft_radix2_second_stage(outputArr, p)
-    }
-    */
-
 }
 
-/* helper function */
-
-// void fft_radix2_first_stage(__global const float * in,__global float2 * out, int p)
-// {
-//   /* id of current thread */
-//   int i = gx;
-//   /* nr of all threads */
-//   int t = width;
-//
-//   int k = i & (p-1); // index in input sequence, in 0..P-1
-//
-//   float2 u0 = in[i];
-//   float2 u1 = in[i+t];
-//
-//   float2 twiddle = pow_theta(k,p);
-//
-//   float2 tmp;
-//
-//   MUL(u1,twiddle,tmp);
-//
-//   DFT2(u0,u1,tmp);
-//
-//   int j = (i<<1) - k; // = ((i-k)<<1)+k
-//
-//   out[j] = u0;
-//
-//   out[j+p] = u1;
-// }
-
-/* helper function */
-void fft_radix2_second_stage(__global float2 * out, int p)
+void fft_rows(
+    float * in,
+    float * out,
+    int gid,
+    int offset,
+    int img_offset,
+    int width,
+    int p
+  )
 {
-  /* id of current thread */
-  int i = gx;
-  /* nr of all threads */
-  int t = width;
+  int k = (gid - offset) & (p-1); // index in input sequence, in 0..P-1
 
-  int k = i & (p-1); // index in input sequence, in 0..P-1
+  float2 u0;
+  float2 u1;
+  if (p == 1) // only real input
+  {
+    u0.x = in[gid];
+    u0.y = 0;
 
-  float2 u0 = out[i];
-  float2 u1 = out[i+t];
+    u1.x = in[gid + (width/2)];
+    u1.y = 0;
+  }
+  else // get real and imaginary part
+  {
+    u0.x = in[gid]; //real part
+    u0.y = in[gid+img_offset]; //imag part
 
-  float2 twiddle = pow_theta(k,p);
+    u1.x = in[gid + (width/2)];
+    u1.y = in[gid + (width/2) + img_offset];
+  }
 
+
+  float2 twiddle = exp_alpha( (float)k*(-1)*2*M_PI / (float)p ); // p in denominator, k
   float2 tmp;
 
   MUL(u1,twiddle,tmp);
 
   DFT2(u0,u1,tmp);
 
-  int j = (i<<1) - k; // = ((i-k)<<1)+k
+  int j = ((gid - offset) <<1) - k; // = ((i-k)<<1)+k
+  j += offset;
 
-  out[j] = u0;
+  out[j] = real(u0);
+  out[j+p] = real(u1);
 
-  out[j+p] = u1;
+  out[j+img_offset] = imag(u0);
+  out[j+p+img_offset] = imag(u1);
 }
+
+void fft_columns(
+    float * in,
+    float * out,
+    int gid,
+    int offset,
+    int img_offset,
+    int width,
+    int p,
+    int offset_xy
+  )
+  {
+    int offset_in_xy_1 = gid - offset_xy * gz;
+    int in_1Dx = offset_xy / width;
+
+    int k = (in_1Dx & (p-1); // index in input sequence, in 0..P-1
+
+    float2 u0;
+    float2 u1;
+    u0.x = in[gid]; //real part
+    u0.y = in[gid+img_offset]; //imag part
+
+    u1.x = in[gid + (height/2)*width];
+    u1.y = in[gid + (height/2)*width + img_offset];
+
+    float2 twiddle = exp_alpha( (float)k*(-1)*2*M_PI / (float)p ); // p in denominator, k
+    float2 tmp;
+
+    MUL(u1,twiddle,tmp);
+
+    DFT2(u0,u1,tmp);
+
+    int j = (in_1Dx << 1) - k; // = ((i-k)<<1)+k
+    j *= width;
+    j += offset_xy*gz;
+    j += gx;
+
+    out[j] = real(u0);
+    out[j+p] = real(u1);
+
+    out[j+img_offset] = imag(u0);
+    out[j+p+img_offset] = imag(u1);
+  }

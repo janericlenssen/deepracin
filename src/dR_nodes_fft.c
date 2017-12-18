@@ -230,7 +230,7 @@ gboolean dR_fft_cleanupLayer(dR_Graph* net, dR_Node* layer)
     // free all memory that was reserved for node
     if(net->prepared)
         g_free(fft->intermedBuf);
-        g_free((dR_FFT_Data*)(layer->layer));
+        g_free(fft);
     return TRUE;
 }
 

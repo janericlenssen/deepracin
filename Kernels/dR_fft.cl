@@ -38,6 +38,7 @@
 
   OpenCL requires the image to be stored in RGBA
 
+  Input image is in RGB, FFT calculates FFT of R, G, B
 */
 
 /* Test function: copies the input and returns it */
