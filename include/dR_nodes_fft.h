@@ -12,7 +12,7 @@ typedef struct dR_FFT_Data dR_FFT_Data;
 
 struct dR_FFT_Data {
     dR_Shape3                  ishape;
-    gfloat*                    intermedBuf;
+    cl_mem                    intermedBuf;
 };
 
 // Mandatory

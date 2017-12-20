@@ -764,4 +764,3 @@ gchar* dR_softmax_printLayer(dR_Node* layer)
             "Softmax Layer: ",layer->layerID,"\n");
     return out;
 }
-

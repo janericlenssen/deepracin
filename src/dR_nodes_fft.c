@@ -121,7 +121,7 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
 
     /* for intermediate Buffer */
     dR_FFT_Data* fft = ((dR_FFT_Data*)(layer->layer));
-    net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_mem), (void *)fft->intermedBuf);          paramid++;
+    net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_mem), (void *)&fft->intermedBuf);          paramid++;
 
     net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_mem), (void *)layer->outputBuf->bufptr);          paramid++;
 
@@ -194,19 +194,23 @@ gboolean dR_fft_allocateBuffers(dR_Graph* net, dR_Node* layer)
 {
     /* create buffer for fft intermediate steps */
     gboolean ret = TRUE;
+    dR_FFT_Data* fft = ((dR_FFT_Data*)(layer->layer));
+    dR_Shape3 shape = fft->ishape;
     if(!net->prepared)
     {
-        dR_FFT_Data* fft = ((dR_FFT_Data*)(layer->layer));
         /* *2 to store real and imag part of complex number */
-        fft->intermedBuf = g_malloc(fft->ishape.s0*fft->ishape.s1*fft->ishape.s2*sizeof(gfloat) * 2 );
+        ret &= dR_createFloatBuffer(net, &(fft->intermedBuf),shape.s0*shape.s1*shape.s2*sizeof(gfloat)*2, CL_MEM_READ_WRITE);
     }
     return ret;
 }
 
 gboolean dR_fft_fillBuffers(dR_Graph* net, dR_Node* layer)
 {
-    // Nothing to do
-    // Warnings shut up, please
+    /*
+    dR_FFT_Data* fft = ((dR_FFT_Data*)(layer->layer));
+    shape = fft->shape;
+    ret &=  dR_uploadArray(net,"",fft->HOSTMEMTOUPLOAD,0,shape.s0*shape.s1*shape.s2*shape.s3*sizeof(gfloat)*2,fft->OPENCLMEM);
+    */
     net = net;
     layer = layer;
     return TRUE;
@@ -218,7 +222,7 @@ gboolean dR_fft_cleanupBuffers(dR_Graph* net, dR_Node* layer)
     if(net->prepared)
     {
         dR_FFT_Data* fft = ((dR_FFT_Data*)(layer->layer));
-        ret &= dR_cleanupKernel((fft->intermedBuf));
+        ret &= dR_clMemoryBufferCleanup(net, fft->intermedBuf);
         ret &= dR_cleanupKernel((layer->clKernel));
     }
     return ret;
