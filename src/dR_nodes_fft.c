@@ -64,7 +64,7 @@ gchar* dR_fft_serializeNode(dR_Node* layer, gchar* params[], gint* numParams, gf
     gint numNodeVariables = 0;
     if(*numParams<numNodeParams||*numVariables<numNodeVariables)
     {
-        g_print("SerializeNode needs space for %d parameters and %d variables!\n",numNodeParams,numNodeVariables);
+        g_print("FFTNode needs space for %d parameters and %d variables!\n",numNodeParams,numNodeVariables);
         return NULL;
     }
     *numParams = numNodeParams;

@@ -341,7 +341,7 @@ __kernel void fill(
     outputArr[gid] = scalar;
 }
 
-/* --------------FFT: Out of place-------------- */
+/* --------------FFT for RGB: Out of place-------------- */
 
 /* complex numbers definitions https://stackoverflow.com/questions/10016125/complex-number-support-in-opencl */
 #ifndef M_PI
@@ -357,11 +357,6 @@ inline float imag(float2 a){
 
 /* Complex multiplication */
 #define MUL(a, b, tmp) { tmp = a; a.x = tmp.x*b.x - tmp.y*b.y; a.y = tmp.x*b.y + tmp.y*b.x; }
-/*
-inline cfloat  cmult(float2 a, float2 b){
-    return (float2)( a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
-}
-*/
 
 /* Butterfly operation */
 #define DFT2( a, b, tmp) { tmp = a - b; a += b; b = tmp; }
@@ -387,6 +382,101 @@ float2 exp_alpha(float alpha)
  * 1) rows: Y*(X/2)*Z work items at once
  * 2) columns: X*(Y/2)*Z work items at once
  */
+
+ void fft_rows(
+     __global float * in,
+     __global float * out,
+     int gid,
+     int offset,
+     int img_offset,
+     int width,
+     int p
+   )
+ {
+   int k = (gid - offset) & (p-1); // index in input sequence, in 0..P-1
+
+   float2 u0;
+   float2 u1;
+   if (p == 1) // only real input
+   {
+     u0.x = in[gid];
+     u0.y = 0;
+
+     u1.x = in[gid + (width/2)];
+     u1.y = 0;
+   }
+   else // get real and imaginary part
+   {
+     u0.x = in[gid]; //real part
+     u0.y = in[gid+img_offset]; //imag part
+
+     u1.x = in[gid + (width/2)];
+     u1.y = in[gid + (width/2) + img_offset];
+   }
+
+
+   float2 twiddle = exp_alpha( (float)k*(-1)*2*M_PI / (float)p ); // p in denominator, k
+   float2 tmp;
+
+   MUL(u1,twiddle,tmp);
+
+   DFT2(u0,u1,tmp);
+
+   int j = ((gid - offset) <<1) - k; // = ((i-k)<<1)+k
+   j += offset;
+
+   out[j] = real(u0);
+   out[j+p] = real(u1);
+
+   out[j+img_offset] = imag(u0);
+   out[j+p+img_offset] = imag(u1);
+ }
+
+ void fft_columns(
+     __global float * in,
+     __global float * out,
+     int gid,
+     int offset,
+     int img_offset,
+     int width,
+     int p,
+     int offset_xy,
+     int gz,
+     int height,
+     int gx
+   )
+   {
+     int offset_in_xy_1 = gid - offset_xy * gz;
+     int in_1Dx = offset_xy / width;
+
+     int k = in_1Dx & (p-1); // index in input sequence, in 0..P-1
+
+     float2 u0;
+     float2 u1;
+     u0.x = in[gid]; //real part
+     u0.y = in[gid+img_offset]; //imag part
+
+     u1.x = in[gid + (height/2)*width];
+     u1.y = in[gid + (height/2)*width + img_offset];
+
+     float2 twiddle = exp_alpha( (float)k*(-1)*2*M_PI / (float)p ); // p in denominator, k
+     float2 tmp;
+
+     MUL(u1,twiddle,tmp);
+
+     DFT2(u0,u1,tmp);
+
+     int j = (in_1Dx << 1) - k; // = ((i-k)<<1)+k
+     j *= width;
+     j += offset_xy*gz;
+     j += gx;
+
+     out[j] = real(u0);
+     out[j+p] = real(u1);
+
+     out[j+img_offset] = imag(u0);
+     out[j+p+img_offset] = imag(u1);
+   }
 
 __kernel void fft(
     const __global float * gInput,
@@ -420,17 +510,17 @@ __kernel void fft(
     {
       if (p == 1)
       {
-        fft_rows(gInput, outputArr, gid, offset, img_offset, p);
+        fft_rows(gInput, outputArr, gid, offset, img_offset, width, p);
       }
       else
       {
         if (even_odd % 2) // odd
         {
-          fft_rows(outputArr, intermedBuf, gid, offset, img_offset, p);
+          fft_rows(outputArr, intermedBuf, gid, offset, img_offset, width, p);
         }
         else // even
         {
-          fft_rows(intermedBuf, outputArr, gid, offset, img_offset, p);
+          fft_rows(intermedBuf, outputArr, gid, offset, img_offset, width, p);
         }
       }
       even_odd++;
@@ -442,105 +532,13 @@ __kernel void fft(
     {
       if (even_odd2 % 2) // odd
       {
-        fft_columns(outputArr, intermedBuf, gid, offset, img_offset, p, offset_xy);
+        fft_columns(outputArr, intermedBuf, gid, offset, img_offset, width, p, offset_xy, gz, height, gx);
       }
       else // even
       {
-        fft_columns(intermedBuf, outputArr, gid, offset, img_offset, p, offset_xy);
+        fft_columns(intermedBuf, outputArr, gid, offset, img_offset, width, p, offset_xy, gz, height, gx);
       }
       even_odd2++;
     }
-    /* collumns may need different work items */
+    /* collumns need different work items if image not quadratic in X and Y */
 }
-
-void fft_rows(
-    float * in,
-    float * out,
-    int gid,
-    int offset,
-    int img_offset,
-    int width,
-    int p
-  )
-{
-  int k = (gid - offset) & (p-1); // index in input sequence, in 0..P-1
-
-  float2 u0;
-  float2 u1;
-  if (p == 1) // only real input
-  {
-    u0.x = in[gid];
-    u0.y = 0;
-
-    u1.x = in[gid + (width/2)];
-    u1.y = 0;
-  }
-  else // get real and imaginary part
-  {
-    u0.x = in[gid]; //real part
-    u0.y = in[gid+img_offset]; //imag part
-
-    u1.x = in[gid + (width/2)];
-    u1.y = in[gid + (width/2) + img_offset];
-  }
-
-
-  float2 twiddle = exp_alpha( (float)k*(-1)*2*M_PI / (float)p ); // p in denominator, k
-  float2 tmp;
-
-  MUL(u1,twiddle,tmp);
-
-  DFT2(u0,u1,tmp);
-
-  int j = ((gid - offset) <<1) - k; // = ((i-k)<<1)+k
-  j += offset;
-
-  out[j] = real(u0);
-  out[j+p] = real(u1);
-
-  out[j+img_offset] = imag(u0);
-  out[j+p+img_offset] = imag(u1);
-}
-
-void fft_columns(
-    float * in,
-    float * out,
-    int gid,
-    int offset,
-    int img_offset,
-    int width,
-    int p,
-    int offset_xy
-  )
-  {
-    int offset_in_xy_1 = gid - offset_xy * gz;
-    int in_1Dx = offset_xy / width;
-
-    int k = (in_1Dx & (p-1); // index in input sequence, in 0..P-1
-
-    float2 u0;
-    float2 u1;
-    u0.x = in[gid]; //real part
-    u0.y = in[gid+img_offset]; //imag part
-
-    u1.x = in[gid + (height/2)*width];
-    u1.y = in[gid + (height/2)*width + img_offset];
-
-    float2 twiddle = exp_alpha( (float)k*(-1)*2*M_PI / (float)p ); // p in denominator, k
-    float2 tmp;
-
-    MUL(u1,twiddle,tmp);
-
-    DFT2(u0,u1,tmp);
-
-    int j = (in_1Dx << 1) - k; // = ((i-k)<<1)+k
-    j *= width;
-    j += offset_xy*gz;
-    j += gx;
-
-    out[j] = real(u0);
-    out[j+p] = real(u1);
-
-    out[j+img_offset] = imag(u0);
-    out[j+p+img_offset] = imag(u1);
-  }
