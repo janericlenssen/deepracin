@@ -478,7 +478,7 @@ float2 exp_alpha(float alpha)
      out[j+p+img_offset] = imag(u1);
    }
 
-__kernel void fft(
+__kernel void fft_rgb(
     const __global float * gInput,
     __global float * intermedBuf,
     __global float * outputArr
@@ -541,4 +541,100 @@ __kernel void fft(
       even_odd2++;
     }
     /* collumns need different work items if image not quadratic in X and Y */
+}
+
+void fft_rows_gray();
+
+/* for grayscale */
+__kernel void fft(
+    const __global float * gInput,
+    __global float * intermedBuf,
+    __global float * outputArr
+    )
+{
+  int gx = (int) get_global_id(0);
+  int gy = (int) get_global_id(1);
+  int gz = (int) get_global_id(2);
+  int width = (int) get_global_size(0);
+  int height = (int) get_global_size(1);
+  int depth = (int) get_global_size(2); // is 1 for grayscale
+  int gid = gy*(width/2) + gx;
+  /* offset for scaling down (and up) of indices to 1D FFT indices */
+  int offset = gid - (width/2)*gy;
+  int imag_offset = width*height;
+
+  int even_odd = 0;
+  /* FFT for rows */
+  /* insert barrier between loop invocations */
+  for(int p = 1; p <= width; p *= 2)
+  {
+    if (p == 1)
+    {
+      fft_rows_gray(gInput, outputArr, p, gx, gy, gz, gid, offset, imag_offset, width);
+    }
+    else
+    {
+      if (even_odd % 2) // odd
+      {
+        fft_rows_gray(outputArr, intermedBuf, p, gx, gy, gz, gid, offset, imag_offset, width);
+      }
+      else // even
+      {
+        fft_rows_gray(intermedBuf, outputArr, p, gx, gy, gz, gid, offset, imag_offset, width);
+      }
+    }
+    even_odd++;
+  }
+}
+
+void fft_rows_gray(
+  __global float * in,
+  __global float * out,
+  int p,
+  int gx,
+  int gy,
+  int gz,
+  int gid,
+  int offset,
+  int imag_offset,
+  int width
+)
+{
+  int k = (gid - offset) & (p-1); // index in input sequence, in 0..P-1
+
+  float2 u0;
+  float2 u1;
+  if (p == 1) // only real input
+  {
+    u0.x = in[gid];
+    u0.y = 0;
+
+    u1.x = in[gid + (width/2)];
+    u1.y = 0;
+  }
+  else // get real and imaginary part
+  {
+    u0.x = in[gid]; //real part
+    u0.y = in[gid+imag_offset]; //imag part
+
+    u1.x = in[gid + (width/2)];
+    u1.y = in[gid + (width/2) + imag_offset];
+  }
+
+
+  float2 twiddle = exp_alpha( (float)k*(-1)*2*M_PI / (float)p ); // p in denominator, k
+  float2 tmp;
+
+  MUL(u1,twiddle,tmp);
+
+  DFT2(u0,u1,tmp);
+
+  int j = ((gid - offset) <<1) - k; // = ((i-k)<<1)+k
+  j += offset;
+
+  out[j] = real(u0);
+  out[j+p] = real(u1);
+
+  out[j+imag_offset] = imag(u0);
+  out[j+p+imag_offset] = imag(u1);
 }
