@@ -170,7 +170,8 @@ gboolean dR_fft_propagateShape(dR_Graph* net, dR_Node* layer)
 
     layer->oshape.s0 = fft->ishape.s0;
     layer->oshape.s1 = fft->ishape.s1;
-    layer->oshape.s2 = fft->ishape.s2;
+    //double this dimension to store real and img parts of fft
+    layer->oshape.s2 = 2*fft->ishape.s2;
     return TRUE;
 }
 
