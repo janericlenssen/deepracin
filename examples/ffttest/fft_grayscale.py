@@ -30,7 +30,8 @@ graph = env.create_graph(interface_layout='HWC')
 # Feed node - Will be fed with data for each graph application
 #feed_node = dr.feed_node(graph, shape=(497, 303, 1))
 
-feed_node = dr.feed_node(graph, shape=(224, 224, 1))
+#feed_node = dr.feed_node(graph, shape=(256, 256, 1))
+feed_node = dr.feed_node(graph, shape=(4, 4, 1))
 
 # create FFT node
 ffttest = dr.FFT(feed_node)
@@ -46,15 +47,17 @@ dr.save_graph(graph,env.model_path)
 
 dr.prepare(graph)
 
-image_paths = ['allblack.png']
+image_paths = ['verts4.png']
 
 for path in image_paths:
 
     # Feed Input
     img = io.imread(path)
+    io.imshow(img)
+    io.show()
+
     print "Input image dimensions: " + '\n' + str(img.shape) + '\n'
     exp = np.expand_dims(img,2)
-    type(img)
     print "Expanded input image dimensions: " + '\n' + str(exp.shape) + '\n'
     data = np.array(exp).astype(np.float32)
     print "np.array image dimensions: " + '\n' + str(data.shape) + '\n'

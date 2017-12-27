@@ -564,27 +564,82 @@ __kernel void fft(
   int imag_offset = width*height;
 
   int even_odd = 0;
+  int lastIn = 0; // if 1 : output in outputArr, 0: in buffer
   /* FFT for rows */
-  /* insert barrier between loop invocations */
+
   for(int p = 1; p <= width; p *= 2)
   {
+    /* barrier between loop invocations */
+    barrier(CLK_GLOBAL_MEM_FENCE);
     if (p == 1)
     {
-      fft_rows_gray(gInput, outputArr, p, gx, gy, gz, gid, offset, imag_offset, width);
+      fft_rows_gray(gInput, outputArr, p, gx, gy, gz, gid, offset, imag_offset, width, 0);
+      lastIn = 1;
     }
     else
     {
       if (even_odd % 2) // odd
       {
-        fft_rows_gray(outputArr, intermedBuf, p, gx, gy, gz, gid, offset, imag_offset, width);
+        fft_rows_gray(outputArr, intermedBuf, p, gx, gy, gz, gid, offset, imag_offset, width, 0);
+        lastIn = 0;
       }
       else // even
       {
-        fft_rows_gray(intermedBuf, outputArr, p, gx, gy, gz, gid, offset, imag_offset, width);
+        fft_rows_gray(intermedBuf, outputArr, p, gx, gy, gz, gid, offset, imag_offset, width, 0);
+        lastIn = 1;
       }
     }
     even_odd++;
   }
+
+  barrier(CLK_GLOBAL_MEM_FENCE);
+  if(lastIn == 0)
+  {
+    outputArr[gid] = intermedBuf[gid];
+    outputArr[gid + width/2] = intermedBuf[gid + width/2];
+    outputArr[gid + imag_offset] = intermedBuf[gid + imag_offset];
+    outputArr[gid + width/2 + imag_offset] = intermedBuf[gid + width/2 + imag_offset];
+  }
+  /* barrier between loop invocations */
+
+  int inv = 1;
+  if(inv)
+  {
+    barrier(CLK_GLOBAL_MEM_FENCE);
+    even_odd = 1;
+    lastIn = 0;
+
+    for(int p = 1; p <= width; p *= 2)
+    {
+      barrier(CLK_GLOBAL_MEM_FENCE);
+      if (even_odd % 2) // odd
+      {
+        fft_rows_gray(outputArr, intermedBuf, p, gx, gy, gz, gid, offset, imag_offset, width, 1);
+        lastIn = 0;
+      }
+      else // even
+      {
+        fft_rows_gray(intermedBuf, outputArr, p, gx, gy, gz, gid, offset, imag_offset, width, 1);
+        lastIn = 1;
+      }
+      even_odd++;
+    }
+
+    barrier(CLK_GLOBAL_MEM_FENCE);
+    if(lastIn == 0)
+    {
+      outputArr[gid] = intermedBuf[gid];
+      outputArr[gid + width/2] = intermedBuf[gid + width/2];
+      outputArr[gid + imag_offset] = intermedBuf[gid + imag_offset];
+      outputArr[gid + width/2 + imag_offset] = intermedBuf[gid + width/2 + imag_offset];
+    }
+
+    barrier(CLK_GLOBAL_MEM_FENCE);
+    outputArr[gid] /= (width*height);
+    outputArr[gid + width/2] /= (width*height);
+    outputArr[gid + imag_offset] /= (width*height);
+    outputArr[gid + width/2 + imag_offset] /= (width*height);
+ }
 }
 
 void fft_rows_gray(
@@ -597,13 +652,15 @@ void fft_rows_gray(
   int gid,
   int offset,
   int imag_offset,
-  int width
+  int width,
+  int inverse
 )
 {
   int k = (gid - offset) & (p-1); // index in input sequence, in 0..P-1
 
   float2 u0;
   float2 u1;
+
   if (p == 1) // only real input
   {
     u0.x = in[gid];
@@ -621,9 +678,17 @@ void fft_rows_gray(
     u1.y = in[gid + (width/2) + imag_offset];
   }
 
-
-  float2 twiddle = exp_alpha( (float)k*(-1)*2*M_PI / (float)p ); // p in denominator, k
+  float2 twiddle;
   float2 tmp;
+
+  if (inverse)
+  {
+     twiddle = exp_alpha( (float)k*2*M_PI / (float)p ); // p in denominator, k
+  }
+  else
+  {
+     twiddle = exp_alpha( (float)k*(-1)*2*M_PI / (float)p ); // p in denominator, k
+  }
 
   MUL(u1,twiddle,tmp);
 
