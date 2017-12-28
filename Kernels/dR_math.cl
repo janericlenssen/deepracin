@@ -559,7 +559,7 @@ void one_dim(
   float2 u0;
   float2 u1;
 
-  if (p == 1) // only real input
+  if (p == 1 && (inverse == 0)) // only real input
   {
     u0.x = in[i];
     u0.y = 0;
@@ -624,25 +624,56 @@ __kernel void fft(
   {
     for(int p = 1; p <= w/2; p *= 2)
     {
-        if (p==1)
+      if (p==1)
+      {
+        one_dim(gInput, outputArr, p, i, w, img_offset, 0);
+      }
+      else
+      {
+        if (even_odd % 2) // odd
         {
-          one_dim(gInput, outputArr, p, i, w, img_offset, 0);
+          one_dim(outputArr, intermedBuf, p, i, w, img_offset, 0);
+          lastIn = 0;
         }
-        else
+        else // even
         {
-          if (even_odd % 2) // odd
-          {
-            one_dim(outputArr, intermedBuf, p, i, w, img_offset, 0);
-            lastIn = 0;
-          }
-          else // even
-          {
-            one_dim(intermedBuf, outputArr, p, i, w, img_offset, 0);
-            lastIn = 1;
-          }
+          one_dim(intermedBuf, outputArr, p, i, w, img_offset, 0);
+          lastIn = 1;
         }
-        even_odd++;
-        barrier(CLK_GLOBAL_MEM_FENCE);
+      }
+      even_odd++;
+      barrier(CLK_GLOBAL_MEM_FENCE);
+    }
+
+    barrier(CLK_GLOBAL_MEM_FENCE);
+    if( lastIn == 0 )
+    {
+      outputArr[i] = intermedBuf[i];
+      outputArr[i + w/2] = intermedBuf[i + w/2];
+      outputArr[i + img_offset] = intermedBuf[i + img_offset];
+      outputArr[i + w/2 + img_offset] = intermedBuf[i + w/2 + img_offset];
+    }
+
+    barrier(CLK_GLOBAL_MEM_FENCE);
+    //when doing inverse, begin with odd call, so =1
+    int even_odd = 1;
+    int lastIn = 0;
+    barrier(CLK_GLOBAL_MEM_FENCE);
+    /* Do inverse 1D FFT */
+    for(int p = 1; p <= w/2; p *= 2)
+    {
+      if (even_odd % 2) // odd
+      {
+        one_dim(outputArr, intermedBuf, p, i, w, img_offset, 1);
+        lastIn = 0;
+      }
+      else // even
+      {
+        one_dim(intermedBuf, outputArr, p, i, w, img_offset, 1);
+        lastIn = 1;
+      }
+      even_odd++;
+      barrier(CLK_GLOBAL_MEM_FENCE);
     }
 
     barrier(CLK_GLOBAL_MEM_FENCE);
@@ -654,6 +685,7 @@ __kernel void fft(
       outputArr[i + w/2 + img_offset] = intermedBuf[i + w/2 + img_offset];
     }
   }
+  outputArr[i] /= w;
 }
 
 /******************** grayscale FFT *********************/
