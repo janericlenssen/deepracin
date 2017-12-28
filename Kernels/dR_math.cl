@@ -383,12 +383,13 @@ float2 exp_alpha(float alpha)
  * 2) columns: X*(Y/2)*Z work items at once
  */
 /*********************************** RGB FFT ******************************************/
+#if 0
  void fft_rows(
      __global float * in,
      __global float * out,
      int gid,
      int offset,
-     int img_offset,
+     int imag_offset,
      int width,
      int p
    )
@@ -408,14 +409,14 @@ float2 exp_alpha(float alpha)
    else // get real and imaginary part
    {
      u0.x = in[gid]; //real part
-     u0.y = in[gid+img_offset]; //imag part
+     u0.y = in[gid+imag_offset]; //imag part
 
      u1.x = in[gid + (width/2)];
-     u1.y = in[gid + (width/2) + img_offset];
+     u1.y = in[gid + (width/2) + imag_offset];
    }
 
 
-   float2 twiddle = exp_alpha( (float)k*(-1)*2*M_PI / (float)p ); // p in denominator, k
+   float2 twiddle = exp_alpha( (float)k*(-1)*M_PI / (float)p ); // p in denominator, k
    float2 tmp;
 
    MUL(u1,twiddle,tmp);
@@ -428,8 +429,8 @@ float2 exp_alpha(float alpha)
    out[j] = real(u0);
    out[j+p] = real(u1);
 
-   out[j+img_offset] = imag(u0);
-   out[j+p+img_offset] = imag(u1);
+   out[j+imag_offset] = imag(u0);
+   out[j+p+imag_offset] = imag(u1);
  }
 
  void fft_columns(
@@ -437,7 +438,7 @@ float2 exp_alpha(float alpha)
      __global float * out,
      int gid,
      int offset,
-     int img_offset,
+     int imag_offset,
      int width,
      int p,
      int offset_xy,
@@ -454,12 +455,12 @@ float2 exp_alpha(float alpha)
      float2 u0;
      float2 u1;
      u0.x = in[gid]; //real part
-     u0.y = in[gid+img_offset]; //imag part
+     u0.y = in[gid+imag_offset]; //imag part
 
      u1.x = in[gid + (height/2)*width];
-     u1.y = in[gid + (height/2)*width + img_offset];
+     u1.y = in[gid + (height/2)*width + imag_offset];
 
-     float2 twiddle = exp_alpha( (float)k*(-1)*2*M_PI / (float)p ); // p in denominator, k
+     float2 twiddle = exp_alpha( (float)k*(-1)*M_PI / (float)p ); // p in denominator, k
      float2 tmp;
 
      MUL(u1,twiddle,tmp);
@@ -474,8 +475,8 @@ float2 exp_alpha(float alpha)
      out[j] = real(u0);
      out[j+p] = real(u1);
 
-     out[j+img_offset] = imag(u0);
-     out[j+p+img_offset] = imag(u1);
+     out[j+imag_offset] = imag(u0);
+     out[j+p+imag_offset] = imag(u1);
    }
 
 __kernel void fft_rgb(
@@ -501,7 +502,7 @@ __kernel void fft_rgb(
     /* offset for scaling down (and up) of indices to 1D FFT indices */
     int offset = gid - (width/2)*height*gz - (width/2)*gy;
     int offset_xy = width*(height/2);
-    int img_offset = width*height*3;
+    int imag_offset = width*height*3;
 
     int even_odd = 0;
     /* FFT for rows */
@@ -510,17 +511,17 @@ __kernel void fft_rgb(
     {
       if (p == 1)
       {
-        fft_rows(gInput, outputArr, gid, offset, img_offset, width, p);
+        fft_rows(gInput, outputArr, gid, offset, imag_offset, width, p);
       }
       else
       {
         if (even_odd % 2) // odd
         {
-          fft_rows(outputArr, intermedBuf, gid, offset, img_offset, width, p);
+          fft_rows(outputArr, intermedBuf, gid, offset, imag_offset, width, p);
         }
         else // even
         {
-          fft_rows(intermedBuf, outputArr, gid, offset, img_offset, width, p);
+          fft_rows(intermedBuf, outputArr, gid, offset, imag_offset, width, p);
         }
       }
       even_odd++;
@@ -532,25 +533,27 @@ __kernel void fft_rgb(
     {
       if (even_odd2 % 2) // odd
       {
-        fft_columns(outputArr, intermedBuf, gid, offset, img_offset, width, p, offset_xy, gz, height, gx);
+        fft_columns(outputArr, intermedBuf, gid, offset, imag_offset, width, p, offset_xy, gz, height, gx);
       }
       else // even
       {
-        fft_columns(intermedBuf, outputArr, gid, offset, img_offset, width, p, offset_xy, gz, height, gx);
+        fft_columns(intermedBuf, outputArr, gid, offset, imag_offset, width, p, offset_xy, gz, height, gx);
       }
       even_odd2++;
     }
     /* collumns need different work items if image not quadratic in X and Y */
 }
-
-/******************** 1D test fft *********************/
+#endif
+/******************** 1D test fft: only transform first row of image*********************/
+#if 0
+//TODO: Inverse test successful, only works till 64*64 images. 128*128 and 256*256 give wrong results
 void one_dim(
   __global float * in,
   __global float * out,
   int p,
   int i,
   int w,
-  int img_offset,
+  int imag_offset,
   int inverse
 )
 {
@@ -570,10 +573,10 @@ void one_dim(
   else // get real and imaginary part
   {
     u0.x = in[i]; //real part
-    u0.y = in[i+img_offset]; //imag part
+    u0.y = in[i+imag_offset]; //imag part
 
     u1.x = in[i + (w/2)];
-    u1.y = in[i + (w/2) + img_offset];
+    u1.y = in[i + (w/2) + imag_offset];
   }
 
   float2 twiddle;
@@ -597,11 +600,11 @@ void one_dim(
   out[j] = real(u0);
   out[j+p] = real(u1);
 
-  out[j+img_offset] = imag(u0);
-  out[j+p+img_offset] = imag(u1);
+  out[j+imag_offset] = imag(u0);
+  out[j+p+imag_offset] = imag(u1);
 }
 
-__kernel void fft(
+__kernel void fft_one_dim(
   const __global float * gInput,
   __global float * intermedBuf,
   __global float * outputArr
@@ -610,7 +613,7 @@ __kernel void fft(
   int i = get_global_id(0);
   int w = (int) get_global_size(0);
   int h = (int) get_global_size(1);
-  int img_offset = w*h;
+  int imag_offset = w*h;
 
   int even_odd = 0;
   int lastIn = 0;
@@ -626,18 +629,18 @@ __kernel void fft(
     {
       if (p==1)
       {
-        one_dim(gInput, outputArr, p, i, w, img_offset, 0);
+        one_dim(gInput, outputArr, p, i, w, imag_offset, 0);
       }
       else
       {
         if (even_odd % 2) // odd
         {
-          one_dim(outputArr, intermedBuf, p, i, w, img_offset, 0);
+          one_dim(outputArr, intermedBuf, p, i, w, imag_offset, 0);
           lastIn = 0;
         }
         else // even
         {
-          one_dim(intermedBuf, outputArr, p, i, w, img_offset, 0);
+          one_dim(intermedBuf, outputArr, p, i, w, imag_offset, 0);
           lastIn = 1;
         }
       }
@@ -650,8 +653,8 @@ __kernel void fft(
     {
       outputArr[i] = intermedBuf[i];
       outputArr[i + w/2] = intermedBuf[i + w/2];
-      outputArr[i + img_offset] = intermedBuf[i + img_offset];
-      outputArr[i + w/2 + img_offset] = intermedBuf[i + w/2 + img_offset];
+      outputArr[i + imag_offset] = intermedBuf[i + imag_offset];
+      outputArr[i + w/2 + imag_offset] = intermedBuf[i + w/2 + imag_offset];
     }
 
     barrier(CLK_GLOBAL_MEM_FENCE);
@@ -659,17 +662,20 @@ __kernel void fft(
     int even_odd = 1;
     int lastIn = 0;
     barrier(CLK_GLOBAL_MEM_FENCE);
+
+    #if 1
+
     /* Do inverse 1D FFT */
     for(int p = 1; p <= w/2; p *= 2)
     {
       if (even_odd % 2) // odd
       {
-        one_dim(outputArr, intermedBuf, p, i, w, img_offset, 1);
+        one_dim(outputArr, intermedBuf, p, i, w, imag_offset, 1);
         lastIn = 0;
       }
       else // even
       {
-        one_dim(intermedBuf, outputArr, p, i, w, img_offset, 1);
+        one_dim(intermedBuf, outputArr, p, i, w, imag_offset, 1);
         lastIn = 1;
       }
       even_odd++;
@@ -681,15 +687,177 @@ __kernel void fft(
     {
       outputArr[i] = intermedBuf[i];
       outputArr[i + w/2] = intermedBuf[i + w/2];
-      outputArr[i + img_offset] = intermedBuf[i + img_offset];
-      outputArr[i + w/2 + img_offset] = intermedBuf[i + w/2 + img_offset];
+      outputArr[i + imag_offset] = intermedBuf[i + imag_offset];
+      outputArr[i + w/2 + imag_offset] = intermedBuf[i + w/2 + imag_offset];
     }
+    #endif
   }
+  barrier(CLK_GLOBAL_MEM_FENCE);
   outputArr[i] /= w;
 }
 
-/******************** grayscale FFT *********************/
+#endif
+/******************** 2D only rows grayscale test fft *********************/
+void two_dim(
+  __global float * in,
+  __global float * out,
+  int p,
+  int gid,
+  int gx,
+  int gy,
+  int w,
+  int imag_offset,
+  int offset,
+  int inverse
+)
+{
+  int k = (gid - offset) & (p-1);
 
+  float2 u0;
+  float2 u1;
+
+  if (p == 1 && (inverse == 0)) // only real input
+  {
+    u0.x = in[gid];
+    u0.y = 0;
+
+    u1.x = in[gid + (w/2)];
+    u1.y = 0;
+  }
+  else // get real and imaginary part
+  {
+    u0.x = in[gid]; //real part
+    u0.y = in[gid+imag_offset]; //imag part
+
+    u1.x = in[gid + (w/2)];
+    u1.y = in[gid + (w/2) + imag_offset];
+  }
+
+  float2 twiddle;
+  float2 tmp;
+
+  if (inverse)
+  {
+     twiddle = exp_alpha( (float)(k)*M_PI / (float)(p) ); // p in denominator, k
+  }
+  else
+  {
+     twiddle = exp_alpha( (float)(k)*(-1)*M_PI / (float)(p) ); // p in denominator, k
+  }
+
+  MUL(u1,twiddle,tmp);
+
+  DFT2(u0,u1,tmp);
+
+  int j = ((gid - offset) << 1) - k;
+  j += offset;
+
+  out[j] = real(u0);
+  out[j+p] = real(u1);
+
+  out[j+imag_offset] = imag(u0);
+  out[j+p+imag_offset] = imag(u1);
+}
+/* Kernel function */
+__kernel void fft(
+  const __global float * gInput,
+  __global float * intermedBuf,
+  __global float * outputArr
+)
+{
+  int gx = get_global_id(0);
+  int gy = get_global_id(1);
+  int w = (int) get_global_size(0);
+  int h = (int) get_global_size(1);
+  int gid = w*gy + gx;
+  int imag_offset = w*h;
+  int offset = gy*w;
+
+  int even_odd = 0;
+  int lastIn = 0;
+
+  barrier(CLK_GLOBAL_MEM_FENCE);
+  intermedBuf[gid] = 0.0;
+  outputArr[gid] = 0.0;
+  outputArr[gid + imag_offset] = 0.0;
+  barrier(CLK_GLOBAL_MEM_FENCE);
+
+  if( (gid - offset) < w/2 )
+  {
+    for(int p = 1; p <= w/2; p *= 2)
+    {
+      if (p==1)
+      {
+        two_dim(gInput, outputArr, p, gid, gx, gy, w, imag_offset, offset, 0);
+      }
+      else
+      {
+        if (even_odd % 2) // odd
+        {
+          two_dim(outputArr, intermedBuf, p, gid, gx, gy, w, imag_offset, offset, 0);
+          lastIn = 0;
+        }
+        else // even
+        {
+          two_dim(intermedBuf, outputArr, p, gid, gx, gy, w, imag_offset, offset, 0);
+          lastIn = 1;
+        }
+      }
+      even_odd++;
+      barrier(CLK_GLOBAL_MEM_FENCE);
+    }
+
+    barrier(CLK_GLOBAL_MEM_FENCE);
+    if( lastIn == 0 )
+    {
+      outputArr[gid] = intermedBuf[gid];
+      outputArr[gid + w/2] = intermedBuf[gid + w/2];
+      outputArr[gid + imag_offset] = intermedBuf[gid + imag_offset];
+      outputArr[gid + w/2 + imag_offset] = intermedBuf[gid + w/2 + imag_offset];
+    }
+
+
+    barrier(CLK_GLOBAL_MEM_FENCE);
+    //when doing inverse, begin with odd call, so =1
+    even_odd = 1;
+    lastIn = 0;
+    barrier(CLK_GLOBAL_MEM_FENCE);
+
+    #if 1
+
+    /* Do inverse 1D FFT */
+    for(int p = 1; p <= w/2; p *= 2)
+    {
+      if (even_odd % 2) // odd
+      {
+        two_dim(outputArr, intermedBuf, p, gid, gx, gy, w, imag_offset, offset, 1);
+        lastIn = 0;
+      }
+      else // even
+      {
+        two_dim(intermedBuf, outputArr, p, gid, gx, gy, w, imag_offset, offset, 1);
+        lastIn = 1;
+      }
+      even_odd++;
+      barrier(CLK_GLOBAL_MEM_FENCE);
+    }
+
+    barrier(CLK_GLOBAL_MEM_FENCE);
+    if( lastIn == 0 )
+    {
+      outputArr[gid] = intermedBuf[gid];
+      outputArr[gid + w/2] = intermedBuf[gid + w/2];
+      outputArr[gid + imag_offset] = intermedBuf[gid + imag_offset];
+      outputArr[gid + w/2 + imag_offset] = intermedBuf[gid + w/2 + imag_offset];
+    }
+  }
+  #endif
+  barrier(CLK_GLOBAL_MEM_FENCE);
+  outputArr[gid] /= w;
+}
+
+/******************** grayscale FFT *********************/
+#if 0
 void fft_rows_gray();
 
 __kernel void fft_gray(
@@ -829,11 +997,11 @@ void fft_rows_gray(
 
   if (inverse)
   {
-     twiddle = exp_alpha( (float)k*2*M_PI / (float)p ); // p in denominator, k
+     twiddle = exp_alpha( (float)k*M_PI / (float)p ); // p in denominator, k
   }
   else
   {
-     twiddle = exp_alpha( (float)k*(-1)*2*M_PI / (float)p ); // p in denominator, k
+     twiddle = exp_alpha( (float)k*(-1)*M_PI / (float)p ); // p in denominator, k
   }
 
   MUL(u1,twiddle,tmp);
@@ -849,3 +1017,4 @@ void fft_rows_gray(
   out[j+imag_offset] = imag(u0);
   out[j+p+imag_offset] = imag(u1);
 }
+#endif

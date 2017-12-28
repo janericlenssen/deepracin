@@ -31,7 +31,7 @@ graph = env.create_graph(interface_layout='HWC')
 #feed_node = dr.feed_node(graph, shape=(497, 303, 1))
 
 #feed_node = dr.feed_node(graph, shape=(256, 256, 1))
-feed_node = dr.feed_node(graph, shape=(4, 4, 1))
+feed_node = dr.feed_node(graph, shape=(512, 512, 1))
 
 # create FFT node
 ffttest = dr.FFT(feed_node)
@@ -47,7 +47,7 @@ dr.save_graph(graph,env.model_path)
 
 dr.prepare(graph)
 
-image_paths = ['verts4.png']
+image_paths = ['tigerbw512.png']
 
 for path in image_paths:
 
