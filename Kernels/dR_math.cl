@@ -660,7 +660,7 @@ __kernel void fft_one_dim(
     barrier(CLK_GLOBAL_MEM_FENCE);
     //when doing inverse, begin with odd call, so =1
     int even_odd = 1;
-    int lastIn = 0;
+    int lastIn = 1;
     barrier(CLK_GLOBAL_MEM_FENCE);
 
     #if 1
@@ -821,7 +821,7 @@ __kernel void fft(
     barrier(CLK_GLOBAL_MEM_FENCE);
     //when doing inverse, begin with odd call, so =1
     even_odd = 1;
-    lastIn = 0;
+    lastIn = 1;
     barrier(CLK_GLOBAL_MEM_FENCE);
 
     #if 1
@@ -859,6 +859,7 @@ __kernel void fft(
 #endif
 /******************** 2D only columns grayscale test fft *********************/
 #if 1
+
 void two_dim_columns(
   __global float * in,
   __global float * out,
@@ -873,7 +874,7 @@ void two_dim_columns(
   int inverse
 )
 {
-  int k = (gid - offset) & (p-1);
+  int k = (gid/w) & (p-1);
 
   float2 u0;
   float2 u1;
@@ -911,16 +912,15 @@ void two_dim_columns(
 
   DFT2(u0,u1,tmp);
 
-  int j = ((gid - offset) << 1) - k;
+  int j = ((gid/w) << 1) - k;
   j *= w;
-  j += offset;
-  j += (gid - offset);
+  j += gx;
 
   out[j] = real(u0);
-  out[j + w*p] = real(u1);
+  out[j + p*w] = real(u1);
 
   out[j + imag_offset] = imag(u0);
-  out[j + w*p + imag_offset] = imag(u1);
+  out[j + p*w + imag_offset] = imag(u1);
 }
 
 /* Kernel function */
@@ -941,14 +941,13 @@ __kernel void fft(
   int even_odd = 0;
   int lastIn = 0;
 
-  barrier(CLK_GLOBAL_MEM_FENCE);
   intermedBuf[gid] = 0.0;
   intermedBuf[gid + imag_offset] = 0.0;
   outputArr[gid] = 0.0;
   outputArr[gid + imag_offset] = 0.0;
   barrier(CLK_GLOBAL_MEM_FENCE);
 
-  if( (gid - offset) < h/2 )
+  if( ( gid < ((h/2)*w) ) && ((gid % w) == 0)  )
   {
     for(int p = 1; p <= h/2; p *= 2)
     {
@@ -974,14 +973,28 @@ __kernel void fft(
     }
 
     barrier(CLK_GLOBAL_MEM_FENCE);
-    //when doing inverse, begin with odd call, so =1
-    //even_odd = 1;
-    //lastIn = 0;
+    if( lastIn == 0 )
+    {
+      outputArr[gid] = intermedBuf[gid];
+      outputArr[gid + (h/2)*w] = intermedBuf[gid + (h/2)*w];
+      outputArr[gid + imag_offset] = intermedBuf[gid + imag_offset];
+      outputArr[gid + (h/2)*w + imag_offset] = intermedBuf[gid + (h/2)*w + imag_offset];
+    }
+
+    /*
+    TODO: fix for sizes larger than 64*64
+    barrier(CLK_GLOBAL_MEM_FENCE);
+    outputArr[gid] = gid;
+    outputArr[gid + (h/2)*w] = gid + (h/2)*w;
+    */
+
+    #if 1
+
+    barrier(CLK_GLOBAL_MEM_FENCE);
+    even_odd = 1;
+    lastIn = 1;
     barrier(CLK_GLOBAL_MEM_FENCE);
 
-    #if 0 // for inverse
-
-    /* Do inverse 1D FFT */
     for(int p = 1; p <= h/2; p *= 2)
     {
       if (even_odd % 2) // odd
@@ -994,34 +1007,23 @@ __kernel void fft(
         two_dim_columns(intermedBuf, outputArr, p, gid, gx, gy, w, h, imag_offset, offset, 1);
         lastIn = 1;
       }
-      even_odd++;
-      barrier(CLK_GLOBAL_MEM_FENCE);
     }
+    even_odd++;
 
     barrier(CLK_GLOBAL_MEM_FENCE);
-    if( lastIn == 0 )
+    if( lastIn = 0 )
     {
       outputArr[gid] = intermedBuf[gid];
-      outputArr[gid + w/2] = intermedBuf[gid + w/2];
+      outputArr[gid + (h/2)*w] = intermedBuf[gid + (h/2)*w];
       outputArr[gid + imag_offset] = intermedBuf[gid + imag_offset];
-      outputArr[gid + w/2 + imag_offset] = intermedBuf[gid + w/2 + imag_offset];
+      outputArr[gid + (h/2)*w + imag_offset] = intermedBuf[gid + (h/2)*w + imag_offset];
     }
-  }
-    #endif
+
     barrier(CLK_GLOBAL_MEM_FENCE);
-
+    //outputArr[gid] /= (h);
+    //outputArr[gid + (h/2)*w] /= (h);
+    #endif
   }
 
-  barrier(CLK_GLOBAL_MEM_FENCE);
-  if( lastIn == 0 )
-  {
-
-    outputArr[gid] = intermedBuf[gid];
-    //outputArr[gid + w*(h/2)] = intermedBuf[gid + w*(h/2)];
-    outputArr[gid + imag_offset] = intermedBuf[gid + imag_offset];
-    //outputArr[gid + w*(h/2) + imag_offset] = intermedBuf[gid + w*(h/2) + imag_offset];
-
-  }
-  //outputArr[gid] /= (w*h);
-  #endif
 }
+#endif
