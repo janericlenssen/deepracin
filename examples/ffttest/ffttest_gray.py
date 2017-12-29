@@ -32,17 +32,17 @@ graph = env.create_graph(interface_layout='HWC')
 
 feed_node = dr.feed_node(graph, shape=(224, 224, 3))
 
-r, g, b = [feed_node[0:224, 0:224, 0] - 123.68,
-            feed_node[0:224, 0:224, 1] - 116.779,
-            feed_node[0:224, 0:224, 2] - 103.939]
+#r, g, b = [feed_node[0:224, 0:224, 0] - 123.68,
+           # feed_node[0:224, 0:224, 1] - 116.779,
+           # feed_node[0:224, 0:224, 2] - 103.939]
 
-concat = dr.Concat([b, g, r], 2)
-
-###
+#concat = dr.Concat([b, g, r], 2)
 
 ###
 
-rgb_to = dr.RGB_to_gray(concat)
+###
+
+rgb_to = dr.RGB_to_gray(feed_node)
 
 # create FFT node
 ffttest = dr.FFT(rgb_to)

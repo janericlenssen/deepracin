@@ -817,7 +817,6 @@ __kernel void fft(
       outputArr[gid + w/2 + imag_offset] = intermedBuf[gid + w/2 + imag_offset];
     }
 
-
     barrier(CLK_GLOBAL_MEM_FENCE);
     //when doing inverse, begin with odd call, so =1
     even_odd = 1;
@@ -851,10 +850,12 @@ __kernel void fft(
       outputArr[gid + imag_offset] = intermedBuf[gid + imag_offset];
       outputArr[gid + w/2 + imag_offset] = intermedBuf[gid + w/2 + imag_offset];
     }
+    barrier(CLK_GLOBAL_MEM_FENCE);
+    outputArr[gid] /= w;
+    outputArr[gid + w/2] /= w;
   }
   #endif
   barrier(CLK_GLOBAL_MEM_FENCE);
-  outputArr[gid] /= w;
 }
 #endif
 /******************** 2D only columns grayscale test fft *********************/
@@ -874,7 +875,8 @@ void two_dim_columns(
   int inverse
 )
 {
-  int k = (gid/w) & (p-1);
+  // get row in array, to get indices in 1D array. or use gy?
+  int k = gy & (p-1);
 
   float2 u0;
   float2 u1;
@@ -890,7 +892,7 @@ void two_dim_columns(
   else // get real and imaginary part
   {
     u0.x = in[gid]; //real part
-    u0.y = in[gid + imag_offset]; //imag part
+    u0.y = in[gid+imag_offset]; //imag part
 
     u1.x = in[gid + (h/2)*w];
     u1.y = in[gid + (h/2)*w + imag_offset];
@@ -912,17 +914,16 @@ void two_dim_columns(
 
   DFT2(u0,u1,tmp);
 
-  int j = ((gid/w) << 1) - k;
+  int j = (gy << 1) - k;
   j *= w;
   j += gx;
 
   out[j] = real(u0);
-  out[j + p*w] = real(u1);
+  out[j+w*p] = real(u1);
 
-  out[j + imag_offset] = imag(u0);
-  out[j + p*w + imag_offset] = imag(u1);
+  out[j+imag_offset] = imag(u0);
+  out[j+w*p+imag_offset] = imag(u1);
 }
-
 /* Kernel function */
 __kernel void fft(
   const __global float * gInput,
@@ -941,13 +942,14 @@ __kernel void fft(
   int even_odd = 0;
   int lastIn = 0;
 
+  barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
   intermedBuf[gid] = 0.0;
   intermedBuf[gid + imag_offset] = 0.0;
   outputArr[gid] = 0.0;
   outputArr[gid + imag_offset] = 0.0;
-  barrier(CLK_GLOBAL_MEM_FENCE);
+  barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
 
-  if( ( gid < ((h/2)*w) ) && ((gid % w) == 0)  )
+  if( gid < ((h/2)*w) )
   {
     for(int p = 1; p <= h/2; p *= 2)
     {
@@ -969,10 +971,10 @@ __kernel void fft(
         }
       }
       even_odd++;
-      barrier(CLK_GLOBAL_MEM_FENCE);
+      barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
     }
 
-    barrier(CLK_GLOBAL_MEM_FENCE);
+    barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
     if( lastIn == 0 )
     {
       outputArr[gid] = intermedBuf[gid];
@@ -981,20 +983,15 @@ __kernel void fft(
       outputArr[gid + (h/2)*w + imag_offset] = intermedBuf[gid + (h/2)*w + imag_offset];
     }
 
-    /*
-    TODO: fix for sizes larger than 64*64
-    barrier(CLK_GLOBAL_MEM_FENCE);
-    outputArr[gid] = gid;
-    outputArr[gid + (h/2)*w] = gid + (h/2)*w;
-    */
+    barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
+    //when doing inverse, begin with odd call, so =1
 
-    #if 1
-
-    barrier(CLK_GLOBAL_MEM_FENCE);
+    #if 1 // 1 turns inverse on, 0 turns inverse off
     even_odd = 1;
     lastIn = 1;
-    barrier(CLK_GLOBAL_MEM_FENCE);
+    barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
 
+    /* Do inverse 1D FFT */
     for(int p = 1; p <= h/2; p *= 2)
     {
       if (even_odd % 2) // odd
@@ -1007,23 +1004,22 @@ __kernel void fft(
         two_dim_columns(intermedBuf, outputArr, p, gid, gx, gy, w, h, imag_offset, offset, 1);
         lastIn = 1;
       }
+      even_odd++;
+      barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
     }
-    even_odd++;
 
-    barrier(CLK_GLOBAL_MEM_FENCE);
-    if( lastIn = 0 )
+    barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
+    if( lastIn == 0 )
     {
       outputArr[gid] = intermedBuf[gid];
       outputArr[gid + (h/2)*w] = intermedBuf[gid + (h/2)*w];
       outputArr[gid + imag_offset] = intermedBuf[gid + imag_offset];
       outputArr[gid + (h/2)*w + imag_offset] = intermedBuf[gid + (h/2)*w + imag_offset];
     }
-
-    barrier(CLK_GLOBAL_MEM_FENCE);
-    //outputArr[gid] /= (h);
-    //outputArr[gid + (h/2)*w] /= (h);
+    barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
+    //outputArr[gid] /= h;
+    //outputArr[gid + (h/2)*w] /= h;
     #endif
   }
-
 }
 #endif

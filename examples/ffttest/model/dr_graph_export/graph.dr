@@ -1,0 +1,11 @@
+deepRACIN graph: 2 nodes, 1 feed nodes
+Node 0: DataFeedNode
+params: 256 256 1
+previous_nodes:
+next_nodes: 1
+variable_files:
+Node 1: fft
+params: 256
+previous_nodes: 0
+next_nodes:
+variable_files:
