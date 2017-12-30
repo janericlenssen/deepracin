@@ -698,6 +698,7 @@ __kernel void fft_one_dim(
 
 #endif
 /******************** 2D only rows grayscale test fft *********************/
+// TODO: tested with inverse, works up to 256*256. for bigger images something with barriers may need to be fixed.
 #if 0
 void two_dim_rows(
   __global float * in,
@@ -712,52 +713,55 @@ void two_dim_rows(
   int inverse
 )
 {
-  int k = (gid - offset) & (p-1);
-
-  float2 u0;
-  float2 u1;
-
-  if (p == 1 && (inverse == 0)) // only real input
+  if( (gx) < w/2 ) // TODO: replace gid-offset with gx
   {
-    u0.x = in[gid];
-    u0.y = 0;
+    int k = (gx) & (p-1);
 
-    u1.x = in[gid + (w/2)];
-    u1.y = 0;
+    float2 u0;
+    float2 u1;
+
+    if (p == 1 && (inverse == 0)) // only real input
+    {
+      u0.x = in[gid];
+      u0.y = 0;
+
+      u1.x = in[gid + (w/2)];
+      u1.y = 0;
+    }
+    else // get real and imaginary part
+    {
+      u0.x = in[gid]; //real part
+      u0.y = in[gid+imag_offset]; //imag part
+
+      u1.x = in[gid + (w/2)];
+      u1.y = in[gid + (w/2) + imag_offset];
+    }
+
+    float2 twiddle;
+    float2 tmp;
+
+    if (inverse)
+    {
+       twiddle = exp_alpha( (float)(k)*M_PI / (float)(p) ); // p in denominator, k
+    }
+    else
+    {
+       twiddle = exp_alpha( (float)(k)*(-1)*M_PI / (float)(p) ); // p in denominator, k
+    }
+
+    MUL(u1,twiddle,tmp);
+
+    DFT2(u0,u1,tmp);
+
+    int j = ((gx) << 1) - k;
+    j += offset;
+
+    out[j] = real(u0);
+    out[j+p] = real(u1);
+
+    out[j+imag_offset] = imag(u0);
+    out[j+p+imag_offset] = imag(u1);
   }
-  else // get real and imaginary part
-  {
-    u0.x = in[gid]; //real part
-    u0.y = in[gid+imag_offset]; //imag part
-
-    u1.x = in[gid + (w/2)];
-    u1.y = in[gid + (w/2) + imag_offset];
-  }
-
-  float2 twiddle;
-  float2 tmp;
-
-  if (inverse)
-  {
-     twiddle = exp_alpha( (float)(k)*M_PI / (float)(p) ); // p in denominator, k
-  }
-  else
-  {
-     twiddle = exp_alpha( (float)(k)*(-1)*M_PI / (float)(p) ); // p in denominator, k
-  }
-
-  MUL(u1,twiddle,tmp);
-
-  DFT2(u0,u1,tmp);
-
-  int j = ((gid - offset) << 1) - k;
-  j += offset;
-
-  out[j] = real(u0);
-  out[j+p] = real(u1);
-
-  out[j+imag_offset] = imag(u0);
-  out[j+p+imag_offset] = imag(u1);
 }
 /* Kernel function */
 __kernel void fft(
@@ -783,84 +787,75 @@ __kernel void fft(
   outputArr[gid + imag_offset] = 0.0;
   barrier(CLK_GLOBAL_MEM_FENCE);
 
-  if( (gid - offset) < w/2 )
+  for(int p = 1; p <= w/2; p *= 2)
   {
-    for(int p = 1; p <= w/2; p *= 2)
+    if (p==1)
     {
-      if (p==1)
-      {
-        two_dim_rows(gInput, outputArr, p, gid, gx, gy, w, imag_offset, offset, 0);
-      }
-      else
-      {
-        if (even_odd % 2) // odd
-        {
-          two_dim_rows(outputArr, intermedBuf, p, gid, gx, gy, w, imag_offset, offset, 0);
-          lastIn = 0;
-        }
-        else // even
-        {
-          two_dim_rows(intermedBuf, outputArr, p, gid, gx, gy, w, imag_offset, offset, 0);
-          lastIn = 1;
-        }
-      }
-      even_odd++;
-      barrier(CLK_GLOBAL_MEM_FENCE);
+      two_dim_rows(gInput, outputArr, p, gid, gx, gy, w, imag_offset, offset, 0);
     }
-
-    barrier(CLK_GLOBAL_MEM_FENCE);
-    if( lastIn == 0 )
-    {
-      outputArr[gid] = intermedBuf[gid];
-      outputArr[gid + w/2] = intermedBuf[gid + w/2];
-      outputArr[gid + imag_offset] = intermedBuf[gid + imag_offset];
-      outputArr[gid + w/2 + imag_offset] = intermedBuf[gid + w/2 + imag_offset];
-    }
-
-    barrier(CLK_GLOBAL_MEM_FENCE);
-    //when doing inverse, begin with odd call, so =1
-    even_odd = 1;
-    lastIn = 1;
-    barrier(CLK_GLOBAL_MEM_FENCE);
-
-    #if 1
-
-    /* Do inverse 1D FFT */
-    for(int p = 1; p <= w/2; p *= 2)
+    else
     {
       if (even_odd % 2) // odd
       {
-        two_dim_rows(outputArr, intermedBuf, p, gid, gx, gy, w, imag_offset, offset, 1);
+        two_dim_rows(outputArr, intermedBuf, p, gid, gx, gy, w, imag_offset, offset, 0);
         lastIn = 0;
       }
       else // even
       {
-        two_dim_rows(intermedBuf, outputArr, p, gid, gx, gy, w, imag_offset, offset, 1);
+        two_dim_rows(intermedBuf, outputArr, p, gid, gx, gy, w, imag_offset, offset, 0);
         lastIn = 1;
       }
-      even_odd++;
-      barrier(CLK_GLOBAL_MEM_FENCE);
     }
-
+    even_odd++;
     barrier(CLK_GLOBAL_MEM_FENCE);
-    if( lastIn == 0 )
-    {
-      outputArr[gid] = intermedBuf[gid];
-      outputArr[gid + w/2] = intermedBuf[gid + w/2];
-      outputArr[gid + imag_offset] = intermedBuf[gid + imag_offset];
-      outputArr[gid + w/2 + imag_offset] = intermedBuf[gid + w/2 + imag_offset];
-    }
-    barrier(CLK_GLOBAL_MEM_FENCE);
-    outputArr[gid] /= w;
-    outputArr[gid + w/2] /= w;
   }
-  #endif
+
   barrier(CLK_GLOBAL_MEM_FENCE);
+  if( lastIn == 0 )
+  {
+    outputArr[gid] = intermedBuf[gid];
+    outputArr[gid + imag_offset] = intermedBuf[gid + imag_offset];
+  }
+
+  barrier(CLK_GLOBAL_MEM_FENCE);
+  //when doing inverse, begin with odd call, so =1
+  even_odd = 1;
+  lastIn = 1;
+  barrier(CLK_GLOBAL_MEM_FENCE);
+
+  #if 1
+
+  /* Do inverse 1D FFT */
+  for(int p = 1; p <= w/2; p *= 2)
+  {
+    if (even_odd % 2) // odd
+    {
+      two_dim_rows(outputArr, intermedBuf, p, gid, gx, gy, w, imag_offset, offset, 1);
+      lastIn = 0;
+    }
+    else // even
+    {
+      two_dim_rows(intermedBuf, outputArr, p, gid, gx, gy, w, imag_offset, offset, 1);
+      lastIn = 1;
+    }
+    even_odd++;
+    barrier(CLK_GLOBAL_MEM_FENCE);
+  }
+
+  barrier(CLK_GLOBAL_MEM_FENCE);
+  if( lastIn == 0 )
+  {
+    outputArr[gid] = intermedBuf[gid];
+    outputArr[gid + imag_offset] = intermedBuf[gid + imag_offset];
+  }
+  barrier(CLK_GLOBAL_MEM_FENCE);
+  outputArr[gid] /= w;
+  #endif
 }
+
 #endif
 /******************** 2D only columns grayscale test fft *********************/
 #if 1
-
 void two_dim_columns(
   __global float * in,
   __global float * out,
@@ -875,54 +870,57 @@ void two_dim_columns(
   int inverse
 )
 {
-  // get row in array, to get indices in 1D array. or use gy?
-  int k = gy & (p-1);
-
-  float2 u0;
-  float2 u1;
-
-  if (p == 1 && (inverse == 0)) // only real input
+  if( gy < h/2 )
   {
-    u0.x = in[gid];
-    u0.y = 0;
+    int k = (gy) & (p-1);
 
-    u1.x = in[gid + (h/2)*w];
-    u1.y = 0;
+    float2 u0;
+    float2 u1;
+
+    if (p == 1 && (inverse == 0)) // only real input
+    {
+      u0.x = in[gid];
+      u0.y = 0;
+
+      u1.x = in[gid + w*(h/2)];
+      u1.y = 0;
+    }
+    else // get real and imaginary part
+    {
+      u0.x = in[gid]; //real part
+      u0.y = in[gid+imag_offset]; //imag part
+
+      u1.x = in[gid + w*(h/2)];
+      u1.y = in[gid + w*(h/2) + imag_offset];
+    }
+
+    float2 twiddle;
+    float2 tmp;
+
+    if (inverse)
+    {
+       twiddle = exp_alpha( (float)(k)*M_PI / (float)(p) ); // p in denominator, k
+    }
+    else
+    {
+       twiddle = exp_alpha( (float)(k)*(-1)*M_PI / (float)(p) ); // p in denominator, k
+    }
+
+    MUL(u1,twiddle,tmp);
+
+    DFT2(u0,u1,tmp);
+
+    int j = ((gy) << 1) - k;
+    j *= w;
+    j += gx;
+
+    out[j] = real(u0);
+    out[j+w*p] = real(u1);
+
+    out[j+imag_offset] = imag(u0);
+    out[j+w*p+imag_offset] = imag(u1);
   }
-  else // get real and imaginary part
-  {
-    u0.x = in[gid]; //real part
-    u0.y = in[gid+imag_offset]; //imag part
-
-    u1.x = in[gid + (h/2)*w];
-    u1.y = in[gid + (h/2)*w + imag_offset];
-  }
-
-  float2 twiddle;
-  float2 tmp;
-
-  if (inverse)
-  {
-     twiddle = exp_alpha( (float)(k)*M_PI / (float)(p) ); // p in denominator, k
-  }
-  else
-  {
-     twiddle = exp_alpha( (float)(k)*(-1)*M_PI / (float)(p) ); // p in denominator, k
-  }
-
-  MUL(u1,twiddle,tmp);
-
-  DFT2(u0,u1,tmp);
-
-  int j = (gy << 1) - k;
-  j *= w;
-  j += gx;
-
-  out[j] = real(u0);
-  out[j+w*p] = real(u1);
-
-  out[j+imag_offset] = imag(u0);
-  out[j+w*p+imag_offset] = imag(u1);
+  // TODO: losing half the workitems here ?
 }
 /* Kernel function */
 __kernel void fft(
@@ -942,84 +940,77 @@ __kernel void fft(
   int even_odd = 0;
   int lastIn = 0;
 
-  barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
+  barrier(CLK_GLOBAL_MEM_FENCE);
   intermedBuf[gid] = 0.0;
-  intermedBuf[gid + imag_offset] = 0.0;
   outputArr[gid] = 0.0;
   outputArr[gid + imag_offset] = 0.0;
-  barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
+  barrier(CLK_GLOBAL_MEM_FENCE);
 
-  if( gid < ((h/2)*w) )
+  for(int p = 1; p <= h/2; p *= 2)
   {
-    for(int p = 1; p <= h/2; p *= 2)
+    if (p==1)
     {
-      if (p==1)
-      {
-        two_dim_columns(gInput, outputArr, p, gid, gx, gy, w, h, imag_offset, offset, 0);
-      }
-      else
-      {
-        if (even_odd % 2) // odd
-        {
-          two_dim_columns(outputArr, intermedBuf, p, gid, gx, gy, w, h, imag_offset, offset, 0);
-          lastIn = 0;
-        }
-        else // even
-        {
-          two_dim_columns(intermedBuf, outputArr, p, gid, gx, gy, w, h, imag_offset, offset, 0);
-          lastIn = 1;
-        }
-      }
-      even_odd++;
-      barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
+      two_dim_columns(gInput, outputArr, p, gid, gx, gy, w, h, imag_offset, offset, 0);
     }
-
-    barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
-    if( lastIn == 0 )
-    {
-      outputArr[gid] = intermedBuf[gid];
-      outputArr[gid + (h/2)*w] = intermedBuf[gid + (h/2)*w];
-      outputArr[gid + imag_offset] = intermedBuf[gid + imag_offset];
-      outputArr[gid + (h/2)*w + imag_offset] = intermedBuf[gid + (h/2)*w + imag_offset];
-    }
-
-    barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
-    //when doing inverse, begin with odd call, so =1
-
-    #if 1 // 1 turns inverse on, 0 turns inverse off
-    even_odd = 1;
-    lastIn = 1;
-    barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
-
-    /* Do inverse 1D FFT */
-    for(int p = 1; p <= h/2; p *= 2)
+    else
     {
       if (even_odd % 2) // odd
       {
-        two_dim_columns(outputArr, intermedBuf, p, gid, gx, gy, w, h, imag_offset, offset, 1);
+        two_dim_columns(outputArr, intermedBuf, p, gid, gx, gy, w, h, imag_offset, offset, 0);
         lastIn = 0;
       }
       else // even
       {
-        two_dim_columns(intermedBuf, outputArr, p, gid, gx, gy, w, h, imag_offset, offset, 1);
+        two_dim_columns(intermedBuf, outputArr, p, gid, gx, gy, w, h, imag_offset, offset, 0);
         lastIn = 1;
       }
-      even_odd++;
-      barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
     }
-
-    barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
-    if( lastIn == 0 )
-    {
-      outputArr[gid] = intermedBuf[gid];
-      outputArr[gid + (h/2)*w] = intermedBuf[gid + (h/2)*w];
-      outputArr[gid + imag_offset] = intermedBuf[gid + imag_offset];
-      outputArr[gid + (h/2)*w + imag_offset] = intermedBuf[gid + (h/2)*w + imag_offset];
-    }
-    barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
-    //outputArr[gid] /= h;
-    //outputArr[gid + (h/2)*w] /= h;
-    #endif
+    even_odd++;
+    barrier(CLK_GLOBAL_MEM_FENCE);
   }
+  // why are just w*h/2 work items left? where is the other half?
+  barrier(CLK_GLOBAL_MEM_FENCE);
+  if( lastIn == 0 )
+  {
+    outputArr[gid] = intermedBuf[gid];
+    outputArr[gid + imag_offset] = intermedBuf[gid + imag_offset];
+  }
+
+  barrier(CLK_GLOBAL_MEM_FENCE);
+  //when doing inverse, begin with odd call, so =1
+  even_odd = 1;
+  lastIn = 1;
+  barrier(CLK_GLOBAL_MEM_FENCE);
+
+  #if 1
+
+  /* Do inverse 1D FFT */
+  for(int p = 1; p <= h/2; p *= 2)
+  {
+    if (even_odd % 2) // odd
+    {
+      two_dim_columns(outputArr, intermedBuf, p, gid, gx, gy, w, h, imag_offset, offset, 1);
+      lastIn = 0;
+    }
+    else // even
+    {
+      two_dim_columns(intermedBuf, outputArr, p, gid, gx, gy, w, h, imag_offset, offset, 1);
+      lastIn = 1;
+    }
+    even_odd++;
+    barrier(CLK_GLOBAL_MEM_FENCE);
+  }
+
+  barrier(CLK_GLOBAL_MEM_FENCE);
+  if( lastIn == 0 )
+  {
+    outputArr[gid] = intermedBuf[gid];
+    outputArr[gid + imag_offset] = intermedBuf[gid + imag_offset];
+  }
+  barrier(CLK_GLOBAL_MEM_FENCE);
+  outputArr[gid] /= h;
+  #endif
+
 }
+
 #endif
