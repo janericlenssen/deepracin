@@ -699,7 +699,7 @@ __kernel void fft_one_dim(
 #endif
 /******************** 2D only rows grayscale test fft *********************/
 // TODO: tested with inverse, works up to 256*256. for bigger images something with barriers may need to be fixed.
-#if 0
+#if 1
 void two_dim_rows(
   __global float * in,
   __global float * out,
@@ -782,6 +782,7 @@ __kernel void fft(
   int lastIn = 0;
 
   barrier(CLK_GLOBAL_MEM_FENCE);
+  // TODO: not needed, maybe do somewhere else
   intermedBuf[gid] = 0.0;
   outputArr[gid] = 0.0;
   outputArr[gid + imag_offset] = 0.0;
@@ -813,17 +814,60 @@ __kernel void fft(
   barrier(CLK_GLOBAL_MEM_FENCE);
   if( lastIn == 0 )
   {
+    // TODO: just change pointer instead of copy
     outputArr[gid] = intermedBuf[gid];
     outputArr[gid + imag_offset] = intermedBuf[gid + imag_offset];
   }
 
   barrier(CLK_GLOBAL_MEM_FENCE);
-  //when doing inverse, begin with odd call, so =1
+  //next, begin with odd call, so even_odd=1
   even_odd = 1;
   lastIn = 1;
-  barrier(CLK_GLOBAL_MEM_FENCE);
 
-  #if 1
+  // transpose, TODO: use more efficient transpose
+  barrier(CLK_GLOBAL_MEM_FENCE);
+  intermedBuf[gx*w + gy] = outputArr[gid];
+  intermedBuf[gx*w + gy + imag_offset] = outputArr[gid + imag_offset];
+  barrier(CLK_GLOBAL_MEM_FENCE);
+  // TODO: just change pointer instead of copy
+  outputArr[gid] = intermedBuf[gid];
+  outputArr[gid + imag_offset] = intermedBuf[gid + imag_offset];
+
+  barrier(CLK_GLOBAL_MEM_FENCE);
+  // after transpose, do fft on rows again.
+  for(int p = 1; p <= w/2; p *= 2)
+  {
+    if (even_odd % 2) // odd
+    {
+      two_dim_rows(outputArr, intermedBuf, p, gid, gx, gy, w, imag_offset, offset, 1);
+      lastIn = 0;
+    }
+    else // even
+    {
+      two_dim_rows(intermedBuf, outputArr, p, gid, gx, gy, w, imag_offset, offset, 1);
+      lastIn = 1;
+    }
+    even_odd++;
+    barrier(CLK_GLOBAL_MEM_FENCE);
+  }
+
+  barrier(CLK_GLOBAL_MEM_FENCE);
+  if( lastIn == 0 )
+  {
+    outputArr[gid] = intermedBuf[gid];
+    outputArr[gid + imag_offset] = intermedBuf[gid + imag_offset];
+  }
+
+  // transpose again.
+  barrier(CLK_GLOBAL_MEM_FENCE);
+  intermedBuf[gx*w + gy] = outputArr[gid];
+  intermedBuf[gx*w + gy + imag_offset] = outputArr[gid + imag_offset];
+  barrier(CLK_GLOBAL_MEM_FENCE);
+  // TODO: just change pointer instead of copy
+  outputArr[gid] = intermedBuf[gid];
+  outputArr[gid + imag_offset] = intermedBuf[gid + imag_offset];
+
+  #if 0
 
   /* Do inverse 1D FFT */
   for(int p = 1; p <= w/2; p *= 2)
@@ -855,7 +899,7 @@ __kernel void fft(
 
 #endif
 /******************** 2D only columns grayscale test fft *********************/
-#if 1
+#if 0
 void two_dim_columns(
   __global float * in,
   __global float * out,
