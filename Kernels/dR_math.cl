@@ -710,7 +710,8 @@ void two_dim_rows(
   int w,
   int imag_offset,
   int offset,
-  int inverse
+  int inverse, // set 1 if inv should be calculated
+  int inv_debug // set 1 if p==1 in first stage of rows fft
 )
 {
   if( (gx) < w/2 ) // TODO: replace gid-offset with gx
@@ -720,7 +721,7 @@ void two_dim_rows(
     float2 u0;
     float2 u1;
 
-    if (p == 1 && (inverse == 0)) // only real input
+    if (p == 1 && (inverse == 0) && (inv_debug == 1)) // only real input
     {
       u0.x = in[gid];
       u0.y = 0;
@@ -792,18 +793,18 @@ __kernel void fft(
   {
     if (p==1)
     {
-      two_dim_rows(gInput, outputArr, p, gid, gx, gy, w, imag_offset, offset, 0);
+      two_dim_rows(gInput, outputArr, p, gid, gx, gy, w, imag_offset, offset, 0, 1);
     }
     else
     {
       if (even_odd % 2) // odd
       {
-        two_dim_rows(outputArr, intermedBuf, p, gid, gx, gy, w, imag_offset, offset, 0);
+        two_dim_rows(outputArr, intermedBuf, p, gid, gx, gy, w, imag_offset, offset, 0, 0);
         lastIn = 0;
       }
       else // even
       {
-        two_dim_rows(intermedBuf, outputArr, p, gid, gx, gy, w, imag_offset, offset, 0);
+        two_dim_rows(intermedBuf, outputArr, p, gid, gx, gy, w, imag_offset, offset, 0, 0);
         lastIn = 1;
       }
     }
@@ -839,12 +840,12 @@ __kernel void fft(
   {
     if (even_odd % 2) // odd
     {
-      two_dim_rows(outputArr, intermedBuf, p, gid, gx, gy, w, imag_offset, offset, 1);
+      two_dim_rows(outputArr, intermedBuf, p, gid, gx, gy, w, imag_offset, offset, 0, 0);
       lastIn = 0;
     }
     else // even
     {
-      two_dim_rows(intermedBuf, outputArr, p, gid, gx, gy, w, imag_offset, offset, 1);
+      two_dim_rows(intermedBuf, outputArr, p, gid, gx, gy, w, imag_offset, offset, 0, 0);
       lastIn = 1;
     }
     even_odd++;
@@ -867,19 +868,62 @@ __kernel void fft(
   outputArr[gid] = intermedBuf[gid];
   outputArr[gid + imag_offset] = intermedBuf[gid + imag_offset];
 
-  #if 0
+  #if 0 // inverse test
+  even_odd = 1;
+  lastIn = 1;
 
-  /* Do inverse 1D FFT */
+  barrier(CLK_GLOBAL_MEM_FENCE);
+
   for(int p = 1; p <= w/2; p *= 2)
   {
     if (even_odd % 2) // odd
     {
-      two_dim_rows(outputArr, intermedBuf, p, gid, gx, gy, w, imag_offset, offset, 1);
+      two_dim_rows(outputArr, intermedBuf, p, gid, gx, gy, w, imag_offset, offset, 1, 0);
       lastIn = 0;
     }
     else // even
     {
-      two_dim_rows(intermedBuf, outputArr, p, gid, gx, gy, w, imag_offset, offset, 1);
+      two_dim_rows(intermedBuf, outputArr, p, gid, gx, gy, w, imag_offset, offset, 1, 0);
+      lastIn = 1;
+    }
+    even_odd++;
+    barrier(CLK_GLOBAL_MEM_FENCE);
+  }
+
+  barrier(CLK_GLOBAL_MEM_FENCE);
+  if( lastIn == 0 )
+  {
+    // TODO: just change pointer instead of copy
+    outputArr[gid] = intermedBuf[gid];
+    outputArr[gid + imag_offset] = intermedBuf[gid + imag_offset];
+  }
+
+  barrier(CLK_GLOBAL_MEM_FENCE);
+  //next, begin with odd call, so even_odd=1
+  even_odd = 1;
+  lastIn = 1;
+
+  // transpose, TODO: use more efficient transpose
+  barrier(CLK_GLOBAL_MEM_FENCE);
+  intermedBuf[gx*w + gy] = outputArr[gid];
+  intermedBuf[gx*w + gy + imag_offset] = outputArr[gid + imag_offset];
+  barrier(CLK_GLOBAL_MEM_FENCE);
+  // TODO: just change pointer instead of copy
+  outputArr[gid] = intermedBuf[gid];
+  outputArr[gid + imag_offset] = intermedBuf[gid + imag_offset];
+
+  barrier(CLK_GLOBAL_MEM_FENCE);
+  // after transpose, do fft on rows again.
+  for(int p = 1; p <= w/2; p *= 2)
+  {
+    if (even_odd % 2) // odd
+    {
+      two_dim_rows(outputArr, intermedBuf, p, gid, gx, gy, w, imag_offset, offset, 1, 0);
+      lastIn = 0;
+    }
+    else // even
+    {
+      two_dim_rows(intermedBuf, outputArr, p, gid, gx, gy, w, imag_offset, offset, 1, 0);
       lastIn = 1;
     }
     even_odd++;
@@ -892,8 +936,17 @@ __kernel void fft(
     outputArr[gid] = intermedBuf[gid];
     outputArr[gid + imag_offset] = intermedBuf[gid + imag_offset];
   }
+
+  // transpose again.
   barrier(CLK_GLOBAL_MEM_FENCE);
-  outputArr[gid] /= w;
+  intermedBuf[gx*w + gy] = outputArr[gid];
+  intermedBuf[gx*w + gy + imag_offset] = outputArr[gid + imag_offset];
+  barrier(CLK_GLOBAL_MEM_FENCE);
+  // TODO: just change pointer instead of copy
+  outputArr[gid] = intermedBuf[gid]/(w*h);
+  outputArr[gid + imag_offset] = intermedBuf[gid + imag_offset]/(w*h);
+
+  barrier(CLK_GLOBAL_MEM_FENCE);
   #endif
 }
 
