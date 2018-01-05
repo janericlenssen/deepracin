@@ -127,7 +127,68 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
 
     if (dR_openCLError(net, "Setting kernel args failed.", "FFT Kernel"))
         return FALSE;
+
     // execute kernel
+    // do fft kernel call loop here.
+    int even_odd = 0;
+    int lastIn = 0;
+    int w = layer->oshape.s1; // get width TODO: change for non quadratic images
+
+    for(int p = 1; p <= w/2; p *= 2)
+    {
+      // prepare Kernel param list: clSetKernelArg(...)
+      if (p==1)
+      {
+        // Kernel call enqueue...fft(Input,Output)
+      }
+      else
+      {
+        if (even_odd % 2) // odd
+        {
+          // Kernel call enqueue...fft(Input,Output)
+          lastIn = 0;
+        }
+        else // even
+        {
+          // Kernel call enqueue...fft(Input,Output)
+          lastIn = 1;
+        }
+      }
+      even_odd++;
+    }
+
+    if( lastIn == 0 )
+    {
+      // use a kernel: copy from intermedBuf to Outputarray while transposing (or swap pointers and then transpose in place)
+    }
+    // use a kernel: else transpose in place (inside outputarray)
+
+    // then do fft on transposed array again
+
+    even_odd = 1;
+    lastIn = 1;
+
+    for(int p = 1; p <= w/2; p *= 2)
+    {
+      if (even_odd % 2) // odd
+      {
+        // Kernel call enqueue...fft(Input,Output)
+        lastIn = 0;
+      }
+      else // even
+      {
+        // Kernel call enqueue...fft(Input,Output)
+        lastIn = 1;
+      }
+      even_odd++;
+    }
+
+    if( lastIn == 0 )
+    {
+      // use a kernel: copy from intermedBuf to Outputarray while transposing (or swap pointers and then transpose in place)
+    }
+    // use a kernel: else transpose in place (inside outputarray)
+
      net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, layer->clKernel, 3, NULL, globalWorkSize,
         NULL, 0, NULL, net->clConfig->clEvent);
 

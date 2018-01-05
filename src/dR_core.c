@@ -379,7 +379,7 @@ gboolean dR_generateAndCompileKernels(dR_Graph* net)
         "dR_conv2d1x1.cl",
         "dR_fft.cl"
     };
-    gint numberoffiles = 6;
+    gint numberoffiles = 7;
     gboolean ret;
     dR_Node* current_layer;
     dR_list_resetIt(net->scheduledLayers);

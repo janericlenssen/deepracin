@@ -8,16 +8,16 @@ preferred_platform_name = 'Mesa'
 with dr.Environment(preferred_platform_name) as env:
     # Properties
     # If true, all debug outputs are printed (Default: False)
-    env.debuginfo = False
+    env.debuginfo = True
 
     # If true, the overall CPU runtimes are profiled and printed (Default: False)
-    env.profileCPU = False
+    env.profileCPU = True
 
     # If true, the GPU kernel runtimes are profiled and printed (Default: False)
-    env.profileGPU = False
+    env.profileGPU = True
 
     # If true, all outputs are supressed (Default: True)
-    env.silent = True
+    env.silent = False
 
     # If not set, a temporary folder will be created in location depending on system
     # Folder is used to store kernels, ptx, and (if model is exported) the exported model)
@@ -31,9 +31,9 @@ graph = env.create_graph(interface_layout='HWC')
 #feed_node = dr.feed_node(graph, shape=(497, 303, 1))
 
 #feed_node = dr.feed_node(graph, shape=(256, 256, 1))
-feed_node = dr.feed_node(graph, shape=(256, 256, 1))
+feed_node = dr.feed_node(graph, shape=(16, 16, 1))
 
-image_paths = ['verts256.png']
+image_paths = ['verts16.png']
 #image_paths = ['tigerbw64.png']
 
 # create FFT node
