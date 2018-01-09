@@ -248,6 +248,7 @@ gboolean dR_fft_createKernel(dR_Graph* net, dR_Node* layer)
     dR_FFT_Data* fft = (dR_FFT_Data*)(layer->layer);
     gboolean ret=FALSE;
     ret = dR_createKernel(net,"fft",&(layer->clKernel));
+    ret = dR_createKernel(net,"transpose",&(fft->transposeKernel));
     return ret;
 }
 
