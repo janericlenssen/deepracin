@@ -466,7 +466,7 @@ void two_dim_rows(
 }
 /* Kernel function */
 __kernel void fft(
-  const __global float * gInput,
+  __global float * gInput,
   __global float * intermedBuf,
   __global float * outputArr
 )
@@ -483,30 +483,40 @@ __kernel void fft(
   int lastIn = 0;
 
   barrier(CLK_GLOBAL_MEM_FENCE);
+
   // TODO: not needed, maybe do somewhere else
   intermedBuf[gid] = 0.0;
+  intermedBuf[gid  + imag_offset] = 0.0;
   outputArr[gid] = 0.0;
   outputArr[gid + imag_offset] = 0.0;
+
   barrier(CLK_GLOBAL_MEM_FENCE);
 
+  __global float* b1;
+  __global float* b2;
   for(int p = 1; p <= w/2; p *= 2)
   {
     if (p==1)
     {
-      two_dim_rows(gInput, outputArr, p, gid, gx, gy, w, imag_offset, offset, 0, 1);
+      b1=gInput;
+      b2=outputArr;
+      two_dim_rows(b1, b2, p, gid, gx, gy, w, imag_offset, offset, 0, 1);
     }
     else
     {
       if (even_odd % 2) // odd
       {
-        two_dim_rows(outputArr, intermedBuf, p, gid, gx, gy, w, imag_offset, offset, 0, 0);
+        b1=outputArr;
+        b2=intermedBuf;
         lastIn = 0;
       }
       else // even
       {
-        two_dim_rows(intermedBuf, outputArr, p, gid, gx, gy, w, imag_offset, offset, 0, 0);
+        b1=intermedBuf;
+        b2=outputArr;
         lastIn = 1;
       }
+      two_dim_rows(b1, b2, p, gid, gx, gy, w, imag_offset, offset, 0, 0);
     }
     even_odd++;
     barrier(CLK_GLOBAL_MEM_FENCE);
@@ -519,7 +529,7 @@ __kernel void fft(
     outputArr[gid] = intermedBuf[gid];
     outputArr[gid + imag_offset] = intermedBuf[gid + imag_offset];
   }
-
+/*
   barrier(CLK_GLOBAL_MEM_FENCE);
   //next, begin with odd call, so even_odd=1
   even_odd = 1;
@@ -535,6 +545,7 @@ __kernel void fft(
   outputArr[gid + imag_offset] = intermedBuf[gid + imag_offset];
 
   barrier(CLK_GLOBAL_MEM_FENCE);
+
   // after transpose, do fft on rows again.
   for(int p = 1; p <= w/2; p *= 2)
   {
@@ -567,8 +578,8 @@ __kernel void fft(
   // TODO: just change pointer instead of copy
   outputArr[gid] = intermedBuf[gid];
   outputArr[gid + imag_offset] = intermedBuf[gid + imag_offset];
-
-  #if 1 // inverse test
+*/
+  #if 0 // inverse test
   even_odd = 1;
   lastIn = 1;
 
@@ -648,6 +659,7 @@ __kernel void fft(
 
   barrier(CLK_GLOBAL_MEM_FENCE);
   #endif
+
 }
 
 #endif

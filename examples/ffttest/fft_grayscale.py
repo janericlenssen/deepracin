@@ -27,13 +27,13 @@ with dr.Environment(preferred_platform_name) as env:
 graph = env.create_graph(interface_layout='HWC')
 
 # Fill graph
-# Feed node - Will be fed with data for each graph application
+# Feed node - Will be fed with data for ea<ch graph application
 #feed_node = dr.feed_node(graph, shape=(497, 303, 1))
 
 #feed_node = dr.feed_node(graph, shape=(256, 256, 1))
-feed_node = dr.feed_node(graph, shape=(16, 16, 1))
+feed_node = dr.feed_node(graph, shape=(1024, 1024, 1))
 
-image_paths = ['verts16.png']
+image_paths = ['dia1024.png']
 #image_paths = ['tigerbw64.png']
 
 # create FFT node
@@ -74,5 +74,11 @@ for path in image_paths:
     io.imshow(dat[:, :, 0])
     io.show()
 
+    io.imshow(np.fft.fft2(img,axes=[1]).real)
+    io.show()
+
     io.imshow(dat[:, :, 1])
+    io.show()
+
+    io.imshow(np.fft.fft2(img,axes=[1]).imag)
     io.show()
