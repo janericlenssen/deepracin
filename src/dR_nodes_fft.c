@@ -108,6 +108,9 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
     // call compute functionality
     // set kernel parameters and enqueue kernels
 
+    //for easier intermedBuf access
+    dR_FFT_Data* fft = ((dR_FFT_Data*)(layer->layer));
+
     size_t globalWorkSize[3];
     int paramid = 0;
     cl_mem* input1;
@@ -117,43 +120,48 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
     globalWorkSize[1] = layer->oshape.s1;
     globalWorkSize[2] = layer->oshape.s2;
 
-    net->clConfig->clError = clSetKernelArg(layer->clKernel, paramid, sizeof(cl_mem), (void *)input1);                      paramid++;
-
-    /* for intermediate Buffer */
-    dR_FFT_Data* fft = ((dR_FFT_Data*)(layer->layer));
-    net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_mem), (void *)&fft->intermedBuf);          paramid++;
-
-    net->clConfig->clError |= clSetKernelArg(layer->clKernel, paramid, sizeof(cl_mem), (void *)layer->outputBuf->bufptr);          paramid++;
-
-    if (dR_openCLError(net, "Setting kernel args failed.", "FFT Kernel"))
-        return FALSE;
-
-    // execute kernel
-    // do fft kernel call loop here.
     int even_odd = 0;
     int lastIn = 0;
-    int w = layer->oshape.s1; // get width TODO: change for non quadratic images
+    int w = layer->oshape.s0;
 
-    for(int p = 1; p <= w/2; p *= 2)
+    void* in;
+    void* out;
+
+    for(cl_int p = 1; p <= w/2; p *= 2)
     {
-      // prepare Kernel param list: clSetKernelArg(...)
       if (p==1)
       {
-        // Kernel call enqueue...fft(Input,Output)
+        in = (void*)input1;
+        out = (void *)layer->outputBuf->bufptr;
       }
       else
       {
         if (even_odd % 2) // odd
         {
-          // Kernel call enqueue...fft(Input,Output)
+          in = (void *)layer->outputBuf->bufptr;
+          out = (void*)&fft->intermedBuf;
           lastIn = 0;
         }
         else // even
         {
-          // Kernel call enqueue...fft(Input,Output)
+          in = (void*)&fft->intermedBuf;
+          out = (void *)layer->outputBuf->bufptr;
           lastIn = 1;
         }
       }
+
+      net->clConfig->clError = clSetKernelArg(layer->clKernel, 0, sizeof(cl_mem), in);
+
+      net->clConfig->clError |= clSetKernelArg(layer->clKernel, 1, sizeof(cl_mem), out);
+
+      net->clConfig->clError |= clSetKernelArg(layer->clKernel, 2, sizeof(cl_int), (void *)&p);
+
+      if (dR_openCLError(net, "Setting kernel args failed.", "FFT Kernel"))
+          return FALSE;
+
+      net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, layer->clKernel, 3, NULL, globalWorkSize,
+         NULL, 0, NULL, net->clConfig->clEvent);
+      dR_finishCLKernel(net, "deepRACIN:fft");
       even_odd++;
     }
 
@@ -167,8 +175,9 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
 
     even_odd = 1;
     lastIn = 1;
+    int h = layer->oshape.s1; // height
 
-    for(int p = 1; p <= w/2; p *= 2)
+    for(cl_int p = 1; p <= h/2; p *= 2)
     {
       if (even_odd % 2) // odd
       {
@@ -189,10 +198,7 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
     }
     // use a kernel: else transpose in place (inside outputarray)
 
-     net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, layer->clKernel, 3, NULL, globalWorkSize,
-        NULL, 0, NULL, net->clConfig->clEvent);
-
-    return dR_finishCLKernel(net, "deepRACIN:fft");
+    return 1;
 
 }
 
@@ -287,6 +293,7 @@ gboolean dR_fft_cleanupBuffers(dR_Graph* net, dR_Node* layer)
         dR_FFT_Data* fft = ((dR_FFT_Data*)(layer->layer));
         ret &= dR_clMemoryBufferCleanup(net, fft->intermedBuf);
         ret &= dR_cleanupKernel((layer->clKernel));
+        // TODO: cleanup transposekernel
     }
     return ret;
 }

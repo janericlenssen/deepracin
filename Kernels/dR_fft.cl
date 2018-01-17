@@ -69,19 +69,6 @@ float2 exp_alpha(float alpha)
   return (float2)(cs,sn);
 }
 
-/* Dimensions of input */
-/*
-#define X 4
-#define Y 4
-#define Z 3 // 3 for RGB
-*/
-//static const unsigned char BitReverseTable[4] = { 0x0, 0x2, 0x1, 0x3 };
-/* Input size N, for 1D FFT N/2 threads, each thread doing one DFT2
- * Input size X*Y*Z, for Z times 2D FFT, Z = 3 for RGB
- * Output size X*Y*6
- * 1) rows: Y*(X/2)*Z work items at once
- * 2) columns: X*(Y/2)*Z work items at once
- */
 /*********************************** RGB FFT ******************************************/
 #if 0
  void fft_rows(
@@ -398,30 +385,29 @@ __kernel void fft_one_dim(
 
 #endif
 /******************** 2D only rows grayscale test fft *********************/
-// TODO: tested with inverse, works up to 256*256 (only rows). for bigger images something with barriers may need to be fixed.
 #if 1
-void two_dim_rows(
+__kernel void fft(
   __global float * in,
   __global float * out,
-  int p,
-  int gid,
-  int gx,
-  int gy,
-  int w,
-  int imag_offset,
-  int offset,
-  int inverse, // set 1 if inv should be calculated
-  int inv_debug // set 1 if p==1 in first stage of rows fft
+  int p
 )
 {
-  if( (gx) < w/2 ) // TODO: replace gid-offset with gx
+  int gx = get_global_id(0);
+  int gy = get_global_id(1);
+  int w = (int) get_global_size(0);
+  int h = (int) get_global_size(1);
+  int offset = gy*w;
+  int gid = w*gy + gx;
+  int imag_offset = w*h;
+
+  if( (gx) < w/2 ) // TODO: use only w/2 workitems
   {
     int k = (gx) & (p-1);
 
     float2 u0;
     float2 u1;
 
-    if (p == 1 && (inverse == 0) && (inv_debug == 1)) // only real input
+    if (p == 1) // only real input
     {
       u0.x = in[gid];
       u0.y = 0;
@@ -432,7 +418,7 @@ void two_dim_rows(
     else // get real and imaginary part
     {
       u0.x = in[gid]; //real part
-      u0.y = in[gid+imag_offset]; //imag part
+      u0.y = in[gid + imag_offset]; //imag part
 
       u1.x = in[gid + (w/2)];
       u1.y = in[gid + (w/2) + imag_offset];
@@ -441,14 +427,7 @@ void two_dim_rows(
     float2 twiddle;
     float2 tmp;
 
-    if (inverse)
-    {
-       twiddle = exp_alpha( (float)(k)*M_PI / (float)(p) ); // p in denominator, k
-    }
-    else
-    {
-       twiddle = exp_alpha( (float)(k)*(-1)*M_PI / (float)(p) ); // p in denominator, k
-    }
+    twiddle = exp_alpha( (float)(k)*(-1)*M_PI / (float)(p) ); // p in denominator, k
 
     MUL(u1,twiddle,tmp);
 
@@ -458,14 +437,50 @@ void two_dim_rows(
     j += offset;
 
     out[j] = real(u0);
-    out[j+p] = real(u1);
+    out[j + p] = real(u1);
 
-    out[j+imag_offset] = imag(u0);
-    out[j+p+imag_offset] = imag(u1);
+    out[j + imag_offset] = imag(u0);
+    out[j + p + imag_offset] = imag(u1);
   }
 }
-/* Kernel function */
-__kernel void fft(
+
+// TODO: implement as string in dR_nodes_fft.c
+ void fft_copy(
+  __global float * in,
+  __global float * out
+)
+{
+  int gx = get_global_id(0);
+  int gy = get_global_id(1);
+  int w = (int) get_global_size(0);
+  int h = (int) get_global_size(1);
+  int gid = w*gy + gx;
+  int imag_offset = w*h;
+
+  out[gid] = in[gid];
+  out[gid + imag_offset] = in[gid + imag_offset];
+}
+
+// TODO: implement as string in dR_nodes_fft.c
+__kernel void transpose(
+  __global float * in,
+  __global float * out
+)
+{
+  int gx = get_global_id(0);
+  int gy = get_global_id(1);
+  int w = (int) get_global_size(0);
+  int h = (int) get_global_size(1);
+  int gid = w*gy + gx;
+  int imag_offset = w*h;
+
+  out[gx*w + gy] = in[gid];
+  out[gx*w + gy + imag_offset] = in[gid + imag_offset];
+}
+
+/* OLD Kernel function */
+#if 0
+ void old_fft(
   __global float * gInput,
   __global float * intermedBuf,
   __global float * outputArr
@@ -662,6 +677,7 @@ __kernel void fft(
 
 }
 
+#endif
 #endif
 /******************** 2D only columns grayscale test fft *********************/
 /* columns fft is not needed. do rows fft on transposed image. */
