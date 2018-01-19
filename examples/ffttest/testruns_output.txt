@@ -1,0 +1,1809 @@
+mikail@my:~/res/nano/deepracin/examples/ffttest$ python fft_grayscale.py 
+Cleaning up temp-path...
+done...
+
+---------------------------------
+deepRACIN graph model: 2 Layers
+
+DataFeedNode: 0
+ Data dimensions: 4x4x1
+ Previous Layers: none
+ Next Layers: 1, 
+
+FFT input operation node: 1
+ Previous Layers: 0, 
+ Next Layers: none
+
+---------------------------------
+
+Initializing OpenCL
+/usr/local/lib/deepracin/kernels/
+/usr/local/lib/deepracin/kernels/
+Creating OpenCL context
+Found 1 OpenCL platform(s):
+Platform 0: Mesa <-- selected
+Creating context for device type: GPU
+Context created...
+Creating OpenCL command queue... 
+Done.
+Found 1 OpenCL devices(s) for DEVICE_TYPE_GPU:
+Device 0: AMD PITCAIRN (DRM 2.49.0 / 4.10.0-42-generic, LLVM 6.0.0) <-- selected 
+Selected OpenCL Device: AMD PITCAIRN (DRM 2.49.0 / 4.10.0-42-generic, LLVM 6.0.0)
+OpenCL device info:
+CL_DEVICE_NAME: 			 AMD PITCAIRN (DRM 2.49.0 / 4.10.0-42-generic, LLVM 6.0.0)
+CL_DEVICE_VENDOR: 			 AMD
+CL_DEVICE_TYPE: 			 GPU
+CL_DRIVER_VERSION: 			 17.3.0-devel - padoka PPA
+CL_DEVICE_VERSION: 			 OpenCL 1.1 Mesa 17.3.0-devel - padoka PPA
+CL_DEVICE_EXTENSIONS: 			 cl_khr_byte_addressable_store cl_khr_global_int32_base_atomics cl_khr_global_int32_extended_atomics cl_khr_local_int32_base_atomics cl_khr_local_int32_extended_atomics cl_khr_int64_base_atomics cl_khr_int64_extended_atomics cl_khr_fp64 cl_khr_fp16
+CL_DEVICE_ADDRESS_BITS: 		 64
+CL_DEVICE_MAX_CLOCK_FREQUENCY: 		 985 MHz 
+CL_DEVICE_MAX_COMPUTE_UNITS: 		 16
+CL_DEVICE_MAX_PARAMETER_SIZE: 		 1024
+CL_DEVICE_MAX_CONSTANT_ARGS: 		 16
+CL_DEVICE_MAX_READ_IMAGE_ARGS: 		 32
+CL_DEVICE_MAX_SAMPLERS: 		 32
+CL_DEVICE_GLOBAL_MEM_SIZE: 		 2048 MB 
+CL_DEVICE_LOCAL_MEM_SIZE: 		 32 KByte 
+CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE: 	 1468006 KByte 
+CL_DEVICE_MAX_MEM_ALLOC_SIZE: 		 1468006 KByte 
+CL_DEVICE_GLOBAL_MEM_CACHE_SIZE: 	 0 KByte 
+CL_DEVICE_MAX_WORK_ITEM_SIZES: 		 256 | 256 | 256
+CL_DEVICE_MAX_WORK_GROUP_SIZE: 		 32
+CL_DEVICE_ERROR_CORRECTION_SUPPORT: 	 NO 
+CL_DEVICE_IMAGE_SUPPORT: 		 NO 
+ENDIANNESS: 				 LITTLE-ENDIAN 
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_CHAR: 	 16
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_SHORT: 8
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_INT: 	 4
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_LONG: 	 2
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT: 4
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_DOUBLE: 2
+
+Done.
+
+Propagate shapes and schedule...
+Propagated layer 1: 4x4x2
+CNN Model: 1 Scheduled Layers
+
+1. Layer 1
+
+
+Done.
+Generate and compile kernels...
+Created Kernel for layer 1 
+Done.
+Loading kernels...
+from /usr/local/lib/deepracin/kernels/...
+Number of Kernelfiles: 7 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_helper.cl...
+Got generated kernel string with length: 14689, total length: 14689 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_fcl.cl...
+Got generated kernel string with length: 3706, total length: 18395 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_math.cl...
+Got generated kernel string with length: 9673, total length: 28068 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_transform.cl...
+Got generated kernel string with length: 1113, total length: 29181 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_winograd2.cl...
+Got generated kernel string with length: 18798, total length: 47979 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_conv2d1x1.cl...
+Got generated kernel string with length: 1507, total length: 49486 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_fft.cl...
+Got generated kernel string with length: 20426, total length: 69912 
+
+Kernel file 0:
+dR_helper.cl
+Kernel file 1:
+dR_fcl.cl
+Kernel file 2:
+dR_math.cl
+Kernel file 3:
+dR_transform.cl
+Kernel file 4:
+dR_winograd2.cl
+Kernel file 5:
+dR_conv2d1x1.cl
+Kernel file 6:
+dR_fft.cl
+Done.
+Creating OpenCL program... 
+Source code length: 69912 
+Done.
+Cleanup loaded kernels...
+Done.
+Building OpenCL program... clBuildProgram: Non-CPU in release mode with fast-relaxed-math
+Done.
+Build log: input.cl:554:17: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:579:17: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:1158:24: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:1380:28: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:1942:42: warning: double precision constant requires cl_khr_fp64, casting to single precision
+/usr/include/clc/float/definitions.h:53:25: note: expanded from macro 'M_PI'
+
+
+Info for kernel fft:
+CL_KERNEL_WORK_GROUP_SIZE: 256
+CL_KERNEL_COMPILE_WORK_GROUP_SIZE: 0 | 0 | 0 
+CL_KERNEL_LOCAL_MEM_SIZE: 0 bytes
+
+Info for kernel transpose:
+CL_KERNEL_WORK_GROUP_SIZE: 256
+CL_KERNEL_COMPILE_WORK_GROUP_SIZE: 0 | 0 | 0 
+CL_KERNEL_LOCAL_MEM_SIZE: 0 bytes
+
+Info for kernel copy:
+CL_KERNEL_WORK_GROUP_SIZE: 256
+CL_KERNEL_COMPILE_WORK_GROUP_SIZE: 0 | 0 | 0 
+CL_KERNEL_LOCAL_MEM_SIZE: 0 bytes
+Done.
+Estimate and allocate buffers...
+Buffer Created: 64 
+Created Buffers for Layer 0
+
+OpenCL Buffer Allocation for Layer 1... 
+Buffer Created: 512 
+Created Buffers for Layer! 1
+Number of required stream buffers: 2, Allocating...
+Buffer Created: 64 
+Stream buffer with size 16 created!
+Buffer Created: 256 
+Stream buffer with size 64 created!
+Stream buffers allocated!
+Done. 
+Fill buffers...
+Done.
+
+
+GPU Profiling: Whole graph GPU memory consumption: 0.000854 MB 
+
+Input image dimensions: 
+(4, 4)
+
+Expanded input image dimensions: 
+(4, 4, 1)
+
+np.array image dimensions: 
+(4, 4, 1)
+
+Event here. 
+Got Prof Info 1. 
+Got Prof Info 2. 
+Profiling: Upload time GPU for array :  0.42ms (0.00GB/s)
+Finished one Prof. 
+Applying graph...
+OpenCL Error in detail: Shader Stats: SGPRS: 24 VGPRS: 6 Code Size: 50424 LDS: 0 Scratch: 0 Max Waves: 10 Spilled SGPRs: 0 Spilled VGPRs: 0 PrivMem VGPRs: 0
+GPU Profiling: deepRACIN:fft took: 0.039ms (+1.06,  0MT/s)
+GPU Profiling: deepRACIN:fft took: 0.040ms (+0.06,  0MT/s)
+OpenCL Error in detail: Shader Stats: SGPRS: 24 VGPRS: 6 Code Size: 50424 LDS: 0 Scratch: 0 Max Waves: 10 Spilled SGPRs: 0 Spilled VGPRs: 0 PrivMem VGPRs: 0
+GPU Profiling: deepRACIN:transpose took: 0.012ms (+0.20,  1MT/s)
+GPU Profiling: deepRACIN:fft took: 0.040ms (+0.09,  0MT/s)
+GPU Profiling: deepRACIN:fft took: 0.039ms (+0.30,  0MT/s)
+GPU Profiling: deepRACIN:transpose took: 0.011ms (+0.10,  1MT/s)
+OpenCL Error in detail: Shader Stats: SGPRS: 24 VGPRS: 6 Code Size: 50424 LDS: 0 Scratch: 0 Max Waves: 10 Spilled SGPRs: 0 Spilled VGPRs: 0 PrivMem VGPRs: 0
+GPU Profiling: deepRACIN:copy took: 0.011ms (+0.20,  1MT/s)
+CPU Profiling: Node 1 took: 7.735ms 
+GPU Profiling: Sum of all kernel run times: 0.191ms 
+CPU Profiling: Whole graph took: 7.743ms, Sum of all nodes: 7.735ms 
+Done.
+
+Transfer Profiling: Download time GPU for array output0:  0.14ms (0.00GB/s)
+
+Output image dimensions: 
+(4, 4, 2)
+
+mikail@my:~/res/nano/deepracin/examples/ffttest$ python fft_grayscale.py 
+Cleaning up temp-path...
+done...
+
+---------------------------------
+deepRACIN graph model: 2 Layers
+
+DataFeedNode: 0
+ Data dimensions: 8x8x1
+ Previous Layers: none
+ Next Layers: 1, 
+
+FFT input operation node: 1
+ Previous Layers: 0, 
+ Next Layers: none
+
+---------------------------------
+
+Initializing OpenCL
+/usr/local/lib/deepracin/kernels/
+/usr/local/lib/deepracin/kernels/
+Creating OpenCL context
+Found 1 OpenCL platform(s):
+Platform 0: Mesa <-- selected
+Creating context for device type: GPU
+Context created...
+Creating OpenCL command queue... 
+Done.
+Found 1 OpenCL devices(s) for DEVICE_TYPE_GPU:
+Device 0: AMD PITCAIRN (DRM 2.49.0 / 4.10.0-42-generic, LLVM 6.0.0) <-- selected 
+Selected OpenCL Device: AMD PITCAIRN (DRM 2.49.0 / 4.10.0-42-generic, LLVM 6.0.0)
+OpenCL device info:
+CL_DEVICE_NAME: 			 AMD PITCAIRN (DRM 2.49.0 / 4.10.0-42-generic, LLVM 6.0.0)
+CL_DEVICE_VENDOR: 			 AMD
+CL_DEVICE_TYPE: 			 GPU
+CL_DRIVER_VERSION: 			 17.3.0-devel - padoka PPA
+CL_DEVICE_VERSION: 			 OpenCL 1.1 Mesa 17.3.0-devel - padoka PPA
+CL_DEVICE_EXTENSIONS: 			 cl_khr_byte_addressable_store cl_khr_global_int32_base_atomics cl_khr_global_int32_extended_atomics cl_khr_local_int32_base_atomics cl_khr_local_int32_extended_atomics cl_khr_int64_base_atomics cl_khr_int64_extended_atomics cl_khr_fp64 cl_khr_fp16
+CL_DEVICE_ADDRESS_BITS: 		 64
+CL_DEVICE_MAX_CLOCK_FREQUENCY: 		 985 MHz 
+CL_DEVICE_MAX_COMPUTE_UNITS: 		 16
+CL_DEVICE_MAX_PARAMETER_SIZE: 		 1024
+CL_DEVICE_MAX_CONSTANT_ARGS: 		 16
+CL_DEVICE_MAX_READ_IMAGE_ARGS: 		 32
+CL_DEVICE_MAX_SAMPLERS: 		 32
+CL_DEVICE_GLOBAL_MEM_SIZE: 		 2048 MB 
+CL_DEVICE_LOCAL_MEM_SIZE: 		 32 KByte 
+CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE: 	 1468006 KByte 
+CL_DEVICE_MAX_MEM_ALLOC_SIZE: 		 1468006 KByte 
+CL_DEVICE_GLOBAL_MEM_CACHE_SIZE: 	 0 KByte 
+CL_DEVICE_MAX_WORK_ITEM_SIZES: 		 256 | 256 | 256
+CL_DEVICE_MAX_WORK_GROUP_SIZE: 		 32
+CL_DEVICE_ERROR_CORRECTION_SUPPORT: 	 NO 
+CL_DEVICE_IMAGE_SUPPORT: 		 NO 
+ENDIANNESS: 				 LITTLE-ENDIAN 
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_CHAR: 	 16
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_SHORT: 8
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_INT: 	 4
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_LONG: 	 2
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT: 4
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_DOUBLE: 2
+
+Done.
+
+Propagate shapes and schedule...
+Propagated layer 1: 8x8x2
+CNN Model: 1 Scheduled Layers
+
+1. Layer 1
+
+
+Done.
+Generate and compile kernels...
+Created Kernel for layer 1 
+Done.
+Loading kernels...
+from /usr/local/lib/deepracin/kernels/...
+Number of Kernelfiles: 7 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_helper.cl...
+Got generated kernel string with length: 14689, total length: 14689 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_fcl.cl...
+Got generated kernel string with length: 3706, total length: 18395 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_math.cl...
+Got generated kernel string with length: 9673, total length: 28068 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_transform.cl...
+Got generated kernel string with length: 1113, total length: 29181 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_winograd2.cl...
+Got generated kernel string with length: 18798, total length: 47979 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_conv2d1x1.cl...
+Got generated kernel string with length: 1507, total length: 49486 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_fft.cl...
+Got generated kernel string with length: 20426, total length: 69912 
+
+Kernel file 0:
+dR_helper.cl
+Kernel file 1:
+dR_fcl.cl
+Kernel file 2:
+dR_math.cl
+Kernel file 3:
+dR_transform.cl
+Kernel file 4:
+dR_winograd2.cl
+Kernel file 5:
+dR_conv2d1x1.cl
+Kernel file 6:
+dR_fft.cl
+Done.
+Creating OpenCL program... 
+Source code length: 69912 
+Done.
+Cleanup loaded kernels...
+Done.
+Building OpenCL program... clBuildProgram: Non-CPU in release mode with fast-relaxed-math
+Done.
+Build log: input.cl:554:17: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:579:17: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:1158:24: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:1380:28: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:1942:42: warning: double precision constant requires cl_khr_fp64, casting to single precision
+/usr/include/clc/float/definitions.h:53:25: note: expanded from macro 'M_PI'
+
+
+Info for kernel fft:
+CL_KERNEL_WORK_GROUP_SIZE: 256
+CL_KERNEL_COMPILE_WORK_GROUP_SIZE: 0 | 0 | 0 
+CL_KERNEL_LOCAL_MEM_SIZE: 0 bytes
+
+Info for kernel transpose:
+CL_KERNEL_WORK_GROUP_SIZE: 256
+CL_KERNEL_COMPILE_WORK_GROUP_SIZE: 0 | 0 | 0 
+CL_KERNEL_LOCAL_MEM_SIZE: 0 bytes
+
+Info for kernel copy:
+CL_KERNEL_WORK_GROUP_SIZE: 256
+CL_KERNEL_COMPILE_WORK_GROUP_SIZE: 0 | 0 | 0 
+CL_KERNEL_LOCAL_MEM_SIZE: 0 bytes
+Done.
+Estimate and allocate buffers...
+Buffer Created: 256 
+Created Buffers for Layer 0
+
+OpenCL Buffer Allocation for Layer 1... 
+Buffer Created: 2048 
+Created Buffers for Layer! 1
+Number of required stream buffers: 2, Allocating...
+Buffer Created: 256 
+Stream buffer with size 64 created!
+Buffer Created: 1024 
+Stream buffer with size 256 created!
+Stream buffers allocated!
+Done. 
+Fill buffers...
+Done.
+
+
+GPU Profiling: Whole graph GPU memory consumption: 0.003418 MB 
+
+Input image dimensions: 
+(8, 8)
+
+Expanded input image dimensions: 
+(8, 8, 1)
+
+np.array image dimensions: 
+(8, 8, 1)
+
+Event here. 
+Got Prof Info 1. 
+Got Prof Info 2. 
+Profiling: Upload time GPU for array :  0.62ms (0.00GB/s)
+Finished one Prof. 
+Applying graph...
+OpenCL Error in detail: Shader Stats: SGPRS: 24 VGPRS: 6 Code Size: 50424 LDS: 0 Scratch: 0 Max Waves: 10 Spilled SGPRs: 0 Spilled VGPRs: 0 PrivMem VGPRs: 0
+GPU Profiling: deepRACIN:fft took: 0.040ms (+0.36,  2MT/s)
+GPU Profiling: deepRACIN:fft took: 0.041ms (+0.11,  2MT/s)
+GPU Profiling: deepRACIN:fft took: 0.041ms (+0.09,  2MT/s)
+OpenCL Error in detail: Shader Stats: SGPRS: 24 VGPRS: 6 Code Size: 50424 LDS: 0 Scratch: 0 Max Waves: 10 Spilled SGPRs: 0 Spilled VGPRs: 0 PrivMem VGPRs: 0
+GPU Profiling: deepRACIN:transpose took: 0.012ms (+0.20,  5MT/s)
+OpenCL Error in detail: Shader Stats: SGPRS: 24 VGPRS: 6 Code Size: 50424 LDS: 0 Scratch: 0 Max Waves: 10 Spilled SGPRs: 0 Spilled VGPRs: 0 PrivMem VGPRs: 0
+GPU Profiling: deepRACIN:copy took: 0.012ms (+0.20,  5MT/s)
+GPU Profiling: deepRACIN:fft took: 0.041ms (+0.45,  2MT/s)
+GPU Profiling: deepRACIN:fft took: 0.042ms (+0.30,  2MT/s)
+GPU Profiling: deepRACIN:fft took: 0.041ms (+0.10,  2MT/s)
+GPU Profiling: deepRACIN:transpose took: 0.012ms (+0.08,  5MT/s)
+CPU Profiling: Node 1 took: 8.752ms 
+GPU Profiling: Sum of all kernel run times: 0.280ms 
+CPU Profiling: Whole graph took: 8.760ms, Sum of all nodes: 8.752ms 
+Done.
+
+Transfer Profiling: Download time GPU for array output0:  0.11ms (0.00GB/s)
+
+Output image dimensions: 
+(8, 8, 2)
+
+mikail@my:~/res/nano/deepracin/examples/ffttest$ python fft_grayscale.py 
+Cleaning up temp-path...
+done...
+
+---------------------------------
+deepRACIN graph model: 2 Layers
+
+DataFeedNode: 0
+ Data dimensions: 16x16x1
+ Previous Layers: none
+ Next Layers: 1, 
+
+FFT input operation node: 1
+ Previous Layers: 0, 
+ Next Layers: none
+
+---------------------------------
+
+Initializing OpenCL
+/usr/local/lib/deepracin/kernels/
+/usr/local/lib/deepracin/kernels/
+Creating OpenCL context
+Found 1 OpenCL platform(s):
+Platform 0: Mesa <-- selected
+Creating context for device type: GPU
+Context created...
+Creating OpenCL command queue... 
+Done.
+Found 1 OpenCL devices(s) for DEVICE_TYPE_GPU:
+Device 0: AMD PITCAIRN (DRM 2.49.0 / 4.10.0-42-generic, LLVM 6.0.0) <-- selected 
+Selected OpenCL Device: AMD PITCAIRN (DRM 2.49.0 / 4.10.0-42-generic, LLVM 6.0.0)
+OpenCL device info:
+CL_DEVICE_NAME: 			 AMD PITCAIRN (DRM 2.49.0 / 4.10.0-42-generic, LLVM 6.0.0)
+CL_DEVICE_VENDOR: 			 AMD
+CL_DEVICE_TYPE: 			 GPU
+CL_DRIVER_VERSION: 			 17.3.0-devel - padoka PPA
+CL_DEVICE_VERSION: 			 OpenCL 1.1 Mesa 17.3.0-devel - padoka PPA
+CL_DEVICE_EXTENSIONS: 			 cl_khr_byte_addressable_store cl_khr_global_int32_base_atomics cl_khr_global_int32_extended_atomics cl_khr_local_int32_base_atomics cl_khr_local_int32_extended_atomics cl_khr_int64_base_atomics cl_khr_int64_extended_atomics cl_khr_fp64 cl_khr_fp16
+CL_DEVICE_ADDRESS_BITS: 		 64
+CL_DEVICE_MAX_CLOCK_FREQUENCY: 		 985 MHz 
+CL_DEVICE_MAX_COMPUTE_UNITS: 		 16
+CL_DEVICE_MAX_PARAMETER_SIZE: 		 1024
+CL_DEVICE_MAX_CONSTANT_ARGS: 		 16
+CL_DEVICE_MAX_READ_IMAGE_ARGS: 		 32
+CL_DEVICE_MAX_SAMPLERS: 		 32
+CL_DEVICE_GLOBAL_MEM_SIZE: 		 2048 MB 
+CL_DEVICE_LOCAL_MEM_SIZE: 		 32 KByte 
+CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE: 	 1468006 KByte 
+CL_DEVICE_MAX_MEM_ALLOC_SIZE: 		 1468006 KByte 
+CL_DEVICE_GLOBAL_MEM_CACHE_SIZE: 	 0 KByte 
+CL_DEVICE_MAX_WORK_ITEM_SIZES: 		 256 | 256 | 256
+CL_DEVICE_MAX_WORK_GROUP_SIZE: 		 32
+CL_DEVICE_ERROR_CORRECTION_SUPPORT: 	 NO 
+CL_DEVICE_IMAGE_SUPPORT: 		 NO 
+ENDIANNESS: 				 LITTLE-ENDIAN 
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_CHAR: 	 16
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_SHORT: 8
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_INT: 	 4
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_LONG: 	 2
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT: 4
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_DOUBLE: 2
+
+Done.
+
+Propagate shapes and schedule...
+Propagated layer 1: 16x16x2
+CNN Model: 1 Scheduled Layers
+
+1. Layer 1
+
+
+Done.
+Generate and compile kernels...
+Created Kernel for layer 1 
+Done.
+Loading kernels...
+from /usr/local/lib/deepracin/kernels/...
+Number of Kernelfiles: 7 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_helper.cl...
+Got generated kernel string with length: 14689, total length: 14689 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_fcl.cl...
+Got generated kernel string with length: 3706, total length: 18395 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_math.cl...
+Got generated kernel string with length: 9673, total length: 28068 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_transform.cl...
+Got generated kernel string with length: 1113, total length: 29181 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_winograd2.cl...
+Got generated kernel string with length: 18798, total length: 47979 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_conv2d1x1.cl...
+Got generated kernel string with length: 1507, total length: 49486 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_fft.cl...
+Got generated kernel string with length: 20426, total length: 69912 
+
+Kernel file 0:
+dR_helper.cl
+Kernel file 1:
+dR_fcl.cl
+Kernel file 2:
+dR_math.cl
+Kernel file 3:
+dR_transform.cl
+Kernel file 4:
+dR_winograd2.cl
+Kernel file 5:
+dR_conv2d1x1.cl
+Kernel file 6:
+dR_fft.cl
+Done.
+Creating OpenCL program... 
+Source code length: 69912 
+Done.
+Cleanup loaded kernels...
+Done.
+Building OpenCL program... clBuildProgram: Non-CPU in release mode with fast-relaxed-math
+Done.
+Build log: input.cl:554:17: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:579:17: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:1158:24: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:1380:28: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:1942:42: warning: double precision constant requires cl_khr_fp64, casting to single precision
+/usr/include/clc/float/definitions.h:53:25: note: expanded from macro 'M_PI'
+
+
+Info for kernel fft:
+CL_KERNEL_WORK_GROUP_SIZE: 256
+CL_KERNEL_COMPILE_WORK_GROUP_SIZE: 0 | 0 | 0 
+CL_KERNEL_LOCAL_MEM_SIZE: 0 bytes
+
+Info for kernel transpose:
+CL_KERNEL_WORK_GROUP_SIZE: 256
+CL_KERNEL_COMPILE_WORK_GROUP_SIZE: 0 | 0 | 0 
+CL_KERNEL_LOCAL_MEM_SIZE: 0 bytes
+
+Info for kernel copy:
+CL_KERNEL_WORK_GROUP_SIZE: 256
+CL_KERNEL_COMPILE_WORK_GROUP_SIZE: 0 | 0 | 0 
+CL_KERNEL_LOCAL_MEM_SIZE: 0 bytes
+Done.
+Estimate and allocate buffers...
+Buffer Created: 1024 
+Created Buffers for Layer 0
+
+OpenCL Buffer Allocation for Layer 1... 
+Buffer Created: 8192 
+Created Buffers for Layer! 1
+Number of required stream buffers: 2, Allocating...
+Buffer Created: 1024 
+Stream buffer with size 256 created!
+Buffer Created: 4096 
+Stream buffer with size 1024 created!
+Stream buffers allocated!
+Done. 
+Fill buffers...
+Done.
+
+
+GPU Profiling: Whole graph GPU memory consumption: 0.013672 MB 
+
+Input image dimensions: 
+(16, 16)
+
+Expanded input image dimensions: 
+(16, 16, 1)
+
+np.array image dimensions: 
+(16, 16, 1)
+
+Event here. 
+Got Prof Info 1. 
+Got Prof Info 2. 
+Profiling: Upload time GPU for array :  0.91ms (0.00GB/s)
+Finished one Prof. 
+Applying graph...
+OpenCL Error in detail: Shader Stats: SGPRS: 24 VGPRS: 6 Code Size: 50424 LDS: 0 Scratch: 0 Max Waves: 10 Spilled SGPRs: 0 Spilled VGPRs: 0 PrivMem VGPRs: 0
+GPU Profiling: deepRACIN:fft took: 0.039ms (+0.81,  7MT/s)
+GPU Profiling: deepRACIN:fft took: 0.040ms (+0.10,  6MT/s)
+GPU Profiling: deepRACIN:fft took: 0.041ms (+0.10,  6MT/s)
+GPU Profiling: deepRACIN:fft took: 0.041ms (+0.11,  6MT/s)
+OpenCL Error in detail: Shader Stats: SGPRS: 24 VGPRS: 6 Code Size: 50424 LDS: 0 Scratch: 0 Max Waves: 10 Spilled SGPRs: 0 Spilled VGPRs: 0 PrivMem VGPRs: 0
+GPU Profiling: deepRACIN:transpose took: 0.013ms (+0.18, 19MT/s)
+GPU Profiling: deepRACIN:fft took: 0.040ms (+0.07,  6MT/s)
+GPU Profiling: deepRACIN:fft took: 0.041ms (+0.07,  6MT/s)
+GPU Profiling: deepRACIN:fft took: 0.040ms (+0.08,  6MT/s)
+GPU Profiling: deepRACIN:fft took: 0.040ms (+0.07,  6MT/s)
+GPU Profiling: deepRACIN:transpose took: 0.013ms (+0.09, 20MT/s)
+OpenCL Error in detail: Shader Stats: SGPRS: 24 VGPRS: 6 Code Size: 50424 LDS: 0 Scratch: 0 Max Waves: 10 Spilled SGPRs: 0 Spilled VGPRs: 0 PrivMem VGPRs: 0
+GPU Profiling: deepRACIN:copy took: 0.012ms (+0.17, 22MT/s)
+CPU Profiling: Node 1 took: 4.609ms 
+GPU Profiling: Sum of all kernel run times: 0.360ms 
+CPU Profiling: Whole graph took: 4.625ms, Sum of all nodes: 4.609ms 
+Done.
+
+Transfer Profiling: Download time GPU for array output0:  0.20ms (0.01GB/s)
+
+Output image dimensions: 
+(16, 16, 2)
+
+mikail@my:~/res/nano/deepracin/examples/ffttest$ python fft_grayscale.py 
+Cleaning up temp-path...
+done...
+
+---------------------------------
+deepRACIN graph model: 2 Layers
+
+DataFeedNode: 0
+ Data dimensions: 32x32x1
+ Previous Layers: none
+ Next Layers: 1, 
+
+FFT input operation node: 1
+ Previous Layers: 0, 
+ Next Layers: none
+
+---------------------------------
+
+Initializing OpenCL
+/usr/local/lib/deepracin/kernels/
+/usr/local/lib/deepracin/kernels/
+Creating OpenCL context
+Found 1 OpenCL platform(s):
+Platform 0: Mesa <-- selected
+Creating context for device type: GPU
+Context created...
+Creating OpenCL command queue... 
+Done.
+Found 1 OpenCL devices(s) for DEVICE_TYPE_GPU:
+Device 0: AMD PITCAIRN (DRM 2.49.0 / 4.10.0-42-generic, LLVM 6.0.0) <-- selected 
+Selected OpenCL Device: AMD PITCAIRN (DRM 2.49.0 / 4.10.0-42-generic, LLVM 6.0.0)
+OpenCL device info:
+CL_DEVICE_NAME: 			 AMD PITCAIRN (DRM 2.49.0 / 4.10.0-42-generic, LLVM 6.0.0)
+CL_DEVICE_VENDOR: 			 AMD
+CL_DEVICE_TYPE: 			 GPU
+CL_DRIVER_VERSION: 			 17.3.0-devel - padoka PPA
+CL_DEVICE_VERSION: 			 OpenCL 1.1 Mesa 17.3.0-devel - padoka PPA
+CL_DEVICE_EXTENSIONS: 			 cl_khr_byte_addressable_store cl_khr_global_int32_base_atomics cl_khr_global_int32_extended_atomics cl_khr_local_int32_base_atomics cl_khr_local_int32_extended_atomics cl_khr_int64_base_atomics cl_khr_int64_extended_atomics cl_khr_fp64 cl_khr_fp16
+CL_DEVICE_ADDRESS_BITS: 		 64
+CL_DEVICE_MAX_CLOCK_FREQUENCY: 		 985 MHz 
+CL_DEVICE_MAX_COMPUTE_UNITS: 		 16
+CL_DEVICE_MAX_PARAMETER_SIZE: 		 1024
+CL_DEVICE_MAX_CONSTANT_ARGS: 		 16
+CL_DEVICE_MAX_READ_IMAGE_ARGS: 		 32
+CL_DEVICE_MAX_SAMPLERS: 		 32
+CL_DEVICE_GLOBAL_MEM_SIZE: 		 2048 MB 
+CL_DEVICE_LOCAL_MEM_SIZE: 		 32 KByte 
+CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE: 	 1468006 KByte 
+CL_DEVICE_MAX_MEM_ALLOC_SIZE: 		 1468006 KByte 
+CL_DEVICE_GLOBAL_MEM_CACHE_SIZE: 	 0 KByte 
+CL_DEVICE_MAX_WORK_ITEM_SIZES: 		 256 | 256 | 256
+CL_DEVICE_MAX_WORK_GROUP_SIZE: 		 32
+CL_DEVICE_ERROR_CORRECTION_SUPPORT: 	 NO 
+CL_DEVICE_IMAGE_SUPPORT: 		 NO 
+ENDIANNESS: 				 LITTLE-ENDIAN 
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_CHAR: 	 16
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_SHORT: 8
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_INT: 	 4
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_LONG: 	 2
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT: 4
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_DOUBLE: 2
+
+Done.
+
+Propagate shapes and schedule...
+Propagated layer 1: 32x32x2
+CNN Model: 1 Scheduled Layers
+
+1. Layer 1
+
+
+Done.
+Generate and compile kernels...
+Created Kernel for layer 1 
+Done.
+Loading kernels...
+from /usr/local/lib/deepracin/kernels/...
+Number of Kernelfiles: 7 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_helper.cl...
+Got generated kernel string with length: 14689, total length: 14689 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_fcl.cl...
+Got generated kernel string with length: 3706, total length: 18395 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_math.cl...
+Got generated kernel string with length: 9673, total length: 28068 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_transform.cl...
+Got generated kernel string with length: 1113, total length: 29181 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_winograd2.cl...
+Got generated kernel string with length: 18798, total length: 47979 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_conv2d1x1.cl...
+Got generated kernel string with length: 1507, total length: 49486 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_fft.cl...
+Got generated kernel string with length: 20426, total length: 69912 
+
+Kernel file 0:
+dR_helper.cl
+Kernel file 1:
+dR_fcl.cl
+Kernel file 2:
+dR_math.cl
+Kernel file 3:
+dR_transform.cl
+Kernel file 4:
+dR_winograd2.cl
+Kernel file 5:
+dR_conv2d1x1.cl
+Kernel file 6:
+dR_fft.cl
+Done.
+Creating OpenCL program... 
+Source code length: 69912 
+Done.
+Cleanup loaded kernels...
+Done.
+Building OpenCL program... clBuildProgram: Non-CPU in release mode with fast-relaxed-math
+Done.
+Build log: input.cl:554:17: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:579:17: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:1158:24: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:1380:28: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:1942:42: warning: double precision constant requires cl_khr_fp64, casting to single precision
+/usr/include/clc/float/definitions.h:53:25: note: expanded from macro 'M_PI'
+
+
+Info for kernel fft:
+CL_KERNEL_WORK_GROUP_SIZE: 256
+CL_KERNEL_COMPILE_WORK_GROUP_SIZE: 0 | 0 | 0 
+CL_KERNEL_LOCAL_MEM_SIZE: 0 bytes
+
+Info for kernel transpose:
+CL_KERNEL_WORK_GROUP_SIZE: 256
+CL_KERNEL_COMPILE_WORK_GROUP_SIZE: 0 | 0 | 0 
+CL_KERNEL_LOCAL_MEM_SIZE: 0 bytes
+
+Info for kernel copy:
+CL_KERNEL_WORK_GROUP_SIZE: 256
+CL_KERNEL_COMPILE_WORK_GROUP_SIZE: 0 | 0 | 0 
+CL_KERNEL_LOCAL_MEM_SIZE: 0 bytes
+Done.
+Estimate and allocate buffers...
+Buffer Created: 4096 
+Created Buffers for Layer 0
+
+OpenCL Buffer Allocation for Layer 1... 
+Buffer Created: 32768 
+Created Buffers for Layer! 1
+Number of required stream buffers: 2, Allocating...
+Buffer Created: 4096 
+Stream buffer with size 1024 created!
+Buffer Created: 16384 
+Stream buffer with size 4096 created!
+Stream buffers allocated!
+Done. 
+Fill buffers...
+Done.
+
+
+GPU Profiling: Whole graph GPU memory consumption: 0.054688 MB 
+
+Input image dimensions: 
+(32, 32)
+
+Expanded input image dimensions: 
+(32, 32, 1)
+
+np.array image dimensions: 
+(32, 32, 1)
+
+Event here. 
+Got Prof Info 1. 
+Got Prof Info 2. 
+Profiling: Upload time GPU for array :  0.39ms (0.01GB/s)
+Finished one Prof. 
+Applying graph...
+OpenCL Error in detail: Shader Stats: SGPRS: 24 VGPRS: 6 Code Size: 50424 LDS: 0 Scratch: 0 Max Waves: 10 Spilled SGPRs: 0 Spilled VGPRs: 0 PrivMem VGPRs: 0
+GPU Profiling: deepRACIN:fft took: 0.039ms (+0.58, 26MT/s)
+GPU Profiling: deepRACIN:fft took: 0.040ms (+0.15, 26MT/s)
+GPU Profiling: deepRACIN:fft took: 0.041ms (+0.13, 25MT/s)
+GPU Profiling: deepRACIN:fft took: 0.040ms (+0.13, 26MT/s)
+GPU Profiling: deepRACIN:fft took: 0.040ms (+0.13, 25MT/s)
+OpenCL Error in detail: Shader Stats: SGPRS: 24 VGPRS: 6 Code Size: 50424 LDS: 0 Scratch: 0 Max Waves: 10 Spilled SGPRs: 0 Spilled VGPRs: 0 PrivMem VGPRs: 0
+GPU Profiling: deepRACIN:transpose took: 0.013ms (+2.45, 79MT/s)
+OpenCL Error in detail: Shader Stats: SGPRS: 24 VGPRS: 6 Code Size: 50424 LDS: 0 Scratch: 0 Max Waves: 10 Spilled SGPRs: 0 Spilled VGPRs: 0 PrivMem VGPRs: 0
+GPU Profiling: deepRACIN:copy took: 0.012ms (+0.32, 86MT/s)
+GPU Profiling: deepRACIN:fft took: 0.040ms (+0.11, 26MT/s)
+GPU Profiling: deepRACIN:fft took: 0.041ms (+0.11, 25MT/s)
+GPU Profiling: deepRACIN:fft took: 0.040ms (+0.10, 26MT/s)
+GPU Profiling: deepRACIN:fft took: 0.041ms (+0.10, 25MT/s)
+GPU Profiling: deepRACIN:fft took: 0.040ms (+0.09, 26MT/s)
+GPU Profiling: deepRACIN:transpose took: 0.013ms (+0.09, 81MT/s)
+CPU Profiling: Node 1 took: 7.502ms 
+GPU Profiling: Sum of all kernel run times: 0.440ms 
+CPU Profiling: Whole graph took: 7.587ms, Sum of all nodes: 7.502ms 
+Done.
+
+Transfer Profiling: Download time GPU for array output0:  0.32ms (0.02GB/s)
+
+Output image dimensions: 
+(32, 32, 2)
+
+mikail@my:~/res/nano/deepracin/examples/ffttest$ python fft_grayscale.py 
+Cleaning up temp-path...
+done...
+
+---------------------------------
+deepRACIN graph model: 2 Layers
+
+DataFeedNode: 0
+ Data dimensions: 64x64x1
+ Previous Layers: none
+ Next Layers: 1, 
+
+FFT input operation node: 1
+ Previous Layers: 0, 
+ Next Layers: none
+
+---------------------------------
+
+Initializing OpenCL
+/usr/local/lib/deepracin/kernels/
+/usr/local/lib/deepracin/kernels/
+Creating OpenCL context
+Found 1 OpenCL platform(s):
+Platform 0: Mesa <-- selected
+Creating context for device type: GPU
+Context created...
+Creating OpenCL command queue... 
+Done.
+Found 1 OpenCL devices(s) for DEVICE_TYPE_GPU:
+Device 0: AMD PITCAIRN (DRM 2.49.0 / 4.10.0-42-generic, LLVM 6.0.0) <-- selected 
+Selected OpenCL Device: AMD PITCAIRN (DRM 2.49.0 / 4.10.0-42-generic, LLVM 6.0.0)
+OpenCL device info:
+CL_DEVICE_NAME: 			 AMD PITCAIRN (DRM 2.49.0 / 4.10.0-42-generic, LLVM 6.0.0)
+CL_DEVICE_VENDOR: 			 AMD
+CL_DEVICE_TYPE: 			 GPU
+CL_DRIVER_VERSION: 			 17.3.0-devel - padoka PPA
+CL_DEVICE_VERSION: 			 OpenCL 1.1 Mesa 17.3.0-devel - padoka PPA
+CL_DEVICE_EXTENSIONS: 			 cl_khr_byte_addressable_store cl_khr_global_int32_base_atomics cl_khr_global_int32_extended_atomics cl_khr_local_int32_base_atomics cl_khr_local_int32_extended_atomics cl_khr_int64_base_atomics cl_khr_int64_extended_atomics cl_khr_fp64 cl_khr_fp16
+CL_DEVICE_ADDRESS_BITS: 		 64
+CL_DEVICE_MAX_CLOCK_FREQUENCY: 		 985 MHz 
+CL_DEVICE_MAX_COMPUTE_UNITS: 		 16
+CL_DEVICE_MAX_PARAMETER_SIZE: 		 1024
+CL_DEVICE_MAX_CONSTANT_ARGS: 		 16
+CL_DEVICE_MAX_READ_IMAGE_ARGS: 		 32
+CL_DEVICE_MAX_SAMPLERS: 		 32
+CL_DEVICE_GLOBAL_MEM_SIZE: 		 2048 MB 
+CL_DEVICE_LOCAL_MEM_SIZE: 		 32 KByte 
+CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE: 	 1468006 KByte 
+CL_DEVICE_MAX_MEM_ALLOC_SIZE: 		 1468006 KByte 
+CL_DEVICE_GLOBAL_MEM_CACHE_SIZE: 	 0 KByte 
+CL_DEVICE_MAX_WORK_ITEM_SIZES: 		 256 | 256 | 256
+CL_DEVICE_MAX_WORK_GROUP_SIZE: 		 32
+CL_DEVICE_ERROR_CORRECTION_SUPPORT: 	 NO 
+CL_DEVICE_IMAGE_SUPPORT: 		 NO 
+ENDIANNESS: 				 LITTLE-ENDIAN 
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_CHAR: 	 16
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_SHORT: 8
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_INT: 	 4
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_LONG: 	 2
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT: 4
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_DOUBLE: 2
+
+Done.
+
+Propagate shapes and schedule...
+Propagated layer 1: 64x64x2
+CNN Model: 1 Scheduled Layers
+
+1. Layer 1
+
+
+Done.
+Generate and compile kernels...
+Created Kernel for layer 1 
+Done.
+Loading kernels...
+from /usr/local/lib/deepracin/kernels/...
+Number of Kernelfiles: 7 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_helper.cl...
+Got generated kernel string with length: 14689, total length: 14689 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_fcl.cl...
+Got generated kernel string with length: 3706, total length: 18395 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_math.cl...
+Got generated kernel string with length: 9673, total length: 28068 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_transform.cl...
+Got generated kernel string with length: 1113, total length: 29181 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_winograd2.cl...
+Got generated kernel string with length: 18798, total length: 47979 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_conv2d1x1.cl...
+Got generated kernel string with length: 1507, total length: 49486 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_fft.cl...
+Got generated kernel string with length: 20426, total length: 69912 
+
+Kernel file 0:
+dR_helper.cl
+Kernel file 1:
+dR_fcl.cl
+Kernel file 2:
+dR_math.cl
+Kernel file 3:
+dR_transform.cl
+Kernel file 4:
+dR_winograd2.cl
+Kernel file 5:
+dR_conv2d1x1.cl
+Kernel file 6:
+dR_fft.cl
+Done.
+Creating OpenCL program... 
+Source code length: 69912 
+Done.
+Cleanup loaded kernels...
+Done.
+Building OpenCL program... clBuildProgram: Non-CPU in release mode with fast-relaxed-math
+Done.
+Build log: input.cl:554:17: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:579:17: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:1158:24: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:1380:28: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:1942:42: warning: double precision constant requires cl_khr_fp64, casting to single precision
+/usr/include/clc/float/definitions.h:53:25: note: expanded from macro 'M_PI'
+
+
+Info for kernel fft:
+CL_KERNEL_WORK_GROUP_SIZE: 256
+CL_KERNEL_COMPILE_WORK_GROUP_SIZE: 0 | 0 | 0 
+CL_KERNEL_LOCAL_MEM_SIZE: 0 bytes
+
+Info for kernel transpose:
+CL_KERNEL_WORK_GROUP_SIZE: 256
+CL_KERNEL_COMPILE_WORK_GROUP_SIZE: 0 | 0 | 0 
+CL_KERNEL_LOCAL_MEM_SIZE: 0 bytes
+
+Info for kernel copy:
+CL_KERNEL_WORK_GROUP_SIZE: 256
+CL_KERNEL_COMPILE_WORK_GROUP_SIZE: 0 | 0 | 0 
+CL_KERNEL_LOCAL_MEM_SIZE: 0 bytes
+Done.
+Estimate and allocate buffers...
+Buffer Created: 16384 
+Created Buffers for Layer 0
+
+OpenCL Buffer Allocation for Layer 1... 
+Buffer Created: 131072 
+Created Buffers for Layer! 1
+Number of required stream buffers: 2, Allocating...
+Buffer Created: 16384 
+Stream buffer with size 4096 created!
+Buffer Created: 65536 
+Stream buffer with size 16384 created!
+Stream buffers allocated!
+Done. 
+Fill buffers...
+Done.
+
+
+GPU Profiling: Whole graph GPU memory consumption: 0.218750 MB 
+
+Input image dimensions: 
+(64, 64)
+
+Expanded input image dimensions: 
+(64, 64, 1)
+
+np.array image dimensions: 
+(64, 64, 1)
+
+Event here. 
+Got Prof Info 1. 
+Got Prof Info 2. 
+Profiling: Upload time GPU for array :  0.41ms (0.04GB/s)
+Finished one Prof. 
+Applying graph...
+OpenCL Error in detail: Shader Stats: SGPRS: 24 VGPRS: 6 Code Size: 50424 LDS: 0 Scratch: 0 Max Waves: 10 Spilled SGPRs: 0 Spilled VGPRs: 0 PrivMem VGPRs: 0
+GPU Profiling: deepRACIN:fft took: 0.039ms (+0.60, 104MT/s)
+GPU Profiling: deepRACIN:fft took: 0.040ms (+0.19, 102MT/s)
+GPU Profiling: deepRACIN:fft took: 0.040ms (+0.14, 103MT/s)
+GPU Profiling: deepRACIN:fft took: 0.040ms (+0.13, 102MT/s)
+GPU Profiling: deepRACIN:fft took: 0.040ms (+0.13, 102MT/s)
+GPU Profiling: deepRACIN:fft took: 0.040ms (+0.44, 102MT/s)
+OpenCL Error in detail: Shader Stats: SGPRS: 24 VGPRS: 6 Code Size: 50424 LDS: 0 Scratch: 0 Max Waves: 10 Spilled SGPRs: 0 Spilled VGPRs: 0 PrivMem VGPRs: 0
+GPU Profiling: deepRACIN:transpose took: 0.023ms (+0.36, 182MT/s)
+GPU Profiling: deepRACIN:fft took: 0.040ms (+0.13, 102MT/s)
+GPU Profiling: deepRACIN:fft took: 0.040ms (+0.13, 102MT/s)
+GPU Profiling: deepRACIN:fft took: 0.040ms (+0.34, 104MT/s)
+GPU Profiling: deepRACIN:fft took: 0.040ms (+0.29, 102MT/s)
+GPU Profiling: deepRACIN:fft took: 0.040ms (+0.17, 103MT/s)
+GPU Profiling: deepRACIN:fft took: 0.040ms (+0.11, 102MT/s)
+GPU Profiling: deepRACIN:transpose took: 0.024ms (+0.23, 174MT/s)
+OpenCL Error in detail: Shader Stats: SGPRS: 24 VGPRS: 6 Code Size: 50424 LDS: 0 Scratch: 0 Max Waves: 10 Spilled SGPRs: 0 Spilled VGPRs: 0 PrivMem VGPRs: 0
+GPU Profiling: deepRACIN:copy took: 0.013ms (+0.32, 321MT/s)
+CPU Profiling: Node 1 took: 8.139ms 
+GPU Profiling: Sum of all kernel run times: 0.538ms 
+CPU Profiling: Whole graph took: 8.166ms, Sum of all nodes: 8.139ms 
+Done.
+
+Transfer Profiling: Download time GPU for array output0:  1.17ms (0.03GB/s)
+
+Output image dimensions: 
+(64, 64, 2)
+
+mikail@my:~/res/nano/deepracin/examples/ffttest$ python fft_grayscale.py 
+Cleaning up temp-path...
+done...
+
+---------------------------------
+deepRACIN graph model: 2 Layers
+
+DataFeedNode: 0
+ Data dimensions: 128x128x1
+ Previous Layers: none
+ Next Layers: 1, 
+
+FFT input operation node: 1
+ Previous Layers: 0, 
+ Next Layers: none
+
+---------------------------------
+
+Initializing OpenCL
+/usr/local/lib/deepracin/kernels/
+/usr/local/lib/deepracin/kernels/
+Creating OpenCL context
+Found 1 OpenCL platform(s):
+Platform 0: Mesa <-- selected
+Creating context for device type: GPU
+Context created...
+Creating OpenCL command queue... 
+Done.
+Found 1 OpenCL devices(s) for DEVICE_TYPE_GPU:
+Device 0: AMD PITCAIRN (DRM 2.49.0 / 4.10.0-42-generic, LLVM 6.0.0) <-- selected 
+Selected OpenCL Device: AMD PITCAIRN (DRM 2.49.0 / 4.10.0-42-generic, LLVM 6.0.0)
+OpenCL device info:
+CL_DEVICE_NAME: 			 AMD PITCAIRN (DRM 2.49.0 / 4.10.0-42-generic, LLVM 6.0.0)
+CL_DEVICE_VENDOR: 			 AMD
+CL_DEVICE_TYPE: 			 GPU
+CL_DRIVER_VERSION: 			 17.3.0-devel - padoka PPA
+CL_DEVICE_VERSION: 			 OpenCL 1.1 Mesa 17.3.0-devel - padoka PPA
+CL_DEVICE_EXTENSIONS: 			 cl_khr_byte_addressable_store cl_khr_global_int32_base_atomics cl_khr_global_int32_extended_atomics cl_khr_local_int32_base_atomics cl_khr_local_int32_extended_atomics cl_khr_int64_base_atomics cl_khr_int64_extended_atomics cl_khr_fp64 cl_khr_fp16
+CL_DEVICE_ADDRESS_BITS: 		 64
+CL_DEVICE_MAX_CLOCK_FREQUENCY: 		 985 MHz 
+CL_DEVICE_MAX_COMPUTE_UNITS: 		 16
+CL_DEVICE_MAX_PARAMETER_SIZE: 		 1024
+CL_DEVICE_MAX_CONSTANT_ARGS: 		 16
+CL_DEVICE_MAX_READ_IMAGE_ARGS: 		 32
+CL_DEVICE_MAX_SAMPLERS: 		 32
+CL_DEVICE_GLOBAL_MEM_SIZE: 		 2048 MB 
+CL_DEVICE_LOCAL_MEM_SIZE: 		 32 KByte 
+CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE: 	 1468006 KByte 
+CL_DEVICE_MAX_MEM_ALLOC_SIZE: 		 1468006 KByte 
+CL_DEVICE_GLOBAL_MEM_CACHE_SIZE: 	 0 KByte 
+CL_DEVICE_MAX_WORK_ITEM_SIZES: 		 256 | 256 | 256
+CL_DEVICE_MAX_WORK_GROUP_SIZE: 		 32
+CL_DEVICE_ERROR_CORRECTION_SUPPORT: 	 NO 
+CL_DEVICE_IMAGE_SUPPORT: 		 NO 
+ENDIANNESS: 				 LITTLE-ENDIAN 
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_CHAR: 	 16
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_SHORT: 8
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_INT: 	 4
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_LONG: 	 2
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT: 4
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_DOUBLE: 2
+
+Done.
+
+Propagate shapes and schedule...
+Propagated layer 1: 128x128x2
+CNN Model: 1 Scheduled Layers
+
+1. Layer 1
+
+
+Done.
+Generate and compile kernels...
+Created Kernel for layer 1 
+Done.
+Loading kernels...
+from /usr/local/lib/deepracin/kernels/...
+Number of Kernelfiles: 7 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_helper.cl...
+Got generated kernel string with length: 14689, total length: 14689 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_fcl.cl...
+Got generated kernel string with length: 3706, total length: 18395 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_math.cl...
+Got generated kernel string with length: 9673, total length: 28068 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_transform.cl...
+Got generated kernel string with length: 1113, total length: 29181 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_winograd2.cl...
+Got generated kernel string with length: 18798, total length: 47979 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_conv2d1x1.cl...
+Got generated kernel string with length: 1507, total length: 49486 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_fft.cl...
+Got generated kernel string with length: 20426, total length: 69912 
+
+Kernel file 0:
+dR_helper.cl
+Kernel file 1:
+dR_fcl.cl
+Kernel file 2:
+dR_math.cl
+Kernel file 3:
+dR_transform.cl
+Kernel file 4:
+dR_winograd2.cl
+Kernel file 5:
+dR_conv2d1x1.cl
+Kernel file 6:
+dR_fft.cl
+Done.
+Creating OpenCL program... 
+Source code length: 69912 
+Done.
+Cleanup loaded kernels...
+Done.
+Building OpenCL program... clBuildProgram: Non-CPU in release mode with fast-relaxed-math
+Done.
+Build log: input.cl:554:17: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:579:17: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:1158:24: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:1380:28: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:1942:42: warning: double precision constant requires cl_khr_fp64, casting to single precision
+/usr/include/clc/float/definitions.h:53:25: note: expanded from macro 'M_PI'
+
+
+Info for kernel fft:
+CL_KERNEL_WORK_GROUP_SIZE: 256
+CL_KERNEL_COMPILE_WORK_GROUP_SIZE: 0 | 0 | 0 
+CL_KERNEL_LOCAL_MEM_SIZE: 0 bytes
+
+Info for kernel transpose:
+CL_KERNEL_WORK_GROUP_SIZE: 256
+CL_KERNEL_COMPILE_WORK_GROUP_SIZE: 0 | 0 | 0 
+CL_KERNEL_LOCAL_MEM_SIZE: 0 bytes
+
+Info for kernel copy:
+CL_KERNEL_WORK_GROUP_SIZE: 256
+CL_KERNEL_COMPILE_WORK_GROUP_SIZE: 0 | 0 | 0 
+CL_KERNEL_LOCAL_MEM_SIZE: 0 bytes
+Done.
+Estimate and allocate buffers...
+Buffer Created: 65536 
+Created Buffers for Layer 0
+
+OpenCL Buffer Allocation for Layer 1... 
+Buffer Created: 524288 
+Created Buffers for Layer! 1
+Number of required stream buffers: 2, Allocating...
+Buffer Created: 65536 
+Stream buffer with size 16384 created!
+Buffer Created: 262144 
+Stream buffer with size 65536 created!
+Stream buffers allocated!
+Done. 
+Fill buffers...
+Done.
+
+
+GPU Profiling: Whole graph GPU memory consumption: 0.875000 MB 
+
+Input image dimensions: 
+(128, 128)
+
+Expanded input image dimensions: 
+(128, 128, 1)
+
+np.array image dimensions: 
+(128, 128, 1)
+
+Event here. 
+Got Prof Info 1. 
+Got Prof Info 2. 
+Profiling: Upload time GPU for array :  0.26ms (0.23GB/s)
+Finished one Prof. 
+Applying graph...
+OpenCL Error in detail: Shader Stats: SGPRS: 24 VGPRS: 6 Code Size: 50424 LDS: 0 Scratch: 0 Max Waves: 10 Spilled SGPRs: 0 Spilled VGPRs: 0 PrivMem VGPRs: 0
+GPU Profiling: deepRACIN:fft took: 0.044ms (+0.54, 371MT/s)
+GPU Profiling: deepRACIN:fft took: 0.048ms (+0.14, 342MT/s)
+GPU Profiling: deepRACIN:fft took: 0.051ms (+0.09, 324MT/s)
+GPU Profiling: deepRACIN:fft took: 0.048ms (+0.08, 340MT/s)
+GPU Profiling: deepRACIN:fft took: 0.048ms (+0.08, 338MT/s)
+GPU Profiling: deepRACIN:fft took: 0.047ms (+0.07, 346MT/s)
+GPU Profiling: deepRACIN:fft took: 0.048ms (+0.07, 342MT/s)
+OpenCL Error in detail: Shader Stats: SGPRS: 24 VGPRS: 6 Code Size: 50424 LDS: 0 Scratch: 0 Max Waves: 10 Spilled SGPRs: 0 Spilled VGPRs: 0 PrivMem VGPRs: 0
+GPU Profiling: deepRACIN:transpose took: 0.067ms (+0.26, 243MT/s)
+OpenCL Error in detail: Shader Stats: SGPRS: 24 VGPRS: 6 Code Size: 50424 LDS: 0 Scratch: 0 Max Waves: 10 Spilled SGPRs: 0 Spilled VGPRs: 0 PrivMem VGPRs: 0
+GPU Profiling: deepRACIN:copy took: 0.020ms (+0.21, 813MT/s)
+GPU Profiling: deepRACIN:fft took: 0.048ms (+0.08, 340MT/s)
+GPU Profiling: deepRACIN:fft took: 0.049ms (+0.20, 333MT/s)
+GPU Profiling: deepRACIN:fft took: 0.048ms (+0.07, 340MT/s)
+GPU Profiling: deepRACIN:fft took: 0.049ms (+0.14, 331MT/s)
+GPU Profiling: deepRACIN:fft took: 0.049ms (+0.07, 337MT/s)
+GPU Profiling: deepRACIN:fft took: 0.049ms (+0.07, 335MT/s)
+GPU Profiling: deepRACIN:fft took: 0.048ms (+0.06, 341MT/s)
+GPU Profiling: deepRACIN:transpose took: 0.068ms (+0.06, 239MT/s)
+CPU Profiling: Node 1 took: 7.182ms 
+GPU Profiling: Sum of all kernel run times: 0.831ms 
+CPU Profiling: Whole graph took: 7.196ms, Sum of all nodes: 7.182ms 
+Done.
+
+Transfer Profiling: Download time GPU for array output0:  0.20ms (0.60GB/s)
+
+Output image dimensions: 
+(128, 128, 2)
+
+mikail@my:~/res/nano/deepracin/examples/ffttest$ python fft_grayscale.py 
+Cleaning up temp-path...
+done...
+
+---------------------------------
+deepRACIN graph model: 2 Layers
+
+DataFeedNode: 0
+ Data dimensions: 256x256x1
+ Previous Layers: none
+ Next Layers: 1, 
+
+FFT input operation node: 1
+ Previous Layers: 0, 
+ Next Layers: none
+
+---------------------------------
+
+Initializing OpenCL
+/usr/local/lib/deepracin/kernels/
+/usr/local/lib/deepracin/kernels/
+Creating OpenCL context
+Found 1 OpenCL platform(s):
+Platform 0: Mesa <-- selected
+Creating context for device type: GPU
+Context created...
+Creating OpenCL command queue... 
+Done.
+Found 1 OpenCL devices(s) for DEVICE_TYPE_GPU:
+Device 0: AMD PITCAIRN (DRM 2.49.0 / 4.10.0-42-generic, LLVM 6.0.0) <-- selected 
+Selected OpenCL Device: AMD PITCAIRN (DRM 2.49.0 / 4.10.0-42-generic, LLVM 6.0.0)
+OpenCL device info:
+CL_DEVICE_NAME: 			 AMD PITCAIRN (DRM 2.49.0 / 4.10.0-42-generic, LLVM 6.0.0)
+CL_DEVICE_VENDOR: 			 AMD
+CL_DEVICE_TYPE: 			 GPU
+CL_DRIVER_VERSION: 			 17.3.0-devel - padoka PPA
+CL_DEVICE_VERSION: 			 OpenCL 1.1 Mesa 17.3.0-devel - padoka PPA
+CL_DEVICE_EXTENSIONS: 			 cl_khr_byte_addressable_store cl_khr_global_int32_base_atomics cl_khr_global_int32_extended_atomics cl_khr_local_int32_base_atomics cl_khr_local_int32_extended_atomics cl_khr_int64_base_atomics cl_khr_int64_extended_atomics cl_khr_fp64 cl_khr_fp16
+CL_DEVICE_ADDRESS_BITS: 		 64
+CL_DEVICE_MAX_CLOCK_FREQUENCY: 		 985 MHz 
+CL_DEVICE_MAX_COMPUTE_UNITS: 		 16
+CL_DEVICE_MAX_PARAMETER_SIZE: 		 1024
+CL_DEVICE_MAX_CONSTANT_ARGS: 		 16
+CL_DEVICE_MAX_READ_IMAGE_ARGS: 		 32
+CL_DEVICE_MAX_SAMPLERS: 		 32
+CL_DEVICE_GLOBAL_MEM_SIZE: 		 2048 MB 
+CL_DEVICE_LOCAL_MEM_SIZE: 		 32 KByte 
+CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE: 	 1468006 KByte 
+CL_DEVICE_MAX_MEM_ALLOC_SIZE: 		 1468006 KByte 
+CL_DEVICE_GLOBAL_MEM_CACHE_SIZE: 	 0 KByte 
+CL_DEVICE_MAX_WORK_ITEM_SIZES: 		 256 | 256 | 256
+CL_DEVICE_MAX_WORK_GROUP_SIZE: 		 32
+CL_DEVICE_ERROR_CORRECTION_SUPPORT: 	 NO 
+CL_DEVICE_IMAGE_SUPPORT: 		 NO 
+ENDIANNESS: 				 LITTLE-ENDIAN 
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_CHAR: 	 16
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_SHORT: 8
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_INT: 	 4
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_LONG: 	 2
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT: 4
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_DOUBLE: 2
+
+Done.
+
+Propagate shapes and schedule...
+Propagated layer 1: 256x256x2
+CNN Model: 1 Scheduled Layers
+
+1. Layer 1
+
+
+Done.
+Generate and compile kernels...
+Created Kernel for layer 1 
+Done.
+Loading kernels...
+from /usr/local/lib/deepracin/kernels/...
+Number of Kernelfiles: 7 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_helper.cl...
+Got generated kernel string with length: 14689, total length: 14689 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_fcl.cl...
+Got generated kernel string with length: 3706, total length: 18395 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_math.cl...
+Got generated kernel string with length: 9673, total length: 28068 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_transform.cl...
+Got generated kernel string with length: 1113, total length: 29181 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_winograd2.cl...
+Got generated kernel string with length: 18798, total length: 47979 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_conv2d1x1.cl...
+Got generated kernel string with length: 1507, total length: 49486 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_fft.cl...
+Got generated kernel string with length: 20426, total length: 69912 
+
+Kernel file 0:
+dR_helper.cl
+Kernel file 1:
+dR_fcl.cl
+Kernel file 2:
+dR_math.cl
+Kernel file 3:
+dR_transform.cl
+Kernel file 4:
+dR_winograd2.cl
+Kernel file 5:
+dR_conv2d1x1.cl
+Kernel file 6:
+dR_fft.cl
+Done.
+Creating OpenCL program... 
+Source code length: 69912 
+Done.
+Cleanup loaded kernels...
+Done.
+Building OpenCL program... clBuildProgram: Non-CPU in release mode with fast-relaxed-math
+Done.
+Build log: input.cl:554:17: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:579:17: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:1158:24: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:1380:28: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:1942:42: warning: double precision constant requires cl_khr_fp64, casting to single precision
+/usr/include/clc/float/definitions.h:53:25: note: expanded from macro 'M_PI'
+
+
+Info for kernel fft:
+CL_KERNEL_WORK_GROUP_SIZE: 256
+CL_KERNEL_COMPILE_WORK_GROUP_SIZE: 0 | 0 | 0 
+CL_KERNEL_LOCAL_MEM_SIZE: 0 bytes
+
+Info for kernel transpose:
+CL_KERNEL_WORK_GROUP_SIZE: 256
+CL_KERNEL_COMPILE_WORK_GROUP_SIZE: 0 | 0 | 0 
+CL_KERNEL_LOCAL_MEM_SIZE: 0 bytes
+
+Info for kernel copy:
+CL_KERNEL_WORK_GROUP_SIZE: 256
+CL_KERNEL_COMPILE_WORK_GROUP_SIZE: 0 | 0 | 0 
+CL_KERNEL_LOCAL_MEM_SIZE: 0 bytes
+Done.
+Estimate and allocate buffers...
+Buffer Created: 262144 
+Created Buffers for Layer 0
+
+OpenCL Buffer Allocation for Layer 1... 
+Buffer Created: 2097152 
+Created Buffers for Layer! 1
+Number of required stream buffers: 2, Allocating...
+Buffer Created: 262144 
+Stream buffer with size 65536 created!
+Buffer Created: 1048576 
+Stream buffer with size 262144 created!
+Stream buffers allocated!
+Done. 
+Fill buffers...
+Done.
+
+
+GPU Profiling: Whole graph GPU memory consumption: 3.500000 MB 
+
+Input image dimensions: 
+(256, 256)
+
+Expanded input image dimensions: 
+(256, 256, 1)
+
+np.array image dimensions: 
+(256, 256, 1)
+
+Event here. 
+Got Prof Info 1. 
+Got Prof Info 2. 
+Profiling: Upload time GPU for array :  0.38ms (0.64GB/s)
+Finished one Prof. 
+Applying graph...
+OpenCL Error in detail: Shader Stats: SGPRS: 24 VGPRS: 6 Code Size: 50424 LDS: 0 Scratch: 0 Max Waves: 10 Spilled SGPRs: 0 Spilled VGPRs: 0 PrivMem VGPRs: 0
+GPU Profiling: deepRACIN:fft took: 0.109ms (+0.29, 599MT/s)
+GPU Profiling: deepRACIN:fft took: 0.145ms (+0.11, 450MT/s)
+GPU Profiling: deepRACIN:fft took: 0.146ms (+0.07, 450MT/s)
+GPU Profiling: deepRACIN:fft took: 0.143ms (+0.07, 458MT/s)
+GPU Profiling: deepRACIN:fft took: 0.146ms (+0.07, 449MT/s)
+GPU Profiling: deepRACIN:fft took: 0.144ms (+0.07, 455MT/s)
+GPU Profiling: deepRACIN:fft took: 0.149ms (+0.09, 439MT/s)
+GPU Profiling: deepRACIN:fft took: 0.145ms (+0.07, 453MT/s)
+OpenCL Error in detail: Shader Stats: SGPRS: 24 VGPRS: 6 Code Size: 50424 LDS: 0 Scratch: 0 Max Waves: 10 Spilled SGPRs: 0 Spilled VGPRs: 0 PrivMem VGPRs: 0
+GPU Profiling: deepRACIN:transpose took: 0.799ms (+0.17, 82MT/s)
+GPU Profiling: deepRACIN:fft took: 0.143ms (+0.05, 457MT/s)
+GPU Profiling: deepRACIN:fft took: 0.148ms (+2.33, 441MT/s)
+GPU Profiling: deepRACIN:fft took: 0.146ms (+0.07, 448MT/s)
+GPU Profiling: deepRACIN:fft took: 0.146ms (+0.07, 449MT/s)
+GPU Profiling: deepRACIN:fft took: 0.146ms (+0.05, 448MT/s)
+GPU Profiling: deepRACIN:fft took: 0.143ms (+0.05, 457MT/s)
+GPU Profiling: deepRACIN:fft took: 0.142ms (+0.05, 463MT/s)
+GPU Profiling: deepRACIN:fft took: 0.142ms (+0.72, 461MT/s)
+GPU Profiling: deepRACIN:transpose took: 0.620ms (+0.18, 106MT/s)
+OpenCL Error in detail: Shader Stats: SGPRS: 24 VGPRS: 6 Code Size: 50424 LDS: 0 Scratch: 0 Max Waves: 10 Spilled SGPRs: 0 Spilled VGPRs: 0 PrivMem VGPRs: 0
+GPU Profiling: deepRACIN:copy took: 0.127ms (+0.24, 516MT/s)
+CPU Profiling: Node 1 took: 13.085ms 
+GPU Profiling: Sum of all kernel run times: 3.831ms 
+CPU Profiling: Whole graph took: 13.094ms, Sum of all nodes: 13.085ms 
+Done.
+
+Transfer Profiling: Download time GPU for array output0:  0.33ms (1.50GB/s)
+
+Output image dimensions: 
+(256, 256, 2)
+
+mikail@my:~/res/nano/deepracin/examples/ffttest$ python fft_grayscale.py 
+Cleaning up temp-path...
+done...
+
+---------------------------------
+deepRACIN graph model: 2 Layers
+
+DataFeedNode: 0
+ Data dimensions: 512x512x1
+ Previous Layers: none
+ Next Layers: 1, 
+
+FFT input operation node: 1
+ Previous Layers: 0, 
+ Next Layers: none
+
+---------------------------------
+
+Initializing OpenCL
+/usr/local/lib/deepracin/kernels/
+/usr/local/lib/deepracin/kernels/
+Creating OpenCL context
+Found 1 OpenCL platform(s):
+Platform 0: Mesa <-- selected
+Creating context for device type: GPU
+Context created...
+Creating OpenCL command queue... 
+Done.
+Found 1 OpenCL devices(s) for DEVICE_TYPE_GPU:
+Device 0: AMD PITCAIRN (DRM 2.49.0 / 4.10.0-42-generic, LLVM 6.0.0) <-- selected 
+Selected OpenCL Device: AMD PITCAIRN (DRM 2.49.0 / 4.10.0-42-generic, LLVM 6.0.0)
+OpenCL device info:
+CL_DEVICE_NAME: 			 AMD PITCAIRN (DRM 2.49.0 / 4.10.0-42-generic, LLVM 6.0.0)
+CL_DEVICE_VENDOR: 			 AMD
+CL_DEVICE_TYPE: 			 GPU
+CL_DRIVER_VERSION: 			 17.3.0-devel - padoka PPA
+CL_DEVICE_VERSION: 			 OpenCL 1.1 Mesa 17.3.0-devel - padoka PPA
+CL_DEVICE_EXTENSIONS: 			 cl_khr_byte_addressable_store cl_khr_global_int32_base_atomics cl_khr_global_int32_extended_atomics cl_khr_local_int32_base_atomics cl_khr_local_int32_extended_atomics cl_khr_int64_base_atomics cl_khr_int64_extended_atomics cl_khr_fp64 cl_khr_fp16
+CL_DEVICE_ADDRESS_BITS: 		 64
+CL_DEVICE_MAX_CLOCK_FREQUENCY: 		 985 MHz 
+CL_DEVICE_MAX_COMPUTE_UNITS: 		 16
+CL_DEVICE_MAX_PARAMETER_SIZE: 		 1024
+CL_DEVICE_MAX_CONSTANT_ARGS: 		 16
+CL_DEVICE_MAX_READ_IMAGE_ARGS: 		 32
+CL_DEVICE_MAX_SAMPLERS: 		 32
+CL_DEVICE_GLOBAL_MEM_SIZE: 		 2048 MB 
+CL_DEVICE_LOCAL_MEM_SIZE: 		 32 KByte 
+CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE: 	 1468006 KByte 
+CL_DEVICE_MAX_MEM_ALLOC_SIZE: 		 1468006 KByte 
+CL_DEVICE_GLOBAL_MEM_CACHE_SIZE: 	 0 KByte 
+CL_DEVICE_MAX_WORK_ITEM_SIZES: 		 256 | 256 | 256
+CL_DEVICE_MAX_WORK_GROUP_SIZE: 		 32
+CL_DEVICE_ERROR_CORRECTION_SUPPORT: 	 NO 
+CL_DEVICE_IMAGE_SUPPORT: 		 NO 
+ENDIANNESS: 				 LITTLE-ENDIAN 
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_CHAR: 	 16
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_SHORT: 8
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_INT: 	 4
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_LONG: 	 2
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT: 4
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_DOUBLE: 2
+
+Done.
+
+Propagate shapes and schedule...
+Propagated layer 1: 512x512x2
+CNN Model: 1 Scheduled Layers
+
+1. Layer 1
+
+
+Done.
+Generate and compile kernels...
+Created Kernel for layer 1 
+Done.
+Loading kernels...
+from /usr/local/lib/deepracin/kernels/...
+Number of Kernelfiles: 7 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_helper.cl...
+Got generated kernel string with length: 14689, total length: 14689 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_fcl.cl...
+Got generated kernel string with length: 3706, total length: 18395 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_math.cl...
+Got generated kernel string with length: 9673, total length: 28068 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_transform.cl...
+Got generated kernel string with length: 1113, total length: 29181 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_winograd2.cl...
+Got generated kernel string with length: 18798, total length: 47979 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_conv2d1x1.cl...
+Got generated kernel string with length: 1507, total length: 49486 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_fft.cl...
+Got generated kernel string with length: 20426, total length: 69912 
+
+Kernel file 0:
+dR_helper.cl
+Kernel file 1:
+dR_fcl.cl
+Kernel file 2:
+dR_math.cl
+Kernel file 3:
+dR_transform.cl
+Kernel file 4:
+dR_winograd2.cl
+Kernel file 5:
+dR_conv2d1x1.cl
+Kernel file 6:
+dR_fft.cl
+Done.
+Creating OpenCL program... 
+Source code length: 69912 
+Done.
+Cleanup loaded kernels...
+Done.
+Building OpenCL program... clBuildProgram: Non-CPU in release mode with fast-relaxed-math
+Done.
+Build log: input.cl:554:17: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:579:17: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:1158:24: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:1380:28: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:1942:42: warning: double precision constant requires cl_khr_fp64, casting to single precision
+/usr/include/clc/float/definitions.h:53:25: note: expanded from macro 'M_PI'
+
+
+Info for kernel fft:
+CL_KERNEL_WORK_GROUP_SIZE: 256
+CL_KERNEL_COMPILE_WORK_GROUP_SIZE: 0 | 0 | 0 
+CL_KERNEL_LOCAL_MEM_SIZE: 0 bytes
+
+Info for kernel transpose:
+CL_KERNEL_WORK_GROUP_SIZE: 256
+CL_KERNEL_COMPILE_WORK_GROUP_SIZE: 0 | 0 | 0 
+CL_KERNEL_LOCAL_MEM_SIZE: 0 bytes
+
+Info for kernel copy:
+CL_KERNEL_WORK_GROUP_SIZE: 256
+CL_KERNEL_COMPILE_WORK_GROUP_SIZE: 0 | 0 | 0 
+CL_KERNEL_LOCAL_MEM_SIZE: 0 bytes
+Done.
+Estimate and allocate buffers...
+Buffer Created: 1048576 
+Created Buffers for Layer 0
+
+OpenCL Buffer Allocation for Layer 1... 
+Buffer Created: 8388608 
+Created Buffers for Layer! 1
+Number of required stream buffers: 2, Allocating...
+Buffer Created: 1048576 
+Stream buffer with size 262144 created!
+Buffer Created: 4194304 
+Stream buffer with size 1048576 created!
+Stream buffers allocated!
+Done. 
+Fill buffers...
+Done.
+
+
+GPU Profiling: Whole graph GPU memory consumption: 14.000000 MB 
+
+Input image dimensions: 
+(512, 512)
+
+Expanded input image dimensions: 
+(512, 512, 1)
+
+np.array image dimensions: 
+(512, 512, 1)
+
+Event here. 
+Got Prof Info 1. 
+Got Prof Info 2. 
+Profiling: Upload time GPU for array :  0.72ms (1.36GB/s)
+Finished one Prof. 
+Applying graph...
+OpenCL Error in detail: Shader Stats: SGPRS: 24 VGPRS: 6 Code Size: 50424 LDS: 0 Scratch: 0 Max Waves: 10 Spilled SGPRs: 0 Spilled VGPRs: 0 PrivMem VGPRs: 0
+GPU Profiling: deepRACIN:fft took: 0.413ms (+0.30, 635MT/s)
+GPU Profiling: deepRACIN:fft took: 0.537ms (+0.09, 488MT/s)
+GPU Profiling: deepRACIN:fft took: 0.532ms (+0.08, 493MT/s)
+GPU Profiling: deepRACIN:fft took: 0.538ms (+0.07, 487MT/s)
+GPU Profiling: deepRACIN:fft took: 0.564ms (+0.06, 465MT/s)
+GPU Profiling: deepRACIN:fft took: 0.556ms (+0.05, 472MT/s)
+GPU Profiling: deepRACIN:fft took: 0.553ms (+0.05, 474MT/s)
+GPU Profiling: deepRACIN:fft took: 0.553ms (+0.05, 474MT/s)
+GPU Profiling: deepRACIN:fft took: 0.553ms (+0.07, 474MT/s)
+OpenCL Error in detail: Shader Stats: SGPRS: 24 VGPRS: 6 Code Size: 50424 LDS: 0 Scratch: 0 Max Waves: 10 Spilled SGPRs: 0 Spilled VGPRs: 0 PrivMem VGPRs: 0
+GPU Profiling: deepRACIN:transpose took: 12.115ms (+0.24, 22MT/s)
+OpenCL Error in detail: Shader Stats: SGPRS: 24 VGPRS: 6 Code Size: 50424 LDS: 0 Scratch: 0 Max Waves: 10 Spilled SGPRs: 0 Spilled VGPRs: 0 PrivMem VGPRs: 0
+GPU Profiling: deepRACIN:copy took: 0.083ms (+0.19, 3177MT/s)
+GPU Profiling: deepRACIN:fft took: 0.274ms (+0.09, 956MT/s)
+GPU Profiling: deepRACIN:fft took: 0.274ms (+0.07, 958MT/s)
+GPU Profiling: deepRACIN:fft took: 0.275ms (+0.06, 954MT/s)
+GPU Profiling: deepRACIN:fft took: 0.274ms (+0.06, 958MT/s)
+GPU Profiling: deepRACIN:fft took: 0.275ms (+0.07, 954MT/s)
+GPU Profiling: deepRACIN:fft took: 0.273ms (+0.06, 960MT/s)
+GPU Profiling: deepRACIN:fft took: 0.275ms (+0.06, 955MT/s)
+GPU Profiling: deepRACIN:fft took: 0.273ms (+0.06, 960MT/s)
+GPU Profiling: deepRACIN:fft took: 0.274ms (+0.06, 956MT/s)
+GPU Profiling: deepRACIN:transpose took: 2.357ms (+0.06, 111MT/s)
+CPU Profiling: Node 1 took: 28.815ms 
+GPU Profiling: Sum of all kernel run times: 21.820ms 
+CPU Profiling: Whole graph took: 28.880ms, Sum of all nodes: 28.815ms 
+Done.
+
+Transfer Profiling: Download time GPU for array output0:  0.93ms (2.10GB/s)
+
+Output image dimensions: 
+(512, 512, 2)
+
+mikail@my:~/res/nano/deepracin/examples/ffttest$ python fft_grayscale.py 
+Cleaning up temp-path...
+done...
+
+---------------------------------
+deepRACIN graph model: 2 Layers
+
+DataFeedNode: 0
+ Data dimensions: 1024x1024x1
+ Previous Layers: none
+ Next Layers: 1, 
+
+FFT input operation node: 1
+ Previous Layers: 0, 
+ Next Layers: none
+
+---------------------------------
+
+Initializing OpenCL
+/usr/local/lib/deepracin/kernels/
+/usr/local/lib/deepracin/kernels/
+Creating OpenCL context
+Found 1 OpenCL platform(s):
+Platform 0: Mesa <-- selected
+Creating context for device type: GPU
+Context created...
+Creating OpenCL command queue... 
+Done.
+Found 1 OpenCL devices(s) for DEVICE_TYPE_GPU:
+Device 0: AMD PITCAIRN (DRM 2.49.0 / 4.10.0-42-generic, LLVM 6.0.0) <-- selected 
+Selected OpenCL Device: AMD PITCAIRN (DRM 2.49.0 / 4.10.0-42-generic, LLVM 6.0.0)
+OpenCL device info:
+CL_DEVICE_NAME: 			 AMD PITCAIRN (DRM 2.49.0 / 4.10.0-42-generic, LLVM 6.0.0)
+CL_DEVICE_VENDOR: 			 AMD
+CL_DEVICE_TYPE: 			 GPU
+CL_DRIVER_VERSION: 			 17.3.0-devel - padoka PPA
+CL_DEVICE_VERSION: 			 OpenCL 1.1 Mesa 17.3.0-devel - padoka PPA
+CL_DEVICE_EXTENSIONS: 			 cl_khr_byte_addressable_store cl_khr_global_int32_base_atomics cl_khr_global_int32_extended_atomics cl_khr_local_int32_base_atomics cl_khr_local_int32_extended_atomics cl_khr_int64_base_atomics cl_khr_int64_extended_atomics cl_khr_fp64 cl_khr_fp16
+CL_DEVICE_ADDRESS_BITS: 		 64
+CL_DEVICE_MAX_CLOCK_FREQUENCY: 		 985 MHz 
+CL_DEVICE_MAX_COMPUTE_UNITS: 		 16
+CL_DEVICE_MAX_PARAMETER_SIZE: 		 1024
+CL_DEVICE_MAX_CONSTANT_ARGS: 		 16
+CL_DEVICE_MAX_READ_IMAGE_ARGS: 		 32
+CL_DEVICE_MAX_SAMPLERS: 		 32
+CL_DEVICE_GLOBAL_MEM_SIZE: 		 2048 MB 
+CL_DEVICE_LOCAL_MEM_SIZE: 		 32 KByte 
+CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE: 	 1468006 KByte 
+CL_DEVICE_MAX_MEM_ALLOC_SIZE: 		 1468006 KByte 
+CL_DEVICE_GLOBAL_MEM_CACHE_SIZE: 	 0 KByte 
+CL_DEVICE_MAX_WORK_ITEM_SIZES: 		 256 | 256 | 256
+CL_DEVICE_MAX_WORK_GROUP_SIZE: 		 32
+CL_DEVICE_ERROR_CORRECTION_SUPPORT: 	 NO 
+CL_DEVICE_IMAGE_SUPPORT: 		 NO 
+ENDIANNESS: 				 LITTLE-ENDIAN 
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_CHAR: 	 16
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_SHORT: 8
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_INT: 	 4
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_LONG: 	 2
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT: 4
+CL_DEVICE_PREFERRED_VECTOR_WIDTH_DOUBLE: 2
+
+Done.
+
+Propagate shapes and schedule...
+Propagated layer 1: 1024x1024x2
+CNN Model: 1 Scheduled Layers
+
+1. Layer 1
+
+
+Done.
+Generate and compile kernels...
+Created Kernel for layer 1 
+Done.
+Loading kernels...
+from /usr/local/lib/deepracin/kernels/...
+Number of Kernelfiles: 7 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_helper.cl...
+Got generated kernel string with length: 14689, total length: 14689 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_fcl.cl...
+Got generated kernel string with length: 3706, total length: 18395 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_math.cl...
+Got generated kernel string with length: 9673, total length: 28068 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_transform.cl...
+Got generated kernel string with length: 1113, total length: 29181 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_winograd2.cl...
+Got generated kernel string with length: 18798, total length: 47979 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_conv2d1x1.cl...
+Got generated kernel string with length: 1507, total length: 49486 
+Loading kernel file /usr/local/lib/deepracin/kernels/dR_fft.cl...
+Got generated kernel string with length: 20426, total length: 69912 
+
+Kernel file 0:
+dR_helper.cl
+Kernel file 1:
+dR_fcl.cl
+Kernel file 2:
+dR_math.cl
+Kernel file 3:
+dR_transform.cl
+Kernel file 4:
+dR_winograd2.cl
+Kernel file 5:
+dR_conv2d1x1.cl
+Kernel file 6:
+dR_fft.cl
+Done.
+Creating OpenCL program... 
+Source code length: 69912 
+Done.
+Cleanup loaded kernels...
+Done.
+Building OpenCL program... clBuildProgram: Non-CPU in release mode with fast-relaxed-math
+Done.
+Build log: input.cl:554:17: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:579:17: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:1158:24: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:1380:28: warning: double precision constant requires cl_khr_fp64, casting to single precision
+input.cl:1942:42: warning: double precision constant requires cl_khr_fp64, casting to single precision
+/usr/include/clc/float/definitions.h:53:25: note: expanded from macro 'M_PI'
+
+
+Info for kernel fft:
+CL_KERNEL_WORK_GROUP_SIZE: 256
+CL_KERNEL_COMPILE_WORK_GROUP_SIZE: 0 | 0 | 0 
+CL_KERNEL_LOCAL_MEM_SIZE: 0 bytes
+
+Info for kernel transpose:
+CL_KERNEL_WORK_GROUP_SIZE: 256
+CL_KERNEL_COMPILE_WORK_GROUP_SIZE: 0 | 0 | 0 
+CL_KERNEL_LOCAL_MEM_SIZE: 0 bytes
+
+Info for kernel copy:
+CL_KERNEL_WORK_GROUP_SIZE: 256
+CL_KERNEL_COMPILE_WORK_GROUP_SIZE: 0 | 0 | 0 
+CL_KERNEL_LOCAL_MEM_SIZE: 0 bytes
+Done.
+Estimate and allocate buffers...
+Buffer Created: 4194304 
+Created Buffers for Layer 0
+
+OpenCL Buffer Allocation for Layer 1... 
+Buffer Created: 33554432 
+Created Buffers for Layer! 1
+Number of required stream buffers: 2, Allocating...
+Buffer Created: 4194304 
+Stream buffer with size 1048576 created!
+Buffer Created: 16777216 
+Stream buffer with size 4194304 created!
+Stream buffers allocated!
+Done. 
+Fill buffers...
+Done.
+
+
+GPU Profiling: Whole graph GPU memory consumption: 56.000000 MB 
+
+Input image dimensions: 
+(1024, 1024)
+
+Expanded input image dimensions: 
+(1024, 1024, 1)
+
+np.array image dimensions: 
+(1024, 1024, 1)
+
+Event here. 
+Got Prof Info 1. 
+Got Prof Info 2. 
+Profiling: Upload time GPU for array :  2.17ms (1.80GB/s)
+Finished one Prof. 
+Applying graph...
+OpenCL Error in detail: Shader Stats: SGPRS: 24 VGPRS: 6 Code Size: 50424 LDS: 0 Scratch: 0 Max Waves: 10 Spilled SGPRs: 0 Spilled VGPRs: 0 PrivMem VGPRs: 0
+GPU Profiling: deepRACIN:fft took: 1.579ms (+1.64, 664MT/s)
+GPU Profiling: deepRACIN:fft took: 2.170ms (+0.13, 483MT/s)
+GPU Profiling: deepRACIN:fft took: 2.169ms (+0.07, 483MT/s)
+GPU Profiling: deepRACIN:fft took: 2.155ms (+0.06, 487MT/s)
+GPU Profiling: deepRACIN:fft took: 1.075ms (+0.05, 976MT/s)
+GPU Profiling: deepRACIN:fft took: 1.075ms (+0.05, 975MT/s)
+GPU Profiling: deepRACIN:fft took: 1.075ms (+0.05, 975MT/s)
+GPU Profiling: deepRACIN:fft took: 1.075ms (+0.05, 975MT/s)
+GPU Profiling: deepRACIN:fft took: 1.075ms (+0.05, 975MT/s)
+GPU Profiling: deepRACIN:fft took: 1.076ms (+0.06, 975MT/s)
+OpenCL Error in detail: Shader Stats: SGPRS: 24 VGPRS: 6 Code Size: 50424 LDS: 0 Scratch: 0 Max Waves: 10 Spilled SGPRs: 0 Spilled VGPRs: 0 PrivMem VGPRs: 0
+GPU Profiling: deepRACIN:transpose took: 15.215ms (+0.15, 69MT/s)
+GPU Profiling: deepRACIN:fft took: 0.554ms (+0.06, 1891MT/s)
+GPU Profiling: deepRACIN:fft took: 0.554ms (+0.05, 1894MT/s)
+GPU Profiling: deepRACIN:fft took: 0.555ms (+0.05, 1890MT/s)
+GPU Profiling: deepRACIN:fft took: 0.554ms (+0.05, 1892MT/s)
+GPU Profiling: deepRACIN:fft took: 0.555ms (+0.05, 1890MT/s)
+GPU Profiling: deepRACIN:fft took: 0.554ms (+0.05, 1894MT/s)
+GPU Profiling: deepRACIN:fft took: 0.554ms (+0.05, 1892MT/s)
+GPU Profiling: deepRACIN:fft took: 0.554ms (+0.05, 1893MT/s)
+GPU Profiling: deepRACIN:fft took: 0.554ms (+0.05, 1891MT/s)
+GPU Profiling: deepRACIN:fft took: 0.524ms (+0.05, 2002MT/s)
+GPU Profiling: deepRACIN:transpose took: 14.444ms (+0.05, 73MT/s)
+OpenCL Error in detail: Shader Stats: SGPRS: 24 VGPRS: 6 Code Size: 50424 LDS: 0 Scratch: 0 Max Waves: 10 Spilled SGPRs: 0 Spilled VGPRs: 0 PrivMem VGPRs: 0
+GPU Profiling: deepRACIN:copy took: 0.250ms (+0.18, 4196MT/s)
+CPU Profiling: Node 1 took: 60.701ms 
+GPU Profiling: Sum of all kernel run times: 49.946ms 
+CPU Profiling: Whole graph took: 60.753ms, Sum of all nodes: 60.701ms 
+Done.
+
+Transfer Profiling: Download time GPU for array output0:  2.84ms (2.75GB/s)
+
+Output image dimensions: 
+(1024, 1024, 2)
+

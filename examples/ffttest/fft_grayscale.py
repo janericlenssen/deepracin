@@ -74,11 +74,14 @@ for path in image_paths:
     io.imshow(dat[:, :, 0])
     io.show()
 
-    io.imshow(np.fft.fft2(img,axes=[1]).real)
+    #axes=[1] means just rows fft
+    #io.imshow(np.fft.fft2(img,axes=[1]).real)
+    io.imshow(np.fft.fft2(img).real)
     io.show()
 
     io.imshow(dat[:, :, 1])
     io.show()
 
-    io.imshow(np.fft.fft2(img,axes=[1]).imag)
+    #io.imshow(np.fft.fft2(img,axes=[1]).imag)
+    io.imshow(np.fft.fft2(img).imag)
     io.show()

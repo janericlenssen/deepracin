@@ -389,7 +389,8 @@ __kernel void fft_one_dim(
 __kernel void fft(
   __global float * in,
   __global float * out,
-  int p
+  int p,
+  int r_c
 )
 {
   int gx = get_global_id(0);
@@ -407,7 +408,7 @@ __kernel void fft(
     float2 u0;
     float2 u1;
 
-    if (p == 1) // only real input
+    if (p == 1 && r_c == 1) // only real input
     {
       u0.x = in[gid];
       u0.y = 0;
@@ -445,7 +446,7 @@ __kernel void fft(
 }
 
 // TODO: implement as string in dR_nodes_fft.c
- void fft_copy(
+ __kernel void copy(
   __global float * in,
   __global float * out
 )

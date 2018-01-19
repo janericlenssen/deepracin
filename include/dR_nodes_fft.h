@@ -13,6 +13,7 @@ typedef struct dR_FFT_Data dR_FFT_Data;
 struct dR_FFT_Data {
     dR_Shape3                  ishape;
     cl_kernel                 transposeKernel;
+    cl_kernel                 copyKernel;
     cl_mem                    intermedBuf;
 };
 

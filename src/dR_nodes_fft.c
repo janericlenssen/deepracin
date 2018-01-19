@@ -123,10 +123,12 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
     int even_odd = 0;
     int lastIn = 0;
     int w = layer->oshape.s0;
+    cl_int r_c; // if r_c is 1 then rows, if r_c is 0 then columns fft is executed
 
     void* in;
     void* out;
 
+    r_c = 1; // just real input for p==1
     for(cl_int p = 1; p <= w/2; p *= 2)
     {
       if (p==1)
@@ -156,6 +158,8 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
 
       net->clConfig->clError |= clSetKernelArg(layer->clKernel, 2, sizeof(cl_int), (void *)&p);
 
+      net->clConfig->clError |= clSetKernelArg(layer->clKernel, 3, sizeof(cl_int), (void *)&r_c);
+
       if (dR_openCLError(net, "Setting kernel args failed.", "FFT Kernel"))
           return FALSE;
 
@@ -167,39 +171,117 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
 
     if( lastIn == 0 )
     {
-      // use a kernel: copy from intermedBuf to Outputarray while transposing (or swap pointers and then transpose in place)
+      //transform is in intermedBuf, transpose from intermedBuf to outputarray
+      in = (void*)&fft->intermedBuf;
+      out = (void*)layer->outputBuf->bufptr;
     }
-    // use a kernel: else transpose in place (inside outputarray)
+    else
+    {
+      //transform is already in outputarray, transpose into intermedBuf and then copy to outputBuf later
+      in =  (void*)layer->outputBuf->bufptr;
+      out = (void*)&fft->intermedBuf;
+    }
+
+    //transpose
+    net->clConfig->clError = clSetKernelArg(fft->transposeKernel, 0, sizeof(cl_mem), in);
+
+    net->clConfig->clError |= clSetKernelArg(fft->transposeKernel, 1, sizeof(cl_mem), out);
+
+    net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, fft->transposeKernel, 3, NULL, globalWorkSize,
+       NULL, 0, NULL, net->clConfig->clEvent);
+    dR_finishCLKernel(net, "deepRACIN:transpose");
+
+    if (lastIn == 1)
+    {
+      //copy to output buffer because transpose is in intermedBuf
+      in =  (void*)&fft->intermedBuf;
+      out = (void*)layer->outputBuf->bufptr;
+
+      net->clConfig->clError = clSetKernelArg(fft->copyKernel, 0, sizeof(cl_mem), in);
+
+      net->clConfig->clError |= clSetKernelArg(fft->copyKernel, 1, sizeof(cl_mem), out);
+
+      net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, fft->copyKernel, 3, NULL, globalWorkSize,
+         NULL, 0, NULL, net->clConfig->clEvent);
+      dR_finishCLKernel(net, "deepRACIN:copy");
+    }
+
+    //------------------------------------------------------------------------//
 
     // then do fft on transposed array again
-
     even_odd = 1;
     lastIn = 1;
     int h = layer->oshape.s1; // height
 
+    r_c = 0; // complex input for p==1
     for(cl_int p = 1; p <= h/2; p *= 2)
     {
       if (even_odd % 2) // odd
       {
-        // Kernel call enqueue...fft(Input,Output)
+        in = (void *)layer->outputBuf->bufptr;
+        out = (void*)&fft->intermedBuf;
         lastIn = 0;
       }
       else // even
       {
-        // Kernel call enqueue...fft(Input,Output)
+        in = (void*)&fft->intermedBuf;
+        out = (void *)layer->outputBuf->bufptr;
         lastIn = 1;
       }
+      net->clConfig->clError = clSetKernelArg(layer->clKernel, 0, sizeof(cl_mem), in);
+
+      net->clConfig->clError |= clSetKernelArg(layer->clKernel, 1, sizeof(cl_mem), out);
+
+      net->clConfig->clError |= clSetKernelArg(layer->clKernel, 2, sizeof(cl_int), (void *)&p);
+
+      net->clConfig->clError |= clSetKernelArg(layer->clKernel, 3, sizeof(cl_int), (void *)&r_c);
+
+      if (dR_openCLError(net, "Setting kernel args failed.", "FFT Kernel"))
+          return FALSE;
+
+      net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, layer->clKernel, 3, NULL, globalWorkSize,
+         NULL, 0, NULL, net->clConfig->clEvent);
+      dR_finishCLKernel(net, "deepRACIN:fft");
       even_odd++;
     }
 
     if( lastIn == 0 )
     {
-      // use a kernel: copy from intermedBuf to Outputarray while transposing (or swap pointers and then transpose in place)
+      //transform is in intermedBuf, transpose from intermedBuf to outputarray
+      in = (void*)&fft->intermedBuf;
+      out = (void*)layer->outputBuf->bufptr;
     }
-    // use a kernel: else transpose in place (inside outputarray)
+    else
+    {
+      //transform is already in outputarray, transpose into intermedBuf and then copy to outputBuf later
+      in =  (void*)layer->outputBuf->bufptr;
+      out = (void*)&fft->intermedBuf;
+    }
 
-    return 1;
+    //transpose
+    net->clConfig->clError = clSetKernelArg(fft->transposeKernel, 0, sizeof(cl_mem), in);
 
+    net->clConfig->clError |= clSetKernelArg(fft->transposeKernel, 1, sizeof(cl_mem), out);
+
+    net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, fft->transposeKernel, 3, NULL, globalWorkSize,
+       NULL, 0, NULL, net->clConfig->clEvent);
+    dR_finishCLKernel(net, "deepRACIN:transpose");
+
+    if (lastIn == 1)
+    {
+      //copy to output buffer because transpose is in intermedBuf
+      in =  (void*)&fft->intermedBuf;
+      out = (void*)layer->outputBuf->bufptr;
+
+      net->clConfig->clError = clSetKernelArg(fft->copyKernel, 0, sizeof(cl_mem), in);
+
+      net->clConfig->clError |= clSetKernelArg(fft->copyKernel, 1, sizeof(cl_mem), out);
+
+      net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, fft->copyKernel, 3, NULL, globalWorkSize,
+         NULL, 0, NULL, net->clConfig->clEvent);
+      dR_finishCLKernel(net, "deepRACIN:copy");
+    }
+    return 1; // TODO: what should be returned ?
 }
 
 gboolean dR_fft_propagateShape(dR_Graph* net, dR_Node* layer)
@@ -255,6 +337,7 @@ gboolean dR_fft_createKernel(dR_Graph* net, dR_Node* layer)
     gboolean ret=FALSE;
     ret = dR_createKernel(net,"fft",&(layer->clKernel));
     ret = dR_createKernel(net,"transpose",&(fft->transposeKernel));
+    ret = dR_createKernel(net,"copy",&(fft->copyKernel));
     return ret;
 }
 
@@ -293,7 +376,8 @@ gboolean dR_fft_cleanupBuffers(dR_Graph* net, dR_Node* layer)
         dR_FFT_Data* fft = ((dR_FFT_Data*)(layer->layer));
         ret &= dR_clMemoryBufferCleanup(net, fft->intermedBuf);
         ret &= dR_cleanupKernel((layer->clKernel));
-        // TODO: cleanup transposekernel
+        ret &= dR_cleanupKernel((fft->transposeKernel));
+        ret &= dR_cleanupKernel((fft->copyKernel));
     }
     return ret;
 }
