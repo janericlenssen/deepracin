@@ -959,6 +959,16 @@ def Crop_Or_Pad(input_node, shape):
     onode = Node(lib.dR_CropOrPad(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr), pointer(sh)),input_node.graph, desc, params)
     return onode
 
+def FFTInv(input_node):
+    # type: (Node) -> Node
+    # Description for python structures
+    desc = 'FFT'
+    params = [' ']
+
+    # Call deepRACIN
+    onode = Node(lib.dR_FFT(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr), 1),input_node.graph, desc, params)
+    return onode
+
 def FFT(input_node):
     # type: (Node) -> Node
     # Description for python structures
@@ -966,7 +976,7 @@ def FFT(input_node):
     params = [' ']
 
     # Call deepRACIN
-    onode = Node(lib.dR_FFT(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr)),input_node.graph, desc, params)
+    onode = Node(lib.dR_FFT(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr), 0), input_node.graph, desc, params)
     return onode
 
 def Concat(input_nodes,  concat_dim, layout='HWC'):

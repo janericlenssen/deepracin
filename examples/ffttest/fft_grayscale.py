@@ -39,8 +39,10 @@ image_paths = ['dia1024.png']
 # create FFT node
 ffttest = dr.FFT(feed_node)
 
+invfft = dr.FFTInv(ffttest)
+
 # Mark output nodes (determines what dr.apply() returns)
-dr.mark_as_output(ffttest)
+dr.mark_as_output(invfft)
 
 # Print graph to console
 dr.print_graph(graph)

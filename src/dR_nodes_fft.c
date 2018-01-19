@@ -5,7 +5,7 @@
 // Fast Fourier Transform //
 // ///////////////////////////
 
-dR_Node* dR_FFT(dR_Graph* net, dR_Node* inputNode1)
+dR_Node* dR_FFT(dR_Graph* net, dR_Node* inputNode1, gboolean inverse)
 {
     // allocate memory for dR_Shape3 (3 dimensional vector)
     dR_FFT_Data* fft = g_malloc(sizeof(dR_FFT_Data));
@@ -15,6 +15,7 @@ dR_Node* dR_FFT(dR_Graph* net, dR_Node* inputNode1)
     // set all attributes of fft node
     // dR_Shape3
     l->layer = fft;
+    ((dR_FFT_Data*)(l->layer))->inv = inverse;
     // node type
     l->type = tFFT;
     // set functions (implemented in this file) for this node
@@ -68,7 +69,7 @@ gchar* dR_fft_serializeNode(dR_Node* layer, gchar* params[], gint* numParams, gf
         return NULL;
     }
     *numParams = numNodeParams;
-    //params[0] = g_strdup_printf("%d",fft->op);
+    params[0] = g_strdup_printf("%d",fft->inv);
 
     *numVariables = numNodeVariables;
     return desc;
@@ -90,7 +91,8 @@ dR_Node* dR_fft_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numINodes,
         g_print("Parsing Error: fft Node needs %d Parameters and %d Variables!\n",numNodeParams,numNodeVariables);
         return NULL;
     }
-    out = dR_FFT(net, iNodes[0]);
+
+    out = dR_FFT( net, iNodes[0], atoi(params[0]) );
     return out;
 }
 
@@ -128,6 +130,17 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
     void* in;
     void* out;
 
+    cl_kernel kern;
+    // check if inverse is used
+    if(fft->inv == 1)
+    {
+      kern = fft->inverseKernel;
+    }
+    else
+    {
+      kern = layer->clKernel;
+    }
+
     r_c = 1; // just real input for p==1
     for(cl_int p = 1; p <= w/2; p *= 2)
     {
@@ -152,18 +165,18 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
         }
       }
 
-      net->clConfig->clError = clSetKernelArg(layer->clKernel, 0, sizeof(cl_mem), in);
+      net->clConfig->clError = clSetKernelArg(kern, 0, sizeof(cl_mem), in);
 
-      net->clConfig->clError |= clSetKernelArg(layer->clKernel, 1, sizeof(cl_mem), out);
+      net->clConfig->clError |= clSetKernelArg(kern, 1, sizeof(cl_mem), out);
 
-      net->clConfig->clError |= clSetKernelArg(layer->clKernel, 2, sizeof(cl_int), (void *)&p);
+      net->clConfig->clError |= clSetKernelArg(kern, 2, sizeof(cl_int), (void *)&p);
 
-      net->clConfig->clError |= clSetKernelArg(layer->clKernel, 3, sizeof(cl_int), (void *)&r_c);
+      net->clConfig->clError |= clSetKernelArg(kern, 3, sizeof(cl_int), (void *)&r_c);
 
       if (dR_openCLError(net, "Setting kernel args failed.", "FFT Kernel"))
           return FALSE;
 
-      net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, layer->clKernel, 3, NULL, globalWorkSize,
+      net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, kern, 3, NULL, globalWorkSize,
          NULL, 0, NULL, net->clConfig->clEvent);
       dR_finishCLKernel(net, "deepRACIN:fft");
       even_odd++;
@@ -206,7 +219,7 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
       dR_finishCLKernel(net, "deepRACIN:copy");
     }
 
-    //------------------------------------------------------------------------//
+    //---------------------------------------------//
 
     // then do fft on transposed array again
     even_odd = 1;
@@ -228,18 +241,18 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
         out = (void *)layer->outputBuf->bufptr;
         lastIn = 1;
       }
-      net->clConfig->clError = clSetKernelArg(layer->clKernel, 0, sizeof(cl_mem), in);
+      net->clConfig->clError = clSetKernelArg(kern, 0, sizeof(cl_mem), in);
 
-      net->clConfig->clError |= clSetKernelArg(layer->clKernel, 1, sizeof(cl_mem), out);
+      net->clConfig->clError |= clSetKernelArg(kern, 1, sizeof(cl_mem), out);
 
-      net->clConfig->clError |= clSetKernelArg(layer->clKernel, 2, sizeof(cl_int), (void *)&p);
+      net->clConfig->clError |= clSetKernelArg(kern, 2, sizeof(cl_int), (void *)&p);
 
-      net->clConfig->clError |= clSetKernelArg(layer->clKernel, 3, sizeof(cl_int), (void *)&r_c);
+      net->clConfig->clError |= clSetKernelArg(kern, 3, sizeof(cl_int), (void *)&r_c);
 
       if (dR_openCLError(net, "Setting kernel args failed.", "FFT Kernel"))
           return FALSE;
 
-      net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, layer->clKernel, 3, NULL, globalWorkSize,
+      net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, kern, 3, NULL, globalWorkSize,
          NULL, 0, NULL, net->clConfig->clEvent);
       dR_finishCLKernel(net, "deepRACIN:fft");
       even_odd++;
@@ -281,6 +294,18 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
          NULL, 0, NULL, net->clConfig->clEvent);
       dR_finishCLKernel(net, "deepRACIN:copy");
     }
+
+    //normalize when inverse
+    if(fft->inv == 1)
+    {
+      out = (void*)layer->outputBuf->bufptr;
+      net->clConfig->clError = clSetKernelArg(fft->normalizeKernel, 0, sizeof(cl_mem), out);
+
+      net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, fft->normalizeKernel, 3, NULL, globalWorkSize,
+         NULL, 0, NULL, net->clConfig->clEvent);
+      dR_finishCLKernel(net, "deepRACIN:normalize");
+    }
+
     return 1; // TODO: what should be returned ?
 }
 
@@ -320,14 +345,31 @@ gboolean dR_fft_propagateShape(dR_Graph* net, dR_Node* layer)
     layer->oshape.s0 = fft->ishape.s0;
     layer->oshape.s1 = fft->ishape.s1;
     //double this dimension to store real and img parts of fft
-    layer->oshape.s2 = 2*fft->ishape.s2;
+    if (fft->inv == 1)
+    {
+      layer->oshape.s2 = fft->ishape.s2;
+    }
+    else
+    {
+      layer->oshape.s2 = 2*fft->ishape.s2;
+    }
     return TRUE;
 }
 
 gint32 dR_fft_getRequiredOutputBufferSize(dR_Node* layer)
 {
     /* input elements * 2 = output, complex numbers in output*/
-    return layer->oshape.s0*layer->oshape.s1*layer->oshape.s2 * 2;
+    dR_FFT_Data* fft = (dR_FFT_Data*)(layer->layer);
+    gint32 ret;
+    if(fft->inv == 1)
+    {
+      ret = layer->oshape.s0*layer->oshape.s1*layer->oshape.s2;
+    }
+    else
+    {
+      ret = layer->oshape.s0*layer->oshape.s1*layer->oshape.s2*2;
+    }
+    return ret;
 }
 
 gboolean dR_fft_createKernel(dR_Graph* net, dR_Node* layer)
@@ -338,9 +380,10 @@ gboolean dR_fft_createKernel(dR_Graph* net, dR_Node* layer)
     ret = dR_createKernel(net,"fft",&(layer->clKernel));
     ret = dR_createKernel(net,"transpose",&(fft->transposeKernel));
     ret = dR_createKernel(net,"copy",&(fft->copyKernel));
+    ret = dR_createKernel(net,"fft_inv",&(fft->inverseKernel));
+    ret = dR_createKernel(net,"normalize",&(fft->normalizeKernel));
     return ret;
 }
-
 
 gboolean dR_fft_allocateBuffers(dR_Graph* net, dR_Node* layer)
 {
@@ -351,7 +394,14 @@ gboolean dR_fft_allocateBuffers(dR_Graph* net, dR_Node* layer)
     if(!net->prepared)
     {
         /* *2 to store real and imag part of complex number */
-        ret &= dR_createFloatBuffer(net, &(fft->intermedBuf),shape.s0*shape.s1*shape.s2*sizeof(gfloat)*2, CL_MEM_READ_WRITE);
+        if (fft->inv == 1)
+        {
+          ret &= dR_createFloatBuffer(net, &(fft->intermedBuf),shape.s0*shape.s1*shape.s2*sizeof(gfloat), CL_MEM_READ_WRITE);
+        }
+        else
+        {
+          ret &= dR_createFloatBuffer(net, &(fft->intermedBuf),shape.s0*shape.s1*shape.s2*sizeof(gfloat)*2, CL_MEM_READ_WRITE);
+        }
     }
     return ret;
 }
@@ -378,6 +428,8 @@ gboolean dR_fft_cleanupBuffers(dR_Graph* net, dR_Node* layer)
         ret &= dR_cleanupKernel((layer->clKernel));
         ret &= dR_cleanupKernel((fft->transposeKernel));
         ret &= dR_cleanupKernel((fft->copyKernel));
+        ret &= dR_cleanupKernel((fft->inverseKernel));
+        ret &= dR_cleanupKernel((fft->normalizeKernel));
     }
     return ret;
 }
@@ -397,7 +449,16 @@ gchar* dR_fft_printLayer(dR_Node* layer)
     // print node
     dR_FFT_Data* fft = (dR_FFT_Data*)(layer->layer);
     gchar* out;
-    out = g_strdup_printf("%s%d%s",
+
+    if(fft->inv == 1)
+    {
+      out =  g_strdup_printf("%s%d%s",
+              "FFT Inverse input operation node: ",layer->layerID, "\n");
+    }
+    else
+    {
+      out = g_strdup_printf("%s%d%s",
             "FFT input operation node: ",layer->layerID, "\n");
+    }
     return out;
 }
