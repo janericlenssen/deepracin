@@ -104,13 +104,8 @@ gboolean dR_fft_schedule(dR_Graph* net, dR_Node* layer){
     return TRUE;
  }
 
-
 gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
-
-    // call compute functionality
-    // set kernel parameters and enqueue kernels
-
-    //for easier intermedBuf access
+    // TODO: seperate fft and inverse fft ?
     dR_FFT_Data* fft = ((dR_FFT_Data*)(layer->layer));
 
     size_t globalWorkSize[3];
@@ -118,31 +113,35 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
     cl_mem* input1;
     dR_list_resetIt(layer->previous_layers);
     input1 = ((dR_Node*)dR_list_next(layer->previous_layers))->outputBuf->bufptr;
-    globalWorkSize[0] = layer->oshape.s0;
+
+    globalWorkSize[0] = layer->oshape.s0 / 2; // half of width many workitems needed
     globalWorkSize[1] = layer->oshape.s1;
     globalWorkSize[2] = layer->oshape.s2;
 
     int even_odd = 0;
     int lastIn = 0;
-    int w = layer->oshape.s0;
-    cl_int r_c; // if r_c is 1 then rows, if r_c is 0 then columns fft is executed
+    int width = globalWorkSize[0];
 
     void* in;
     void* out;
 
+    int r_c; // rows_columns: if rows fft is executed then set 1, else 0
+
     cl_kernel kern;
     // check if inverse is used
-    if(fft->inv == 1)
+    if(fft->inv == 0)
     {
-      kern = fft->inverseKernel;
+      kern = layer->clKernel; //forward fft
     }
     else
     {
-      kern = layer->clKernel;
+      kern = fft->inverseKernel; //inverse fft
     }
-
-    r_c = 1; // just real input for p==1
-    for(cl_int p = 1; p <= w/2; p *= 2)
+    // there are three arrays: input (the input image), intermedBuf (an intermediate buffer, because we use an out of place fft implementation) and output (the output buffer)
+    // flow of data: input -> output -> intermedBuf -> output -> intermedBuf -> ... -> output
+    //----------------------- rows fft ----------------------//
+    r_c = 1;
+    for(cl_int p = 1; p <= width; p *= 2)
     {
       if (p==1)
       {
@@ -171,10 +170,17 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
 
       net->clConfig->clError |= clSetKernelArg(kern, 2, sizeof(cl_int), (void *)&p);
 
-      net->clConfig->clError |= clSetKernelArg(kern, 3, sizeof(cl_int), (void *)&r_c);
-
-      if (dR_openCLError(net, "Setting kernel args failed.", "FFT Kernel"))
-          return FALSE;
+      if(fft->inv != 1) // only forward fft uses r_c parameter
+      {
+        net->clConfig->clError |= clSetKernelArg(kern, 3, sizeof(cl_int), (void *)&r_c);
+        if (dR_openCLError(net, "Setting kernel args failed.", "FFT Kernel"))
+            return FALSE;
+      }
+      else
+      {
+        if (dR_openCLError(net, "Setting kernel args failed.", "FFT inverse Kernel"))
+            return FALSE;
+      }
 
       net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, kern, 3, NULL, globalWorkSize,
          NULL, 0, NULL, net->clConfig->clEvent);
@@ -194,11 +200,17 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
       in =  (void*)layer->outputBuf->bufptr;
       out = (void*)&fft->intermedBuf;
     }
-
+    // do transpose and copy with one workitem per pixel
+    globalWorkSize[0] = layer->oshape.s0;
+    globalWorkSize[1] = layer->oshape.s1;
+    globalWorkSize[2] = layer->oshape.s2;
     //transpose
     net->clConfig->clError = clSetKernelArg(fft->transposeKernel, 0, sizeof(cl_mem), in);
 
     net->clConfig->clError |= clSetKernelArg(fft->transposeKernel, 1, sizeof(cl_mem), out);
+
+    if (dR_openCLError(net, "Setting kernel args failed.", "transpose Kernel"))
+        return FALSE;
 
     net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, fft->transposeKernel, 3, NULL, globalWorkSize,
        NULL, 0, NULL, net->clConfig->clEvent);
@@ -214,20 +226,26 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
 
       net->clConfig->clError |= clSetKernelArg(fft->copyKernel, 1, sizeof(cl_mem), out);
 
+      if (dR_openCLError(net, "Setting kernel args failed.", "copy Kernel"))
+          return FALSE;
+
       net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, fft->copyKernel, 3, NULL, globalWorkSize,
          NULL, 0, NULL, net->clConfig->clEvent);
       dR_finishCLKernel(net, "deepRACIN:copy");
     }
 
-    //---------------------------------------------//
-
-    // then do fft on transposed array again
+    //----------------------- columns fft ----------------------//
+    // TODO: could do a loop, with just one block of code. but would need more cases and could be harder to understand
+    globalWorkSize[0] = layer->oshape.s1/2; //height is the new width
+    globalWorkSize[1] = layer->oshape.s0;
+    globalWorkSize[2] = layer->oshape.s2;
+    // do fft on transposed image again
     even_odd = 1;
     lastIn = 1;
-    int h = layer->oshape.s1; // height
+    int height = globalWorkSize[0];
 
-    r_c = 0; // complex input for p==1
-    for(cl_int p = 1; p <= h/2; p *= 2)
+    r_c = 0; //columns now
+    for(cl_int p = 1; p <= height; p *= 2)
     {
       if (even_odd % 2) // odd
       {
@@ -247,10 +265,17 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
 
       net->clConfig->clError |= clSetKernelArg(kern, 2, sizeof(cl_int), (void *)&p);
 
-      net->clConfig->clError |= clSetKernelArg(kern, 3, sizeof(cl_int), (void *)&r_c);
-
-      if (dR_openCLError(net, "Setting kernel args failed.", "FFT Kernel"))
-          return FALSE;
+      if(fft->inv != 1) // only forward fft uses r_c parameter
+      {
+        net->clConfig->clError |= clSetKernelArg(kern, 3, sizeof(cl_int), (void *)&r_c);
+        if (dR_openCLError(net, "Setting kernel args failed.", "FFT Kernel"))
+            return FALSE;
+      }
+      else
+      {
+        if (dR_openCLError(net, "Setting kernel args failed.", "FFT inverse Kernel"))
+            return FALSE;
+      }
 
       net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, kern, 3, NULL, globalWorkSize,
          NULL, 0, NULL, net->clConfig->clEvent);
@@ -260,21 +285,25 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
 
     if( lastIn == 0 )
     {
-      //transform is in intermedBuf, transpose from intermedBuf to outputarray
       in = (void*)&fft->intermedBuf;
       out = (void*)layer->outputBuf->bufptr;
     }
     else
     {
-      //transform is already in outputarray, transpose into intermedBuf and then copy to outputBuf later
       in =  (void*)layer->outputBuf->bufptr;
       out = (void*)&fft->intermedBuf;
     }
 
-    //transpose
+    globalWorkSize[0] = layer->oshape.s0;
+    globalWorkSize[1] = layer->oshape.s1;
+    globalWorkSize[2] = layer->oshape.s2;
+
     net->clConfig->clError = clSetKernelArg(fft->transposeKernel, 0, sizeof(cl_mem), in);
 
     net->clConfig->clError |= clSetKernelArg(fft->transposeKernel, 1, sizeof(cl_mem), out);
+
+    if (dR_openCLError(net, "Setting kernel args failed.", "transpose Kernel"))
+        return FALSE;
 
     net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, fft->transposeKernel, 3, NULL, globalWorkSize,
        NULL, 0, NULL, net->clConfig->clEvent);
@@ -290,16 +319,22 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
 
       net->clConfig->clError |= clSetKernelArg(fft->copyKernel, 1, sizeof(cl_mem), out);
 
+      if (dR_openCLError(net, "Setting kernel args failed.", "copy Kernel"))
+          return FALSE;
+
       net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, fft->copyKernel, 3, NULL, globalWorkSize,
          NULL, 0, NULL, net->clConfig->clEvent);
       dR_finishCLKernel(net, "deepRACIN:copy");
     }
 
-    //normalize when inverse
+    //normalize when using inverse
     if(fft->inv == 1)
     {
       out = (void*)layer->outputBuf->bufptr;
       net->clConfig->clError = clSetKernelArg(fft->normalizeKernel, 0, sizeof(cl_mem), out);
+
+      if (dR_openCLError(net, "Setting kernel args failed.", "normalize Kernel"))
+          return FALSE;
 
       net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, fft->normalizeKernel, 3, NULL, globalWorkSize,
          NULL, 0, NULL, net->clConfig->clEvent);
