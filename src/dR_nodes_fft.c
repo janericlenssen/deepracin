@@ -105,8 +105,62 @@ gboolean dR_fft_schedule(dR_Graph* net, dR_Node* layer){
  }
 
 gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
+    #if 0 // TEST if upscaling the shape in propagateshape destroys image (it does) + TEST if more workitems then pixels destroys image (it does).
+    dR_FFT_Data* fft = ((dR_FFT_Data*)(layer->layer));
+    cl_int real_width = fft->real_width;
+    cl_int real_height = fft->real_height;
+
+    gint power_two = 1;
+    gint padToSize = fft->real_width;
+    while( power_two < padToSize )
+    {
+      power_two *= 2;
+    }
+    padToSize = power_two;
+
+    size_t globalWorkSize[3];
+    int paramid = 0;
+    cl_mem* input1;
+    dR_list_resetIt(layer->previous_layers);
+
+    void *in = ((dR_Node*)dR_list_next(layer->previous_layers))->outputBuf->bufptr;
+    void *out = (void*)layer->outputBuf->bufptr;
+
+    globalWorkSize[0] = padToSize;
+    globalWorkSize[1] = padToSize;
+    globalWorkSize[2] = layer->oshape.s2;
+
+    net->clConfig->clError = clSetKernelArg(fft->copyKernel, 0, sizeof(cl_mem), in);
+
+    net->clConfig->clError |= clSetKernelArg(fft->copyKernel, 1, sizeof(cl_mem), out);
+
+    net->clConfig->clError |= clSetKernelArg(fft->copyKernel, 2, sizeof(cl_int), (void *)&real_width);
+
+    net->clConfig->clError |= clSetKernelArg(fft->copyKernel, 3, sizeof(cl_int), (void *)&real_height);
+
+    if (dR_openCLError(net, "Setting kernel args failed.", "copy Kernel"))
+        return FALSE;
+
+    net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, fft->copyKernel, 3, NULL, globalWorkSize,
+       NULL, 0, NULL, net->clConfig->clEvent);
+    dR_finishCLKernel(net, "deepRACIN:copy");
+    #endif
+
+    #if 1
     // TODO: seperate fft and inverse fft ?
     dR_FFT_Data* fft = ((dR_FFT_Data*)(layer->layer));
+    cl_int real_width = fft->real_width;
+    cl_int real_height = fft->real_height;
+
+    gint power_two = 1;
+    gint padToSize = fft->real_width;
+    while( power_two < padToSize )
+    {
+      power_two *= 2;
+    }
+    padToSize = power_two;
+
+    g_print("pad to: %d", power_two);
 
     size_t globalWorkSize[3];
     int paramid = 0;
@@ -114,9 +168,10 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
     dR_list_resetIt(layer->previous_layers);
     input1 = ((dR_Node*)dR_list_next(layer->previous_layers))->outputBuf->bufptr;
 
-    globalWorkSize[0] = layer->oshape.s0 / 2; // half of width many workitems needed
-    globalWorkSize[1] = layer->oshape.s1;
+    globalWorkSize[0] = padToSize / 2; // half of width many workitems needed
+    globalWorkSize[1] = padToSize;
     globalWorkSize[2] = layer->oshape.s2;
+
 
     int even_odd = 0;
     int lastIn = 0;
@@ -170,9 +225,13 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
 
       net->clConfig->clError |= clSetKernelArg(kern, 2, sizeof(cl_int), (void *)&p);
 
+      net->clConfig->clError |= clSetKernelArg(kern, 3, sizeof(cl_int), (void *)&real_width);
+
+      net->clConfig->clError |= clSetKernelArg(kern, 4, sizeof(cl_int), (void *)&real_height);
+
       if(fft->inv != 1) // only forward fft uses r_c parameter
       {
-        net->clConfig->clError |= clSetKernelArg(kern, 3, sizeof(cl_int), (void *)&r_c);
+        net->clConfig->clError |= clSetKernelArg(kern, 5, sizeof(cl_int), (void *)&r_c);
         if (dR_openCLError(net, "Setting kernel args failed.", "FFT Kernel"))
             return FALSE;
       }
@@ -201,13 +260,17 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
       out = (void*)&fft->intermedBuf;
     }
     // do transpose and copy with one workitem per pixel
-    globalWorkSize[0] = layer->oshape.s0;
-    globalWorkSize[1] = layer->oshape.s1;
+    globalWorkSize[0] = padToSize;
+    globalWorkSize[1] = padToSize;
     globalWorkSize[2] = layer->oshape.s2;
     //transpose
     net->clConfig->clError = clSetKernelArg(fft->transposeKernel, 0, sizeof(cl_mem), in);
 
     net->clConfig->clError |= clSetKernelArg(fft->transposeKernel, 1, sizeof(cl_mem), out);
+
+    net->clConfig->clError |= clSetKernelArg(fft->transposeKernel, 2, sizeof(cl_int), (void *)&real_width);
+
+    net->clConfig->clError |= clSetKernelArg(fft->transposeKernel, 3, sizeof(cl_int), (void *)&real_height);
 
     if (dR_openCLError(net, "Setting kernel args failed.", "transpose Kernel"))
         return FALSE;
@@ -226,6 +289,10 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
 
       net->clConfig->clError |= clSetKernelArg(fft->copyKernel, 1, sizeof(cl_mem), out);
 
+      net->clConfig->clError |= clSetKernelArg(fft->copyKernel, 2, sizeof(cl_int), (void *)&real_width);
+
+      net->clConfig->clError |= clSetKernelArg(fft->copyKernel, 3, sizeof(cl_int), (void *)&real_height);
+
       if (dR_openCLError(net, "Setting kernel args failed.", "copy Kernel"))
           return FALSE;
 
@@ -236,8 +303,8 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
 
     //----------------------- columns fft ----------------------//
     // TODO: could do a loop, with just one block of code. but would need more cases and could be harder to understand
-    globalWorkSize[0] = layer->oshape.s1/2; //height is the new width
-    globalWorkSize[1] = layer->oshape.s0;
+    globalWorkSize[0] = padToSize/2; //height is the new width
+    globalWorkSize[1] = padToSize;
     globalWorkSize[2] = layer->oshape.s2;
     // do fft on transposed image again
     even_odd = 1;
@@ -265,9 +332,13 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
 
       net->clConfig->clError |= clSetKernelArg(kern, 2, sizeof(cl_int), (void *)&p);
 
+      net->clConfig->clError |= clSetKernelArg(kern, 3, sizeof(cl_int), (void *)&real_height);
+
+      net->clConfig->clError |= clSetKernelArg(kern, 4, sizeof(cl_int), (void *)&real_width);
+
       if(fft->inv != 1) // only forward fft uses r_c parameter
       {
-        net->clConfig->clError |= clSetKernelArg(kern, 3, sizeof(cl_int), (void *)&r_c);
+        net->clConfig->clError |= clSetKernelArg(kern, 5, sizeof(cl_int), (void *)&r_c);
         if (dR_openCLError(net, "Setting kernel args failed.", "FFT Kernel"))
             return FALSE;
       }
@@ -294,13 +365,17 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
       out = (void*)&fft->intermedBuf;
     }
 
-    globalWorkSize[0] = layer->oshape.s0;
-    globalWorkSize[1] = layer->oshape.s1;
+    globalWorkSize[0] = padToSize;
+    globalWorkSize[1] = padToSize;
     globalWorkSize[2] = layer->oshape.s2;
 
     net->clConfig->clError = clSetKernelArg(fft->transposeKernel, 0, sizeof(cl_mem), in);
 
     net->clConfig->clError |= clSetKernelArg(fft->transposeKernel, 1, sizeof(cl_mem), out);
+
+    net->clConfig->clError |= clSetKernelArg(fft->transposeKernel, 2, sizeof(cl_int), (void *)&real_height);
+
+    net->clConfig->clError |= clSetKernelArg(fft->transposeKernel, 3, sizeof(cl_int), (void *)&real_width);
 
     if (dR_openCLError(net, "Setting kernel args failed.", "transpose Kernel"))
         return FALSE;
@@ -319,6 +394,10 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
 
       net->clConfig->clError |= clSetKernelArg(fft->copyKernel, 1, sizeof(cl_mem), out);
 
+      net->clConfig->clError |= clSetKernelArg(fft->copyKernel, 2, sizeof(cl_int), (void *)&real_width);
+
+      net->clConfig->clError |= clSetKernelArg(fft->copyKernel, 3, sizeof(cl_int), (void *)&real_height);
+
       if (dR_openCLError(net, "Setting kernel args failed.", "copy Kernel"))
           return FALSE;
 
@@ -333,6 +412,10 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
       out = (void*)layer->outputBuf->bufptr;
       net->clConfig->clError = clSetKernelArg(fft->normalizeKernel, 0, sizeof(cl_mem), out);
 
+      net->clConfig->clError |= clSetKernelArg(fft->normalizeKernel, 1, sizeof(cl_int), (void *)&real_width);
+
+      net->clConfig->clError |= clSetKernelArg(fft->normalizeKernel, 2, sizeof(cl_int), (void *)&real_height);
+
       if (dR_openCLError(net, "Setting kernel args failed.", "normalize Kernel"))
           return FALSE;
 
@@ -342,6 +425,7 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
     }
 
     return 1; // TODO: what should be returned ?
+    #endif
 }
 
 gboolean dR_fft_propagateShape(dR_Graph* net, dR_Node* layer)
@@ -362,19 +446,36 @@ gboolean dR_fft_propagateShape(dR_Graph* net, dR_Node* layer)
     // store last node
     lastlayer = dR_list_next(layer->previous_layers);
     // transfer output shape of previous node to fft node
-    fft->ishape.s0 = lastlayer->oshape.s0;
-    fft->ishape.s1 = lastlayer->oshape.s1;
-    fft->ishape.s2 = lastlayer->oshape.s2;
 
-    if(fft->ishape.s0!=lastlayer->oshape.s0||fft->ishape.s1!=lastlayer->oshape.s1||fft->ishape.s2!=lastlayer->oshape.s2)
+    gint32 padToSize = lastlayer->oshape.s0 > lastlayer->oshape.s1 ? lastlayer->oshape.s0 : lastlayer->oshape.s1;
+
+    int power_two = 1;
+    while( power_two < padToSize )
     {
-        if(!net->config->silent)
-        {
-            g_print("FFT Node needs 1 input node with the same shape!\n");
-            g_print("[%d, %d, %d] and [%d, %d, %d] not matching!\n",
-                    fft->ishape.s0,fft->ishape.s1,fft->ishape.s2,lastlayer->oshape.s0,lastlayer->oshape.s1,lastlayer->oshape.s2);
-        }
-        return FALSE;
+      power_two *= 2;
+    }
+    padToSize = power_two;
+    g_print("pad to: %d", power_two);
+
+    // store the actual width and height of the image
+    fft->real_width = lastlayer->oshape.s0;
+    fft->real_height = lastlayer->oshape.s1;
+    // if quadratic image
+    if (lastlayer->oshape.s0 == lastlayer->oshape.s1)
+    {
+      fft->ishape.s0 = lastlayer->oshape.s0;
+      fft->ishape.s1 = lastlayer->oshape.s1;
+      fft->ishape.s2 = lastlayer->oshape.s2;
+    }
+    else // image is not quadratic
+    {
+      g_print("non-quadratic image\n");
+      //save bigger size to make a quadratic image out of non-quadratic image
+      g_print("bigger size: %d\n", padToSize);
+
+      fft->ishape.s0 = lastlayer->oshape.s0;
+      fft->ishape.s1 = lastlayer->oshape.s1;
+      fft->ishape.s2 = lastlayer->oshape.s2;
     }
 
     layer->oshape.s0 = fft->ishape.s0;
@@ -388,6 +489,7 @@ gboolean dR_fft_propagateShape(dR_Graph* net, dR_Node* layer)
     {
       layer->oshape.s2 = 2*fft->ishape.s2;
     }
+
     return TRUE;
 }
 

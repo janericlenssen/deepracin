@@ -11,13 +11,15 @@
 typedef struct dR_FFT_Data dR_FFT_Data;
 
 struct dR_FFT_Data {
-    dR_Shape3                  ishape;
+    dR_Shape3                 ishape;
     cl_kernel                 inverseKernel;
     cl_kernel                 transposeKernel;
     cl_kernel                 copyKernel;
     cl_kernel                 normalizeKernel;
     cl_mem                    intermedBuf;
     gboolean                  inv;
+    gint32                    real_width;
+    gint32                    real_height;
 };
 
 // Mandatory
