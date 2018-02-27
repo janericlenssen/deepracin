@@ -599,3 +599,57 @@ gchar* dR_fft_printLayer(dR_Node* layer)
     }
     return out;
 }
+
+// fftshift
+
+dR_Node* dR_FFTShift(dR_Graph* net, dR_Node* inputNode1)
+{
+    // allocate memory for dR_Shape3 (3 dimensional vector)
+    dR_FFTShift_Data* fftshift = g_malloc(sizeof(dR_FFTShift_Data));
+    // allocate memory for a node
+    dR_Node* l = g_malloc(sizeof(dR_Node));
+
+    // set all attributes of fft node
+    // dR_Shape3
+    l->layer = fftshift;
+    // node type
+    l->type = tFFTShift;
+    // set functions (implemented in this file) for this node
+    /*
+    l->compute = dR_fftshift_compute;
+    l->schedule = dR_fftshift_schedule;
+    l->propagateShape = dR_fftshift_propagateShape;
+    l->getRequiredOutputBufferSize = dR_fftshift_getRequiredOutputBufferSize;
+    l->createKernel = dR_fftshift_createKernel;
+    l->allocateBuffers = dR_fftshift_allocateBuffers;
+    l->fillBuffers = dR_fftshift_fillBuffers;
+    l->cleanupBuffers = dR_fftshift_cleanupBuffers;
+    l->cleanupLayer = dR_fftshift_cleanupLayer;
+    l->serializeNode = dR_fftshift_serializeNode;
+    l->parseAppendNode = dR_fftshift_parseAppendNode;
+
+    l->generateKernel = NULL;
+    l->createKernelName = NULL;
+    l->setVariables = NULL;
+    l->printLayer = dR_fftshift_printLayer;
+    */
+    if (inputNode1)
+    {
+      // create empty list for previous nodes
+      l->previous_layers = dR_list_createEmptyList();
+      // append the input of this node to the list
+      dR_list_append(l->previous_layers,inputNode1);
+      // create empty list for following nodes
+      l->next_layers = dR_list_createEmptyList();
+      // append the current (fft) node as the following node of the previous node
+      dR_list_append(inputNode1->next_layers,l);
+    }
+    else
+    {
+        g_print("Error: FFT node needs an appropriate Inputnode");
+    }
+    // append node to graph
+    dR_appendLayer(net, l);
+    // return pointer to node
+    return l;
+}
