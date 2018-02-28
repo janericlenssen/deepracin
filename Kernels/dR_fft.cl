@@ -204,7 +204,7 @@ __kernel void transpose(
   }
 }
 
-__kernel void normalize(
+__kernel void normalizeFFT(
   __global float *out,
   int real_width,
   int real_height
@@ -220,3 +220,51 @@ __kernel void normalize(
   if(!(gx<0 || (gx)>=(real_width)|| gy<0 || gy>=real_height))
     out[gid] /= (width*height);
 }
+
+// for fftshift: https://www.researchgate.net/publication/271457994_High_performance_multi-dimensional_2D3D_FFT-Shift_implementation_on_Graphics_Processing_Units_GPUs
+// https://www.researchgate.net/publication/278847958_CufftShift_High_performance_CUDA-accelerated_FFT-shift_library
+// TODO: (1) could be done in-place. out-of-place has less temporal values (2) if only quadratic images, use only width
+
+/*
+1 2  becomes  4 3
+3 4           2 1
+*/
+__kernel void shiftFFT(
+  __global float *in,
+  __global float *out
+  )
+  {
+    int width = (int) get_global_size(0);
+    int height = (int) get_global_size(1);
+    int gx = get_global_id(0);
+    int gy = get_global_id(1);
+    int gid = gy*width + gx;
+    int imag_offset = width*height;
+    int eq1 = ((width*height) + width)/2;
+    int eq2 = ((width*height) - height)/2;
+
+    if (gx < width/2)
+    {
+      if (gy < height/2)
+      {
+        // swap first quadrant with fourth
+        out[gid] = in[gid+eq1];
+        out[gid+eq1] = in[gid];
+
+        out[gid + imag_offset] = in[gid + eq1 + imag_offset];
+        out[gid + eq1 + imag_offset] = in[gid + imag_offset];
+      }
+    }
+    else
+    {
+      if (gy > height/2)
+      {
+        // swap second quadrant with third
+        out[gid] = in[gid + eq2];
+        out[gid+eq2] = in[gid];
+
+        out[gid + imag_offset] = in[gid + eq2 + imag_offset];
+        out[gid + eq2 + imag_offset] = in[gid + imag_offset];
+      }
+    }
+  }

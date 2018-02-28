@@ -31,18 +31,16 @@ graph = env.create_graph(interface_layout='HWC')
 #feed_node = dr.feed_node(graph, shape=(497, 303, 1))
 
 #feed_node = dr.feed_node(graph, shape=(256, 256, 1))
-feed_node = dr.feed_node(graph, shape=(1024, 1024, 1))
+feed_node = dr.feed_node(graph, shape=(32, 32, 1))
 
-image_paths = ['dia1024.png']
+image_paths = ['dia32.png']
 #image_paths = ['tigerbw64.png']
 
 # create FFT node
 ffttest = dr.FFT(feed_node)
 
-invfft = dr.FFTInv(ffttest)
-
 # Mark output nodes (determines what dr.apply() returns)
-dr.mark_as_output(invfft)
+dr.mark_as_output(ffttest)
 
 # Print graph to console
 dr.print_graph(graph)

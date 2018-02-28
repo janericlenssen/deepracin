@@ -518,7 +518,7 @@ gboolean dR_fft_createKernel(dR_Graph* net, dR_Node* layer)
     ret = dR_createKernel(net,"transpose",&(fft->transposeKernel));
     ret = dR_createKernel(net,"copy",&(fft->copyKernel));
     ret = dR_createKernel(net,"fft_inv",&(fft->inverseKernel));
-    ret = dR_createKernel(net,"normalize",&(fft->normalizeKernel));
+    ret = dR_createKernel(net,"normalizeFFT",&(fft->normalizeKernel));
     return ret;
 }
 
@@ -600,7 +600,9 @@ gchar* dR_fft_printLayer(dR_Node* layer)
     return out;
 }
 
-// fftshift
+//------------fftshift------------------
+// https://www.researchgate.net/publication/278847958_CufftShift_High_performance_CUDA-accelerated_FFT-shift_library
+// 
 
 dR_Node* dR_FFTShift(dR_Graph* net, dR_Node* inputNode1)
 {
@@ -615,8 +617,9 @@ dR_Node* dR_FFTShift(dR_Graph* net, dR_Node* inputNode1)
     // node type
     l->type = tFFTShift;
     // set functions (implemented in this file) for this node
-    /*
+
     l->compute = dR_fftshift_compute;
+
     l->schedule = dR_fftshift_schedule;
     l->propagateShape = dR_fftshift_propagateShape;
     l->getRequiredOutputBufferSize = dR_fftshift_getRequiredOutputBufferSize;
@@ -632,7 +635,7 @@ dR_Node* dR_FFTShift(dR_Graph* net, dR_Node* inputNode1)
     l->createKernelName = NULL;
     l->setVariables = NULL;
     l->printLayer = dR_fftshift_printLayer;
-    */
+
     if (inputNode1)
     {
       // create empty list for previous nodes
@@ -653,3 +656,163 @@ dR_Node* dR_FFTShift(dR_Graph* net, dR_Node* inputNode1)
     // return pointer to node
     return l;
 }
+
+gchar* dR_fftshift_serializeNode(dR_Node* layer, gchar* params[], gint* numParams, gfloat* variables[], gint variableSizes[], gint* numVariables)
+{
+    dR_FFTShift_Data* fft = (dR_FFTShift_Data*)(layer->layer);
+    gchar* desc = "fftshift";
+    gint numNodeParams = 0;
+    gint numNodeVariables = 0;
+    if(*numParams<numNodeParams||*numVariables<numNodeVariables)
+    {
+        g_print("FFTShiftNode needs space for %d parameters and %d variables!\n",numNodeParams,numNodeVariables);
+        return NULL;
+    }
+    *numParams = numNodeParams;
+
+    *numVariables = numNodeVariables;
+    return desc;
+}
+
+dR_Node* dR_fftshift_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numINodes, gchar** params, gint numParams, gfloat** variables, gint numVariables)
+{
+    gint numNodeInputs = 1;
+    gint numNodeParams = 0;
+    gint numNodeVariables = 0;
+    dR_Node* out;
+    if(numINodes!=1)
+    {
+        g_print("Parsing Error: fftshift Node needs %d InputNodes but got %d!\n",numNodeInputs,numNodeVariables);
+        return NULL;
+    }
+    if(numParams!=numNodeParams||numVariables!=numNodeVariables)
+    {
+        g_print("Parsing Error: fftshift Node needs %d Parameters and %d Variables!\n",numNodeParams,numNodeVariables);
+        return NULL;
+    }
+
+    out = dR_FFTShift( net, iNodes[0] );
+    return out;
+}
+
+gboolean dR_fftshift_compute(dR_Graph* net, dR_Node* layer){
+
+  // call shift kernel
+  return TRUE;
+
+}
+
+gboolean dR_fftshift_schedule(dR_Graph* net, dR_Node* layer){
+    // Nothing to do
+    // Warnings shut up, please
+    net = net;
+    layer = layer;
+    return TRUE;
+ }
+
+ gboolean dR_fftshift_propagateShape(dR_Graph* net, dR_Node* layer)
+ {
+     // compute output shape of node
+     // output of fft is complex number with re + im
+     // input for fft is a picture (2D array) which can have a few levels (determined by dR_Shape)
+     dR_FFTShift_Data* fft = (dR_FFTShift_Data*)(layer->layer);
+     dR_Node* lastlayer;
+     // check if previous layer gives correct output for fft
+     if(layer->previous_layers->length!=1)
+     {
+         if(!net->config->silent)
+             g_print("FFTShift Node with id %d has %d inputs but needs 1!\n",layer->layerID,layer->previous_layers->length);
+         return FALSE;
+     }
+     dR_list_resetIt(layer->previous_layers); // to NULL
+     // store last node
+     lastlayer = dR_list_next(layer->previous_layers);
+
+     // transfer output shape of previous node to fft node
+     // input is frequency spectrum, output aswell, but only shifted
+     fft->ishape.s0 = lastlayer->oshape.s0;
+     fft->ishape.s1 = lastlayer->oshape.s1;
+     fft->ishape.s2 = lastlayer->oshape.s2;
+
+     layer->oshape.s0 = fft->ishape.s0;
+     layer->oshape.s1 = fft->ishape.s1;
+     layer->oshape.s2 = fft->ishape.s2;
+
+     return TRUE;
+ }
+
+ gint32 dR_fftshift_getRequiredOutputBufferSize(dR_Node* layer)
+ {
+     dR_FFTShift_Data* fft = (dR_FFTShift_Data*)(layer->layer);
+     gint32 ret;
+     ret = layer->oshape.s0*layer->oshape.s1*layer->oshape.s2;
+     return ret;
+ }
+
+ gboolean dR_fftshift_createKernel(dR_Graph* net, dR_Node* layer)
+ {
+     //call all Opencl kernel creation routines required
+     dR_FFTShift_Data* fft = (dR_FFTShift_Data*)(layer->layer);
+     gboolean ret=FALSE;
+     ret = dR_createKernel(net,"copy",&(fft->copyKernel));
+     return ret;
+ }
+
+ gboolean dR_fftshift_allocateBuffers(dR_Graph* net, dR_Node* layer)
+ {
+     /* create buffer for intermediate steps */
+     gboolean ret = TRUE;
+     dR_FFTShift_Data* fft = ((dR_FFTShift_Data*)(layer->layer));
+     dR_Shape3 shape = fft->ishape;
+     if(!net->prepared)
+     {
+         ret &= dR_createFloatBuffer(net, &(fft->intermedBuf),shape.s0*shape.s1*shape.s2*sizeof(gfloat), CL_MEM_READ_WRITE);
+     }
+     return ret;
+ }
+
+ gboolean dR_fftshift_fillBuffers(dR_Graph* net, dR_Node* layer)
+ {
+     /*
+     dR_FFT_Data* fft = ((dR_FFT_Data*)(layer->layer));
+     shape = fft->shape;
+     ret &=  dR_uploadArray(net,"",fft->HOSTMEMTOUPLOAD,0,shape.s0*shape.s1*shape.s2*shape.s3*sizeof(gfloat)*2,fft->OPENCLMEM);
+     */
+     net = net;
+     layer = layer;
+     return TRUE;
+ }
+
+ gboolean dR_fftshift_cleanupBuffers(dR_Graph* net, dR_Node* layer)
+ {
+     gboolean ret = TRUE;
+     if(net->prepared)
+     {
+         dR_FFTShift_Data* fft = ((dR_FFTShift_Data*)(layer->layer));
+         ret &= dR_clMemoryBufferCleanup(net, fft->intermedBuf);
+         ret &= dR_cleanupKernel((layer->clKernel));
+         ret &= dR_cleanupKernel((fft->copyKernel));
+     }
+     return ret;
+ }
+
+ gboolean dR_fftshift_cleanupLayer(dR_Graph* net, dR_Node* layer)
+ {
+     dR_FFTShift_Data* fft = ((dR_FFTShift_Data*)(layer->layer));
+     // free all memory that was reserved for node
+     if(net->prepared)
+         g_free(fft->intermedBuf);
+         g_free(fft);
+     return TRUE;
+ }
+
+ gchar* dR_fftshift_printLayer(dR_Node* layer)
+ {
+     // print node
+     dR_FFTShift_Data* fft = (dR_FFTShift_Data*)(layer->layer);
+     gchar* out;
+     out =  g_strdup_printf("%s%d%s", "FFTShift operation node: ",layer->layerID, "\n");
+     return out;
+ }
+
+//fftabs
