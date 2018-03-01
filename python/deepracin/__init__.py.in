@@ -177,6 +177,11 @@ func = lib.dR_FFTShift
 func.argtypes = [c_void_p, c_void_p]
 func.restype = c_void_p
 
+# dR_FFTAbs
+func = lib.dR_FFTAbs
+func.argtypes = [c_void_p, c_void_p]
+func.restype = c_void_p
+
 # dR_Softmax
 func = lib.dR_Softmax
 func.argtypes = [c_void_p, c_void_p]
@@ -992,6 +997,16 @@ def FFTShift(input_node):
 
     # Call deepRACIN
     onode = Node(lib.dR_FFTShift(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr), 0), input_node.graph, desc, params)
+    return onode
+
+def FFTAbs(input_node):
+    # type: (Node) -> Node
+    # Description for python structures
+    desc = 'FFTAbs'
+    params = [' ']
+
+    # Call deepRACIN
+    onode = Node(lib.dR_FFTAbs(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr), 0), input_node.graph, desc, params)
     return onode
 
 def Concat(input_nodes,  concat_dim, layout='HWC'):

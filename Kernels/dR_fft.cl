@@ -264,3 +264,23 @@ __kernel void shiftFFT(
       }
     }
   }
+
+  // magnitude of fft
+  __kernel void absFFT(
+    __global float *in,
+    __global float *out
+    )
+    {
+      int width = (int) get_global_size(0);
+      int height = (int) get_global_size(1);
+      int gx = get_global_id(0);
+      int gy = get_global_id(1);
+      int gid = gy*width + gx;
+      int imag_offset = width*height;
+
+      float real = in[gid];
+      float imag = in[gid + imag_offset];
+      real *= real;
+      imag *= imag;
+      out[gid] = sqrt(real + imag);
+    }

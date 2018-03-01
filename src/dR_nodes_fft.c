@@ -601,8 +601,7 @@ gchar* dR_fft_printLayer(dR_Node* layer)
 }
 
 //------------fftshift------------------
-// https://www.researchgate.net/publication/278847958_CufftShift_High_performance_CUDA-accelerated_FFT-shift_library
-//
+// inspired by https://www.researchgate.net/publication/278847958_CufftShift_High_performance_CUDA-accelerated_FFT-shift_library
 
 dR_Node* dR_FFTShift(dR_Graph* net, dR_Node* inputNode1)
 {
@@ -649,7 +648,7 @@ dR_Node* dR_FFTShift(dR_Graph* net, dR_Node* inputNode1)
     }
     else
     {
-        g_print("Error: FFT node needs an appropriate Inputnode");
+        g_print("Error: FFTShift node needs an appropriate Inputnode");
     }
     // append node to graph
     dR_appendLayer(net, l);
@@ -777,7 +776,6 @@ gboolean dR_fftshift_schedule(dR_Graph* net, dR_Node* layer){
      dR_FFTShift_Data* fft = (dR_FFTShift_Data*)(layer->layer);
      gboolean ret=FALSE;
      ret = dR_createKernel(net,"shiftFFT",&(layer->clKernel));
-     ret = dR_createKernel(net,"copy",&(fft->copyKernel));
      return ret;
  }
 
@@ -785,12 +783,6 @@ gboolean dR_fftshift_schedule(dR_Graph* net, dR_Node* layer){
  {
      /* create buffer for intermediate steps */
      gboolean ret = TRUE;
-     dR_FFTShift_Data* fft = ((dR_FFTShift_Data*)(layer->layer));
-     dR_Shape3 shape = fft->ishape;
-     if(!net->prepared)
-     {
-         ret &= dR_createFloatBuffer(net, &(fft->intermedBuf),shape.s0*shape.s1*shape.s2*sizeof(gfloat), CL_MEM_READ_WRITE);
-     }
      return ret;
  }
 
@@ -812,9 +804,7 @@ gboolean dR_fftshift_schedule(dR_Graph* net, dR_Node* layer){
      if(net->prepared)
      {
          dR_FFTShift_Data* fft = ((dR_FFTShift_Data*)(layer->layer));
-         ret &= dR_clMemoryBufferCleanup(net, fft->intermedBuf);
          ret &= dR_cleanupKernel((layer->clKernel));
-         ret &= dR_cleanupKernel((fft->copyKernel));
      }
      return ret;
  }
@@ -824,7 +814,6 @@ gboolean dR_fftshift_schedule(dR_Graph* net, dR_Node* layer){
      dR_FFTShift_Data* fft = ((dR_FFTShift_Data*)(layer->layer));
      // free all memory that was reserved for node
      if(net->prepared)
-         g_free(fft->intermedBuf);
          g_free(fft);
      return TRUE;
  }
@@ -838,4 +827,219 @@ gboolean dR_fftshift_schedule(dR_Graph* net, dR_Node* layer){
      return out;
  }
 
-//fftabs
+//fftabs-----------
+
+dR_Node* dR_FFTAbs(dR_Graph* net, dR_Node* inputNode1)
+{
+    // allocate memory for dR_Shape3 (3 dimensional vector)
+    dR_FFTAbs_Data* fftabs = g_malloc(sizeof(dR_FFTAbs_Data));
+    // allocate memory for a node
+    dR_Node* l = g_malloc(sizeof(dR_Node));
+
+    // set all attributes of fft node
+    // dR_Shape3
+    l->layer = fftabs;
+    // node type
+    l->type = tFFTAbs;
+    // set functions (implemented in this file) for this node
+
+    l->compute = dR_fftabs_compute;
+
+    l->schedule = dR_fftabs_schedule;
+    l->propagateShape = dR_fftabs_propagateShape;
+    l->getRequiredOutputBufferSize = dR_fftabs_getRequiredOutputBufferSize;
+    l->createKernel = dR_fftabs_createKernel;
+    l->allocateBuffers = dR_fftabs_allocateBuffers;
+    l->fillBuffers = dR_fftabs_fillBuffers;
+    l->cleanupBuffers = dR_fftabs_cleanupBuffers;
+    l->cleanupLayer = dR_fftabs_cleanupLayer;
+    l->serializeNode = dR_fftabs_serializeNode;
+    l->parseAppendNode = dR_fftabs_parseAppendNode;
+
+    l->generateKernel = NULL;
+    l->createKernelName = NULL;
+    l->setVariables = NULL;
+    l->printLayer = dR_fftabs_printLayer;
+
+    if (inputNode1)
+    {
+      // create empty list for previous nodes
+      l->previous_layers = dR_list_createEmptyList();
+      // append the input of this node to the list
+      dR_list_append(l->previous_layers,inputNode1);
+      // create empty list for following nodes
+      l->next_layers = dR_list_createEmptyList();
+      // append the current (fft) node as the following node of the previous node
+      dR_list_append(inputNode1->next_layers,l);
+    }
+    else
+    {
+        g_print("Error: FFTAbs node needs an appropriate Inputnode");
+    }
+    // append node to graph
+    dR_appendLayer(net, l);
+    // return pointer to node
+    return l;
+}
+
+gchar* dR_fftabs_serializeNode(dR_Node* layer, gchar* params[], gint* numParams, gfloat* variables[], gint variableSizes[], gint* numVariables)
+{
+    dR_FFTAbs_Data* fft = (dR_FFTAbs_Data*)(layer->layer);
+    gchar* desc = "fftabs";
+    gint numNodeParams = 0;
+    gint numNodeVariables = 0;
+    if(*numParams<numNodeParams||*numVariables<numNodeVariables)
+    {
+        g_print("FFTAbs Node needs space for %d parameters and %d variables!\n",numNodeParams,numNodeVariables);
+        return NULL;
+    }
+    *numParams = numNodeParams;
+
+    *numVariables = numNodeVariables;
+    return desc;
+}
+
+dR_Node* dR_fftabs_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numINodes, gchar** params, gint numParams, gfloat** variables, gint numVariables)
+{
+    gint numNodeInputs = 1;
+    gint numNodeParams = 0;
+    gint numNodeVariables = 0;
+    dR_Node* out;
+    if(numINodes!=1)
+    {
+        g_print("Parsing Error: fftabs Node needs %d InputNodes but got %d!\n",numNodeInputs,numNodeVariables);
+        return NULL;
+    }
+    if(numParams!=numNodeParams||numVariables!=numNodeVariables)
+    {
+        g_print("Parsing Error: fftabs Node needs %d Parameters and %d Variables!\n",numNodeParams,numNodeVariables);
+        return NULL;
+    }
+
+    out = dR_FFTAbs( net, iNodes[0] );
+    return out;
+}
+
+gboolean dR_fftabs_compute(dR_Graph* net, dR_Node* layer){
+
+    dR_FFTAbs_Data* fft = ((dR_FFTAbs_Data*)(layer->layer));
+
+    size_t globalWorkSize[3];
+    int paramid = 0;
+    dR_list_resetIt(layer->previous_layers);
+
+    void *in = ((dR_Node*)dR_list_next(layer->previous_layers))->outputBuf->bufptr;
+    void *out = (void*)layer->outputBuf->bufptr;
+
+    globalWorkSize[0] = layer->oshape.s0;
+    globalWorkSize[1] = layer->oshape.s1;
+    globalWorkSize[2] = layer->oshape.s2;
+
+    net->clConfig->clError = clSetKernelArg(layer->clKernel, 0, sizeof(cl_mem), in);
+
+    net->clConfig->clError |= clSetKernelArg(layer->clKernel, 1, sizeof(cl_mem), out);
+
+    if (dR_openCLError(net, "Setting kernel args failed.", "fftabs Kernel"))
+        return FALSE;
+
+    net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, layer->clKernel, 3, NULL, globalWorkSize,
+       NULL, 0, NULL, net->clConfig->clEvent);
+    dR_finishCLKernel(net, "deepRACIN:fftabs");
+    return TRUE;
+
+}
+
+gboolean dR_fftabs_schedule(dR_Graph* net, dR_Node* layer){
+    // Nothing to do
+    // Warnings shut up, please
+    net = net;
+    layer = layer;
+    return TRUE;
+ }
+
+ gboolean dR_fftabs_propagateShape(dR_Graph* net, dR_Node* layer)
+ {
+     // compute output shape of node
+     dR_FFTAbs_Data* fft = (dR_FFTAbs_Data*)(layer->layer);
+     dR_Node* lastlayer;
+
+     if(layer->previous_layers->length!=1)
+     {
+         if(!net->config->silent)
+             g_print("FFTAbs Node with id %d has %d inputs but needs 1!\n",layer->layerID,layer->previous_layers->length);
+         return FALSE;
+     }
+     dR_list_resetIt(layer->previous_layers); // to NULL
+     // store last node
+     lastlayer = dR_list_next(layer->previous_layers);
+
+     fft->ishape.s0 = lastlayer->oshape.s0;
+     fft->ishape.s1 = lastlayer->oshape.s1;
+     fft->ishape.s2 = lastlayer->oshape.s2;
+
+     layer->oshape.s0 = fft->ishape.s0;
+     layer->oshape.s1 = fft->ishape.s1;
+     layer->oshape.s2 = fft->ishape.s2/2;
+
+     return TRUE;
+ }
+
+ gint32 dR_fftabs_getRequiredOutputBufferSize(dR_Node* layer)
+ {
+     dR_FFTAbs_Data* fft = (dR_FFTAbs_Data*)(layer->layer);
+     gint32 ret;
+     ret = layer->oshape.s0*layer->oshape.s1;
+     return ret;
+ }
+
+ gboolean dR_fftabs_createKernel(dR_Graph* net, dR_Node* layer)
+ {
+     //call all Opencl kernel creation routines required
+     dR_FFTAbs_Data* fft = (dR_FFTAbs_Data*)(layer->layer);
+     gboolean ret=FALSE;
+     ret = dR_createKernel(net,"absFFT",&(layer->clKernel));
+     return ret;
+ }
+
+ gboolean dR_fftabs_allocateBuffers(dR_Graph* net, dR_Node* layer)
+ {
+     /* create buffer for intermediate steps */
+     gboolean ret = TRUE;
+     return ret;
+ }
+
+ gboolean dR_fftabs_fillBuffers(dR_Graph* net, dR_Node* layer)
+ {
+     net = net;
+     layer = layer;
+     return TRUE;
+ }
+
+ gboolean dR_fftabs_cleanupBuffers(dR_Graph* net, dR_Node* layer)
+ {
+     gboolean ret = TRUE;
+     if(net->prepared)
+     {
+         dR_FFTAbs_Data* fft = ((dR_FFTAbs_Data*)(layer->layer));
+         ret &= dR_cleanupKernel((layer->clKernel));
+     }
+     return ret;
+ }
+
+ gboolean dR_fftabs_cleanupLayer(dR_Graph* net, dR_Node* layer)
+ {
+     dR_FFTShift_Data* fft = ((dR_FFTShift_Data*)(layer->layer));
+     // free all memory that was reserved for node
+     if(net->prepared)
+         g_free(fft);
+     return TRUE;
+ }
+
+ gchar* dR_fftabs_printLayer(dR_Node* layer)
+ {
+     // print node
+     dR_FFTAbs_Data* fft = (dR_FFTAbs_Data*)(layer->layer);
+     gchar* out;
+     out =  g_strdup_printf("%s%d%s", "FFTAbs operation node: ",layer->layerID, "\n");
+     return out;
+ }

@@ -100,8 +100,6 @@ typedef struct dR_FFTShift_Data dR_FFTShift_Data;
 
 struct dR_FFTShift_Data {
     dR_Shape3                 ishape;
-    cl_kernel                 copyKernel;
-    cl_mem                    intermedBuf;
 };
 
 // Mandatory
@@ -177,5 +175,83 @@ dR_Node*    dR_fftshift_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint nu
 gchar* dR_fftshift_printLayer(dR_Node* layer);
 
 // fftabs implementation
+
+typedef struct dR_FFTAbs_Data dR_FFTAbs_Data;
+
+struct dR_FFTAbs_Data {
+    dR_Shape3                 ishape;
+};
+
+// Mandatory
+#ifdef __cplusplus
+extern "C"{
+#endif
+/**
+* \brief Appends an FFT layer that computes the fast fourier transform on input image
+*
+*
+* \param[in] graph The dR_Graph object pointer.
+* \param[in] inputnode A node of the graph to which the layer should be appended.
+*
+*
+* \returns The appended graph node
+
+*/
+dR_Node* dR_FFTAbs(dR_Graph* net, dR_Node* inputNode1);
+#ifdef __cplusplus
+}
+#endif
+/**
+* \brief The compute function. All non-initialization compute functionality has to be called here. Set kernel parameters and enqueue kernels.
+
+*/
+gboolean dR_fftabs_compute(dR_Graph* net, dR_Node* layer);
+
+/**
+* \brief The schedule function. All platform dependent scheduling and selection of parameters should be done here. Is executed in dR_prepare.
+*/
+gboolean dR_fftabs_schedule(dR_Graph* net, dR_Node* layer);
+
+/**
+* \brief Computes the nodes output shape, given the inputs output shape. Is executed in dR_prepare.
+*/
+gboolean dR_fftabs_propagateShape(dR_Graph* net, dR_Node* layer);
+
+/**
+* \brief Returns required output buffer size.
+*/
+gint32 dR_fftabs_getRequiredOutputBufferSize(dR_Node* layer);
+
+
+/**
+* Calls all Opencl kernel creation routines that are required for this node. Is executed in dR_prepare.
+*/
+gboolean dR_fftabs_createKernel(dR_Graph* net, dR_Node* layer);
+
+/**
+* Creates all OpenCL memory buffers that are required for this node (except input and output buffers). Is executed in dR_prepare.
+*/
+gboolean dR_fftabs_allocateBuffers(dR_Graph* net, dR_Node* layer);
+
+/**
+* Performs initialization of all constant buffers, required for this node. Is executed in the "prepare"-step of dr.
+*/
+gboolean dR_fftabs_fillBuffers(dR_Graph* net, dR_Node* layer);
+
+/**
+* Releases all buffers of this node. Is called in dR_cleanup.
+*/
+gboolean dR_fftabs_cleanupBuffers(dR_Graph* net, dR_Node* layer);
+
+/**
+* Releases all layer specific memory.
+*/
+gboolean dR_fftabs_cleanupLayer(dR_Graph* net, dR_Node* layer);
+
+gchar*      dR_fftabs_serializeNode(dR_Node* layer, gchar* params[], gint* numParams, gfloat* variables[], gint variableSizes[], gint* numVariables);
+
+dR_Node*    dR_fftabs_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numINodes, gchar** params, gint numParams, gfloat** variables, gint numVariables);
+
+gchar* dR_fftabs_printLayer(dR_Node* layer);
 
 #endif

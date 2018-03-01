@@ -92,7 +92,8 @@ enum dR_LayerType {
     tElemWise2Op,
     tElemWise1Op,
     tFFT,
-    tFFTShift
+    tFFTShift,
+    tFFTAbs
 };
 typedef enum dR_LayerType dR_LayerType;
 
