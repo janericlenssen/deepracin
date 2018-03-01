@@ -253,7 +253,7 @@ __kernel void shiftFFT(
     }
     else
     {
-      if (gy > height/2)
+      if (gy < height/2)
       {
         // swap second quadrant with third
         out[gid] = in[gid + eq2];
