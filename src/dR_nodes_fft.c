@@ -602,7 +602,7 @@ gchar* dR_fft_printLayer(dR_Node* layer)
 
 //------------fftshift------------------
 // https://www.researchgate.net/publication/278847958_CufftShift_High_performance_CUDA-accelerated_FFT-shift_library
-// 
+//
 
 dR_Node* dR_FFTShift(dR_Graph* net, dR_Node* inputNode1)
 {
@@ -697,8 +697,30 @@ dR_Node* dR_fftshift_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numIN
 
 gboolean dR_fftshift_compute(dR_Graph* net, dR_Node* layer){
 
-  // call shift kernel
-  return TRUE;
+    dR_FFTShift_Data* fft = ((dR_FFTShift_Data*)(layer->layer));
+
+    size_t globalWorkSize[3];
+    int paramid = 0;
+    dR_list_resetIt(layer->previous_layers);
+
+    void *in = ((dR_Node*)dR_list_next(layer->previous_layers))->outputBuf->bufptr;
+    void *out = (void*)layer->outputBuf->bufptr;
+
+    globalWorkSize[0] = layer->oshape.s0;
+    globalWorkSize[1] = layer->oshape.s1;
+    globalWorkSize[2] = layer->oshape.s2;
+
+    net->clConfig->clError = clSetKernelArg(layer->clKernel, 0, sizeof(cl_mem), in);
+
+    net->clConfig->clError |= clSetKernelArg(layer->clKernel, 1, sizeof(cl_mem), out);
+
+    if (dR_openCLError(net, "Setting kernel args failed.", "fftshift Kernel"))
+        return FALSE;
+
+    net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, layer->clKernel, 3, NULL, globalWorkSize,
+       NULL, 0, NULL, net->clConfig->clEvent);
+    dR_finishCLKernel(net, "deepRACIN:fftshift");
+    return TRUE;
 
 }
 
@@ -713,11 +735,11 @@ gboolean dR_fftshift_schedule(dR_Graph* net, dR_Node* layer){
  gboolean dR_fftshift_propagateShape(dR_Graph* net, dR_Node* layer)
  {
      // compute output shape of node
-     // output of fft is complex number with re + im
-     // input for fft is a picture (2D array) which can have a few levels (determined by dR_Shape)
+     // output of fftshift is frequency spectrum with re in first array and im in second array
+     // input for fftshift is frequency spectrum
      dR_FFTShift_Data* fft = (dR_FFTShift_Data*)(layer->layer);
      dR_Node* lastlayer;
-     // check if previous layer gives correct output for fft
+     // check if previous layer gives correct output for fftshift
      if(layer->previous_layers->length!=1)
      {
          if(!net->config->silent)
@@ -728,8 +750,8 @@ gboolean dR_fftshift_schedule(dR_Graph* net, dR_Node* layer){
      // store last node
      lastlayer = dR_list_next(layer->previous_layers);
 
-     // transfer output shape of previous node to fft node
-     // input is frequency spectrum, output aswell, but only shifted
+     // transfer output shape of previous node to fftshift node
+     // input is frequency spectrum, output aswell, but only shifted. shapes are the same in input and output
      fft->ishape.s0 = lastlayer->oshape.s0;
      fft->ishape.s1 = lastlayer->oshape.s1;
      fft->ishape.s2 = lastlayer->oshape.s2;
@@ -754,6 +776,7 @@ gboolean dR_fftshift_schedule(dR_Graph* net, dR_Node* layer){
      //call all Opencl kernel creation routines required
      dR_FFTShift_Data* fft = (dR_FFTShift_Data*)(layer->layer);
      gboolean ret=FALSE;
+     ret = dR_createKernel(net,"shiftFFT",&(layer->clKernel));
      ret = dR_createKernel(net,"copy",&(fft->copyKernel));
      return ret;
  }

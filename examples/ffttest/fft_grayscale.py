@@ -31,16 +31,17 @@ graph = env.create_graph(interface_layout='HWC')
 #feed_node = dr.feed_node(graph, shape=(497, 303, 1))
 
 #feed_node = dr.feed_node(graph, shape=(256, 256, 1))
-feed_node = dr.feed_node(graph, shape=(32, 32, 1))
+feed_node = dr.feed_node(graph, shape=(64, 64, 1))
 
-image_paths = ['dia32.png']
+image_paths = ['dia64.png']
 #image_paths = ['tigerbw64.png']
 
 # create FFT node
 ffttest = dr.FFT(feed_node)
+fftshifted = dr.FFTShift(ffttest)
 
 # Mark output nodes (determines what dr.apply() returns)
-dr.mark_as_output(ffttest)
+dr.mark_as_output(fftshifted)
 
 # Print graph to console
 dr.print_graph(graph)
@@ -57,11 +58,11 @@ for path in image_paths:
     io.imshow(img)
     io.show()
 
-    print "Input image dimensions: " + '\n' + str(img.shape) + '\n'
+    #print "Input image dimensions: " + '\n' + str(img.shape) + '\n'
     exp = np.expand_dims(img,2)
-    print "Expanded input image dimensions: " + '\n' + str(exp.shape) + '\n'
+    #print "Expanded input image dimensions: " + '\n' + str(exp.shape) + '\n'
     data = np.array(exp).astype(np.float32)
-    print "np.array image dimensions: " + '\n' + str(data.shape) + '\n'
+    #print "np.array image dimensions: " + '\n' + str(data.shape) + '\n'
     dr.feed_data(feed_node,data)
 
     # Apply graph - returns one numpy array for each node marked as output
@@ -69,19 +70,24 @@ for path in image_paths:
     #print "fftout image dimensions: " + '\n' + str(fftout.shape) + '\n'
 
     dat = np.array(fftout[0]).astype(np.float32)
-    print '\n' + "Output image dimensions: " + '\n' + str(dat.shape) + '\n'
+    #print '\n' + "Output image dimensions: " + '\n' + str(dat.shape) + '\n'
 
+    # real part of drfft
     io.imshow(dat[:, :, 0])
     io.show()
 
-    #axes=[1] means just rows fft
+    #real part of npfft, axes=[1] means just rows fft
     #io.imshow(np.fft.fft2(img,axes=[1]).real)
-    io.imshow(np.fft.fft2(img).real)
+    npreal = np.fft.fft2(img).real
+    io.imshow(np.fft.fftshift(npreal))
     io.show()
 
+    # imag part of drfft
     io.imshow(dat[:, :, 1])
     io.show()
 
+    #imag part of npfft
     #io.imshow(np.fft.fft2(img,axes=[1]).imag)
-    io.imshow(np.fft.fft2(img).imag)
+    npimag = np.fft.fft2(img).imag
+    io.imshow(np.fft.fftshift(npimag))
     io.show()

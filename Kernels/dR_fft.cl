@@ -7,10 +7,6 @@
 
 /* The implementation is inspired by http://www.bealto.com/gpu-fft_opencl-1.html */
 
-#ifndef M_PI
-#define M_PI 3.1416 // TODO: more exact PI
-#endif
-
 /* Return real or imaginary component of complex number */
 inline float real(float2 a){
      return a.x;
@@ -99,7 +95,7 @@ __kernel void fft(
   float2 twiddle;
   float2 tmp;
 
-  twiddle = exp_alpha( (float)(k)*(-1)*M_PI / (float)(p) );
+  twiddle = exp_alpha( (float)(k)*(-1)*M_PI_F / (float)(p) );
 
   MUL(u1,twiddle,tmp);
 
@@ -147,7 +143,7 @@ __kernel void fft_inv(
   float2 twiddle;
   float2 tmp;
 
-  twiddle = exp_alpha( (float)(k)*M_PI / (float)(p) );
+  twiddle = exp_alpha( (float)(k)*M_PI_F / (float)(p) );
 
   MUL(u1,twiddle,tmp);
 
