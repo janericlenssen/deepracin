@@ -100,23 +100,45 @@ gboolean dR_specxture_compute(dR_Graph* net, dR_Node* layer){
     int paramid = 0;
     dR_list_resetIt(layer->previous_layers);
 
-    //calculate specxture
     printf("\n**SPECXTURE BEGIN**\n");
 
+    int width = specxture->x0*2;
     gint32 rmax = specxture->rmax;
-    printf("\nrmax: %d\n", rmax);
+    //printf("\nrmax: %d\n", rmax);
     // array for storing srad values
     gfloat srad[rmax];
 
     gint32 xc[180];
     gint32 yc[180];
 
-    srad[0] = 0; // we do not use this value
+    srad[0] = 0; // we do not use this array element
     srad[1] = 1; // store DC component here
 
-    for( gint32 curr_radius = 2; curr_radius <= rmax; curr_radius++ )
+    gint32 prev_xc = 0;
+    gint32 prev_yc = 0;
+    gint32 index_cart;
+    // compure srad. This loop has N/2 iterations (for N*N image)
+    for(gint32 curr_radius = 2; curr_radius <= rmax; curr_radius++)
     {
-      halfcircle(curr_radius, xc, yc, specxture->x0, specxture->y0, out);
+        srad[curr_radius] = 0;
+        // create halfcircle. Loop in halfcircle has 180 iterations
+        halfcircle(curr_radius, xc, yc, specxture->x0, specxture->y0, out);
+        // sum on circle. 180 iterations
+        for(gint32 i = 0; i < 180; i++)
+        {
+            // only sum when there is a new coordinate
+            if(i == 0 || prev_xc != xc[i] || prev_yc != yc[i])
+            {
+                //printf("\nI: %d\n", i);
+                //printf("\nxc: %d, yc: %d\n", xc[i], yc[i]);
+                index_cart = yc[i]*width + xc[i];
+                //printf("\nout[%d] = %.0f\n", index_cart, out[index_cart]);
+                srad[curr_radius] += out[index_cart];
+                prev_xc = xc[i];
+                prev_yc = yc[i];
+            }
+        }
+        printf("\nsrad[%d] = %0.f\n", curr_radius, srad[curr_radius]);
     }
 
     printf("\n**SPECXTURE END**\n");
@@ -127,10 +149,9 @@ void halfcircle(gint32 r, gint32* xc, gint32* yc, gint32 x0, gint32 y0, gfloat* 
 {
     gfloat theta[180];
     gint32 array_index;
-
     // for testing
     int n = x0*2;
-    for(int i = 0; i<n; i++)
+    for(int i = 0; i < n; i++)
     {
       for (int j = 0; j < n; j++)
       {
@@ -143,17 +164,14 @@ void halfcircle(gint32 r, gint32* xc, gint32* yc, gint32 x0, gint32 y0, gfloat* 
       array_index = angle-91;
       theta[array_index] = angle*(M_PI_F/180); // in radiants
        //printf("%d ,", theta[angle-91] );
-       //in polar coordinates
        xc[array_index] = round(r*cos(theta[array_index])) + x0;
        yc[array_index] = round(r*sin(theta[array_index])) + y0;
        //printf("\narrayIndex: %d, cartX: %d, cartY: %d\n", array_index, xc[array_index], yc[array_index]);
-       //for testing
        out[yc[array_index]*n + xc[array_index]] = 1.0;
     }
-    printf("\nx0: %d, y0: %d\n", x0, y0);
-
-    // for testing
-    for(int i = 0; i<n; i++)
+    //printf("\nx0: %d, y0: %d\n", x0, y0);
+    /* // for testing
+    for(int i = 0; i < n; i++)
     {
       for (int j = 0; j < n; j++)
       {
@@ -161,7 +179,7 @@ void halfcircle(gint32 r, gint32* xc, gint32* yc, gint32 x0, gint32 y0, gfloat* 
       }
       printf("\n");
     }
-
+    */
 }
 
 gboolean dR_specxture_schedule(dR_Graph* net, dR_Node* layer){
