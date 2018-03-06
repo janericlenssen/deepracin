@@ -95,13 +95,72 @@ dR_Node* dR_specxture_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numI
 gboolean dR_specxture_compute(dR_Graph* net, dR_Node* layer){
 
     dR_Specxture_Data* specxture = ((dR_Specxture_Data*)(layer->layer));
+    gfloat* out = (gfloat*)layer->outputBuf->bufptr;
+
     int paramid = 0;
     dR_list_resetIt(layer->previous_layers);
 
     //calculate specxture
-    printf("\nI WAS HERE.\n");
+    printf("\n**SPECXTURE BEGIN**\n");
 
+    gint32 rmax = specxture->rmax;
+    printf("\nrmax: %d\n", rmax);
+    // array for storing srad values
+    gfloat srad[rmax];
+
+    gint32 xc[180];
+    gint32 yc[180];
+
+    srad[0] = 0; // we do not use this value
+    srad[1] = 1; // store DC component here
+
+    for( gint32 curr_radius = 2; curr_radius <= rmax; curr_radius++ )
+    {
+      halfcircle(curr_radius, xc, yc, specxture->x0, specxture->y0, out);
+    }
+
+    printf("\n**SPECXTURE END**\n");
     return TRUE;
+}
+
+void halfcircle(gint32 r, gint32* xc, gint32* yc, gint32 x0, gint32 y0, gfloat* out)
+{
+    gfloat theta[180];
+    gint32 array_index;
+
+    // for testing
+    int n = x0*2;
+    for(int i = 0; i<n; i++)
+    {
+      for (int j = 0; j < n; j++)
+      {
+          out[i*n + j] = 0.0;
+      }
+    }
+
+    for( gint32 angle = 91; angle <= 270; angle++ )
+    {
+      array_index = angle-91;
+      theta[array_index] = angle*(M_PI_F/180); // in radiants
+       //printf("%d ,", theta[angle-91] );
+       //in polar coordinates
+       xc[array_index] = round(r*cos(theta[array_index])) + x0;
+       yc[array_index] = round(r*sin(theta[array_index])) + y0;
+       //printf("\narrayIndex: %d, cartX: %d, cartY: %d\n", array_index, xc[array_index], yc[array_index]);
+       //for testing
+       out[yc[array_index]*n + xc[array_index]] = 1.0;
+    }
+    printf("\nx0: %d, y0: %d\n", x0, y0);
+
+    // for testing
+    for(int i = 0; i<n; i++)
+    {
+      for (int j = 0; j < n; j++)
+      {
+          printf("%.0f, ", out[i*n + j]);
+      }
+      printf("\n");
+    }
 
 }
 
@@ -141,12 +200,13 @@ gboolean dR_specxture_schedule(dR_Graph* net, dR_Node* layer){
      specxture->rmax = x > y ? y/2 - 1 : x/2 - 1;
 
      // store middle of frequency domain
-     specxture->x0 = x/2 + 1;
-     specxture->y0 = y/2 + 1;
+     // TODO: not sure if x/2 + 1. but that would not be the middle
+     specxture->x0 = x/2;
+     specxture->y0 = y/2;
 
      // as an outputshape, only an array of rmax is needed
-     layer->oshape.s0 = specxture->rmax;
-     layer->oshape.s1 = 1;
+     layer->oshape.s0 = lastlayer->oshape.s0; //specxture->rmax;
+     layer->oshape.s1 = lastlayer->oshape.s1;//1;
      layer->oshape.s2 = 1;
 
      return TRUE;
