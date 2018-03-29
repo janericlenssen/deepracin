@@ -92,6 +92,9 @@ dR_Node* dR_specxture_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numI
     return out;
 }
 
+void halfcircle(gint32 r, gint32* xc, gint32* yc, gint32 x0, gint32 y0, gfloat* out);
+void intline(gint32 x1, gint32 y1, gint32 x2, gint32 y2, gfloat* out);
+
 gboolean dR_specxture_compute(dR_Graph* net, dR_Node* layer){
 
     dR_Specxture_Data* specxture = ((dR_Specxture_Data*)(layer->layer));
@@ -107,6 +110,10 @@ gboolean dR_specxture_compute(dR_Graph* net, dR_Node* layer){
     //printf("\nrmax: %d\n", rmax);
     // array for storing srad values
     gfloat srad[rmax];
+    gfloat sang[180];
+
+    // array for integer lines
+    //gint32 intline[2*width];
 
     gint32 xc[180];
     gint32 yc[180];
@@ -117,8 +124,10 @@ gboolean dR_specxture_compute(dR_Graph* net, dR_Node* layer){
     gint32 prev_xc = 0;
     gint32 prev_yc = 0;
     gint32 index_cart;
+
+    gint32 curr_radius;
     // compure srad. This loop has N/2 iterations (for N*N image)
-    for(gint32 curr_radius = 2; curr_radius <= rmax; curr_radius++)
+    for(curr_radius = 2; curr_radius <= rmax; curr_radius++)
     {
         srad[curr_radius] = 0;
         // create halfcircle. Loop in halfcircle has 180 iterations
@@ -141,10 +150,32 @@ gboolean dR_specxture_compute(dR_Graph* net, dR_Node* layer){
         printf("\nsrad[%d] = %0.f\n", curr_radius, srad[curr_radius]);
     }
 
+    prev_xc = 0;
+    prev_yc = 0;
+
+    // calculate sang
+    // make room for coordinates
+
+    for(gint32 i = 0; i < 1 /*180*/; i++)
+    {
+        // only sum when there is a new coordinate
+        if(i == 0 || prev_xc != xc[i] || prev_yc != yc[i])
+        {
+            printf("\nx1,y1:  %d, %d\n", specxture->x0, specxture->y0);
+            gint32 x2 = 0;
+            gint32 y2 = 0;
+            printf("\nx2,y2: %d, %d\n", x2, y2);
+            intline(specxture->x0, specxture->y0, x2, y2, out);
+            //printf("\nI: %d\n", i);
+            //printf("\nxc: %d, yc: %d\n", xc[i], yc[i]);
+        }
+    }
+
     printf("\n**SPECXTURE END**\n");
     return TRUE;
 }
 
+// compute coordinates of a halfcircle around x0 y0 with radius r.
 void halfcircle(gint32 r, gint32* xc, gint32* yc, gint32 x0, gint32 y0, gfloat* out)
 {
     gfloat theta[180];
@@ -180,6 +211,113 @@ void halfcircle(gint32 r, gint32* xc, gint32* yc, gint32 x0, gint32 y0, gfloat* 
       printf("\n");
     }
     */
+}
+
+// Computes the coordinates of a straight line segment extending from (x1, y1) mid, to (x2, y2).
+void intline(gint32 x1, gint32 y1, gint32 x2, gint32 y2, gfloat* out)
+{
+    gint32 n = x1*2;
+    gint32 flip = 0;
+    gfloat m;
+
+    gint32 dx = abs(x2 - x1);
+    gint32 dy = abs(y2 - y1);
+
+    // no line to draw
+    if((dx == 0) && (dy == 0))
+    {
+        x2 = x1;
+        y2 = y1;
+        return;
+    }
+
+    for(int i = 0; i < n; i++)
+    {
+      for (int j = 0; j < n; j++)
+      {
+          out[i*n + j] = 0.0;
+      }
+    }
+
+    // always take the longer variable, otherwise approximation of the line could be bad
+    if(dx >= dy)
+    {
+        printf("\nfirst\n");
+        if(x1 > x2)
+        {
+            // swap x1 with x2, and y1 with y2 to always draw from (x1,y1) to (x2,y2), left to right
+            gint32 temp;
+            temp = x1; x1 = x2; x2 = temp;
+            temp = y1; y1 = y2; y2 = temp;
+            flip = 1;
+        }
+        // calculate gradient
+        m = (y2 - y1) / (x2 - x1);
+        // create an array X of length dx which has all values between x1 and x2
+        gint32 *x_coord = (gint32 *)malloc(dx * sizeof(gint32));
+        gint32 *y_coord = (gint32 *)malloc(dx * sizeof(gint32));
+        printf("\n Output of sang:\n");
+        for(gint32 i = 0; ((i + x1) < x2); i++)
+        {
+            x_coord[i] = x1 + i;
+            //printf("%d,%d | ", x_coord[i], y_coord[i]);
+            y_coord[i] = round(y1 + m*(x_coord[i]-x1));
+            out[x_coord[i]*n + y_coord[i]] = 1.0;
+        }
+
+        for(int i = 0; i < n; i++)
+        {
+           for (int j = 0; j < n; j++)
+           {
+               printf("%.0f, ", out[i*n + j]);
+           }
+           printf("\n");
+        }
+
+        free(x_coord);
+        free(y_coord);
+        // create another array Y of length dx which calculates y = round(y1 + m*(x - x1)) for all values in X
+    }
+    else
+    {
+        printf("\nsecond\n");
+        if(y1 > y2)
+        {
+            // swap x1 with x2, and y1 with y2 to always draw from (x1,y1) to (x2,y2)
+            gint32 temp;
+            temp = x1; x1 = x2; x2 = temp;
+            temp = y1; y1 = y2; y2 = temp;
+            flip = 1;
+        }
+        // calculate slope
+        m = (y2 - y1) / (x2 - x1);
+        // x = round(x1 + m*(y - y1));
+        gint32 *y_coord = (gint32 *)malloc(dy * sizeof(gint32));
+        gint32 *x_coord = (gint32 *)malloc(dy * sizeof(gint32));
+        printf("\n Output of sang:\n");
+        for(gint32 i = 0; ((i + y1) < y2); i++)
+        {
+            y_coord[i] = y1 + i;
+            x_coord[i] = round(x1 + m*(y_coord[i]-y1));
+            out[y_coord[i]*n + x_coord[i]] = 1.0;
+        }
+
+        for(int i = 0; i < n; i++)
+        {
+          for (int j = 0; j < n; j++)
+          {
+              printf("%.0f, ", out[i*n + j]);
+          }
+          printf("\n");
+        }
+        free(x_coord);
+        free(y_coord);
+      }
+
+    if (flip)
+    {
+
+    }
 }
 
 gboolean dR_specxture_schedule(dR_Graph* net, dR_Node* layer){
