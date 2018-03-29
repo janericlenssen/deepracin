@@ -156,19 +156,22 @@ gboolean dR_specxture_compute(dR_Graph* net, dR_Node* layer){
     // calculate sang
     // make room for coordinates
 
-    for(gint32 i = 0; i < 1 /*180*/; i++)
+    for(gint32 i = 0; i < 180; i++)
     {
         // only sum when there is a new coordinate
         if(i == 0 || prev_xc != xc[i] || prev_yc != yc[i])
         {
             printf("\nx1,y1:  %d, %d\n", specxture->x0, specxture->y0);
-            /*******/
+            /******
             gint32 x2 = 2;
-            gint32 y2 = 2;
-            printf("\nx2,y2: %d, %d\n", x2, y2);
-            intline(specxture->x0, specxture->y0, x2, y2, out);
+            gint32 y2 = 3;
+            */
+            printf("\nx2,y2: %d, %d\n", xc[i], yc[i]);
+            intline(specxture->x0, specxture->y0, xc[i], yc[i], out);
             //printf("\nI: %d\n", i);
             //printf("\nxc: %d, yc: %d\n", xc[i], yc[i]);
+            prev_xc = xc[i];
+            prev_yc = yc[i];
         }
     }
 
@@ -219,7 +222,7 @@ void intline(gint32 x1, gint32 y1, gint32 x2, gint32 y2, gfloat* out)
 {
     gint32 n = x1*2;
     gint32 flip = 0;
-    gfloat m;
+    gfloat m = 0.0;
 
     gint32 dx = abs(x2 - x1);
     gint32 dy = abs(y2 - y1);
@@ -254,7 +257,8 @@ void intline(gint32 x1, gint32 y1, gint32 x2, gint32 y2, gfloat* out)
         }
         printf("\nx1,y1: %d, %d | x2,y2: %d, %d\n", x1, y1, x2, y2);
         // calculate gradient
-        m = (y2 - y1) / (x2 - x1);
+        m = (gfloat)(y2 - y1) / (x2 - x1);
+        printf("\nm = %.2f\n", m);
         // create an array X of length dx which has all values between x1 and x2
         gint32 *x_coord = (gint32 *)malloc(dx * sizeof(gint32));
         gint32 *y_coord = (gint32 *)malloc(dx * sizeof(gint32));
@@ -304,7 +308,7 @@ void intline(gint32 x1, gint32 y1, gint32 x2, gint32 y2, gfloat* out)
         }
         printf("\nx1,y1: %d, %d | x2,y2: %d, %d\n", x1, y1, x2, y2);
         // calculate slope
-        m = (x2 - x1) / (y2 - y1);
+        m = (gfloat)(x2 - x1) / (y2 - y1);
         // x = round(x1 + m*(y - y1));
         gint32 *y_coord = (gint32 *)malloc(dy * sizeof(gint32));
         gint32 *x_coord = (gint32 *)malloc(dy * sizeof(gint32));
