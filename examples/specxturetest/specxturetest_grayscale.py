@@ -58,7 +58,7 @@ for path in image_paths:
     # Feed Input
     img = io.imread(path)
     io.imshow(img)
-    io.show()
+    ##io.show()
 
     exp = np.expand_dims(img,2)
 
@@ -72,4 +72,4 @@ for path in image_paths:
 
     #show output of specxture
     io.imshow(dat)
-    io.show()
+    ##io.show()

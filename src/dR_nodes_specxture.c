@@ -162,8 +162,9 @@ gboolean dR_specxture_compute(dR_Graph* net, dR_Node* layer){
         if(i == 0 || prev_xc != xc[i] || prev_yc != yc[i])
         {
             printf("\nx1,y1:  %d, %d\n", specxture->x0, specxture->y0);
-            gint32 x2 = 0;
-            gint32 y2 = 0;
+            /*******/
+            gint32 x2 = 2;
+            gint32 y2 = 2;
             printf("\nx2,y2: %d, %d\n", x2, y2);
             intline(specxture->x0, specxture->y0, x2, y2, out);
             //printf("\nI: %d\n", i);
@@ -213,7 +214,7 @@ void halfcircle(gint32 r, gint32* xc, gint32* yc, gint32 x0, gint32 y0, gfloat* 
     */
 }
 
-// Computes the coordinates of a straight line segment extending from (x1, y1) mid, to (x2, y2).
+// Computes the coordinates of a straight line segment extending from center (x1, y1), to (x2, y2).
 void intline(gint32 x1, gint32 y1, gint32 x2, gint32 y2, gfloat* out)
 {
     gint32 n = x1*2;
@@ -239,7 +240,7 @@ void intline(gint32 x1, gint32 y1, gint32 x2, gint32 y2, gfloat* out)
       }
     }
 
-    // always take the longer variable, otherwise approximation of the line could be bad
+    // always take the longer variable, otherwise approximation of the line would be worse
     if(dx >= dy)
     {
         printf("\nfirst\n");
@@ -251,19 +252,31 @@ void intline(gint32 x1, gint32 y1, gint32 x2, gint32 y2, gfloat* out)
             temp = y1; y1 = y2; y2 = temp;
             flip = 1;
         }
+        printf("\nx1,y1: %d, %d | x2,y2: %d, %d\n", x1, y1, x2, y2);
         // calculate gradient
         m = (y2 - y1) / (x2 - x1);
         // create an array X of length dx which has all values between x1 and x2
         gint32 *x_coord = (gint32 *)malloc(dx * sizeof(gint32));
         gint32 *y_coord = (gint32 *)malloc(dx * sizeof(gint32));
         printf("\n Output of sang:\n");
-        for(gint32 i = 0; ((i + x1) < x2); i++)
+
+        printf("\nx_coord:");
+        for(gint32 i = 0; i < dx; i++)
         {
             x_coord[i] = x1 + i;
+            printf("%d,", x_coord[i]);
+        }
+        printf("\n");
+
+        printf("\ny_coord:");
+        for(gint32 i = 0; i < dx; i++)
+        {
             //printf("%d,%d | ", x_coord[i], y_coord[i]);
             y_coord[i] = round(y1 + m*(x_coord[i]-x1));
-            out[x_coord[i]*n + y_coord[i]] = 1.0;
+            printf("%d,", y_coord[i]);
+            out[y_coord[i]*n + x_coord[i]] = 1.0;
         }
+        printf("\n");
 
         for(int i = 0; i < n; i++)
         {
@@ -289,15 +302,23 @@ void intline(gint32 x1, gint32 y1, gint32 x2, gint32 y2, gfloat* out)
             temp = y1; y1 = y2; y2 = temp;
             flip = 1;
         }
+        printf("\nx1,y1: %d, %d | x2,y2: %d, %d\n", x1, y1, x2, y2);
         // calculate slope
-        m = (y2 - y1) / (x2 - x1);
+        m = (x2 - x1) / (y2 - y1);
         // x = round(x1 + m*(y - y1));
         gint32 *y_coord = (gint32 *)malloc(dy * sizeof(gint32));
         gint32 *x_coord = (gint32 *)malloc(dy * sizeof(gint32));
-        printf("\n Output of sang:\n");
-        for(gint32 i = 0; ((i + y1) < y2); i++)
+
+        printf("\nx_coord:");
+        for(gint32 i = 0; i < dy; i++)
         {
             y_coord[i] = y1 + i;
+            printf("%d,", y_coord[i]);
+        }
+
+        printf("\n Output of sang:\n");
+        for(gint32 i = 0; i < dy; i++)
+        {
             x_coord[i] = round(x1 + m*(y_coord[i]-y1));
             out[y_coord[i]*n + x_coord[i]] = 1.0;
         }
