@@ -100,6 +100,13 @@ gboolean dR_specxture_compute(dR_Graph* net, dR_Node* layer){
     dR_Specxture_Data* specxture = ((dR_Specxture_Data*)(layer->layer));
     gfloat* out = (gfloat*)layer->outputBuf->bufptr;
 
+    // Download the shifted FFT magnitude to the host into out.
+    size_t numBytes = specxture->x0*specxture->y0*4*sizeof(cl_float);
+    dR_list_resetIt(layer->previous_layers);
+    cl_mem* fftMagArray;
+    fftMagArray = ((dR_Node*)dR_list_next(layer->previous_layers))->outputBuf->bufptr;
+    dR_downloadArray(net, "ffMagDownload", fftMagArray, 0, numBytes, out);
+
     int paramid = 0;
     dR_list_resetIt(layer->previous_layers);
 
@@ -156,6 +163,7 @@ gboolean dR_specxture_compute(dR_Graph* net, dR_Node* layer){
     // calculate sang
     // make room for coordinates
 
+    #if 0
     for(gint32 i = 0; i < 180; i++)
     {
         // only sum when there is a new coordinate
@@ -174,7 +182,7 @@ gboolean dR_specxture_compute(dR_Graph* net, dR_Node* layer){
             prev_yc = yc[i];
         }
     }
-
+    #endif
     printf("\n**SPECXTURE END**\n");
     return TRUE;
 }
@@ -184,8 +192,9 @@ void halfcircle(gint32 r, gint32* xc, gint32* yc, gint32 x0, gint32 y0, gfloat* 
 {
     gfloat theta[180];
     gint32 array_index;
-    // for testing
     int n = x0*2;
+    /*
+    // for testing;
     for(int i = 0; i < n; i++)
     {
       for (int j = 0; j < n; j++)
@@ -193,7 +202,7 @@ void halfcircle(gint32 r, gint32* xc, gint32* yc, gint32 x0, gint32 y0, gfloat* 
           out[i*n + j] = 0.0;
       }
     }
-
+    */
     for( gint32 angle = 91; angle <= 270; angle++ )
     {
       array_index = angle-91;
@@ -202,10 +211,11 @@ void halfcircle(gint32 r, gint32* xc, gint32* yc, gint32 x0, gint32 y0, gfloat* 
        xc[array_index] = round(r*cos(theta[array_index])) + x0;
        yc[array_index] = round(r*sin(theta[array_index])) + y0;
        //printf("\narrayIndex: %d, cartX: %d, cartY: %d\n", array_index, xc[array_index], yc[array_index]);
-       out[yc[array_index]*n + xc[array_index]] = 1.0;
+       //out[yc[array_index]*n + xc[array_index]] = 1.0;
     }
     //printf("\nx0: %d, y0: %d\n", x0, y0);
-    /* // for testing
+     // for testing
+     /*
     for(int i = 0; i < n; i++)
     {
       for (int j = 0; j < n; j++)
