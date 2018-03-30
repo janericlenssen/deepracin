@@ -98,10 +98,10 @@ void intline(gint32 x1, gint32 y1, gint32 x2, gint32 y2, gfloat* sangElement, gf
 gboolean dR_specxture_compute(dR_Graph* net, dR_Node* layer){
 
     dR_Specxture_Data* specxture = ((dR_Specxture_Data*)(layer->layer));
-    gfloat* out = (gfloat*)layer->outputBuf->bufptr;
+    gfloat* out = (gfloat*)specxture->hostmem;
 
     // Download the shifted FFT magnitude to the host into out.
-    size_t numBytes = specxture->x0*specxture->y0*4*sizeof(cl_float);
+    size_t numBytes = specxture->x0*specxture->y0*sizeof(cl_float)*4;
     dR_list_resetIt(layer->previous_layers);
     cl_mem* fftMagArray;
     fftMagArray = ((dR_Node*)dR_list_next(layer->previous_layers))->outputBuf->bufptr;
@@ -270,8 +270,8 @@ void intline(gint32 x1, gint32 y1, gint32 x2, gint32 y2, gfloat* sangElement, fl
         //printf("\nm = %.2f\n", m);
         // create an array X of length dx which has all values between x1 and x2
         // TODO: replace malloc with 2*N static array, could be faster
-        gint32 *x_coord = (gint32 *)malloc(dx * sizeof(gint32));
-        gint32 *y_coord = (gint32 *)malloc(dx * sizeof(gint32));
+        gint32 *x_coord = (gint32 *)g_malloc(dx * sizeof(gint32));
+        gint32 *y_coord = (gint32 *)g_malloc(dx * sizeof(gint32));
         //printf("\n Output of sang:\n");
 
         //printf("\nx_coord:");
@@ -297,8 +297,8 @@ void intline(gint32 x1, gint32 y1, gint32 x2, gint32 y2, gfloat* sangElement, fl
            printf("\n");
         }
         */
-        free(x_coord);
-        free(y_coord);
+        g_free(x_coord);
+        g_free(y_coord);
         // create another array Y of length dx which calculates y = round(y1 + m*(x - x1)) for all values in X
     }
     else
@@ -412,7 +412,9 @@ gboolean dR_specxture_schedule(dR_Graph* net, dR_Node* layer){
  gboolean dR_specxture_allocateBuffers(dR_Graph* net, dR_Node* layer)
  {
      /* create buffer for intermediate steps */
+     dR_Specxture_Data* specxture = ((dR_Specxture_Data*)(layer->layer));
      gboolean ret = TRUE;
+     specxture->hostmem = g_malloc(specxture->x0*specxture->y0*sizeof(cl_float)*4);
      return ret;
  }
 
@@ -439,7 +441,10 @@ gboolean dR_specxture_schedule(dR_Graph* net, dR_Node* layer){
      dR_Specxture_Data* specxture = ((dR_Specxture_Data*)(layer->layer));
      // free all memory that was reserved for node
      if(net->prepared)
+     {
+         g_free(specxture->hostmem);
          g_free(specxture);
+     }
      return TRUE;
  }
 
