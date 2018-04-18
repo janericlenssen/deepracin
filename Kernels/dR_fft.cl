@@ -8,6 +8,8 @@
 /* The implementation is inspired by http://www.bealto.com/gpu-fft_opencl-1.html */
 
 /* Return real or imaginary component of complex number */
+#define SQRT2 1.41421356237309504880f
+
 inline float real(float2 a){
      return a.x;
 }
@@ -283,4 +285,26 @@ __kernel void shiftFFT(
       real *= real;
       imag *= imag;
       out[gid] = sqrt(real + imag);
+    }
+
+
+  __kernel void haarwt(
+    __global float *in,
+    __global float *out
+    )
+    {
+      int width = (int) get_global_size(0);
+      /*
+      int height = (int) get_global_size(1);
+      int gx = get_global_id(0);
+      int gy = get_global_id(1);
+      int gid = gy*width + gx;
+      */
+      int width = (int) get_global_size(0);
+      int gx = get_global_id(0);
+
+      out[gx] = in[2*gx] + in[2*gx+1];
+      out[gx] /= SQRT2;
+      out[width/2 + gx] = out[2*gx] - out[2*gx+1];
+      out[width/2 + gx] /= SQRT2;
     }

@@ -13,6 +13,8 @@ typedef struct dR_Haarwt_Data dR_Haarwt_Data;
 struct dR_Haarwt_Data {
     dR_Shape3                 ishape;
     gfloat*                   hostmem;
+    cl_kernel                 transposeKernel;
+    cl_kernel                 copyKernel;
 };
 
 // Mandatory

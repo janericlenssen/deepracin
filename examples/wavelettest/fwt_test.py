@@ -39,12 +39,12 @@ image_paths = ['dia8.png']
 
 # create FFT node
 ffttest = dr.FFT(feed_node)
+hwt = dr.Haarwt(feed_node)
 fftshifted = dr.FFTShift(ffttest)
 fftmag = dr.FFTAbs(fftshifted)
-hwt = dr.Haarwt(fftmag)
 
 # Mark output nodes (determines what dr.apply() returns)
-dr.mark_as_output(fftmag)
+dr.mark_as_output(hwt)
 
 # Print graph to console
 dr.print_graph(graph)
@@ -68,12 +68,12 @@ for path in image_paths:
     dr.feed_data(feed_node,data)
 
     # Apply graph - returns one numpy array for each node marked as output
-    fftOut = dr.apply(graph)
-    dat = np.array(fftOut[0]).astype(np.float32)
+    hwtOut = dr.apply(graph)
+    dat = np.array(hwtOut[0]).astype(np.float32)
 
     #show output of specxture
     io.imshow(dat)
-    ##io.show()
+    io.show()
 
     # to use wavelets in python: pip install PyWavelets
     # from https://pywavelets.readthedocs.io/en/latest/
