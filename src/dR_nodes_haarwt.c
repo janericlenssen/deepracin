@@ -93,8 +93,72 @@ dR_Node* dR_haarwt_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numINod
 }
 
 gboolean dR_haarwt_compute(dR_Graph* net, dR_Node* layer){
-    printf("\n**haarwt**\n");
+    printf("\n**BEGIN haarwt**\n");
+
+    dR_Haarwt_Data* haarwt = ((dR_Haarwt_Data*)(layer->layer));
+
+    size_t globalWorkSize[3];
+    int paramid = 0;
+    dR_list_resetIt(layer->previous_layers);
+
+    void *in = ((dR_Node*)dR_list_next(layer->previous_layers))->outputBuf->bufptr;
+    void *out = (void*)layer->outputBuf->bufptr;
+
+    globalWorkSize[0] = layer->oshape.s0/2;
+    globalWorkSize[1] = layer->oshape.s1; //layer->oshape.s1;
+    globalWorkSize[2] = 1; //layer->oshape.s2;
+
+    net->clConfig->clError = clSetKernelArg(layer->clKernel, 0, sizeof(cl_mem), in);
+
+    net->clConfig->clError |= clSetKernelArg(layer->clKernel, 1, sizeof(cl_mem), out);
+
+    if (dR_openCLError(net, "Setting kernel args failed.", "haarwt Kernel"))
+        return FALSE;
+
+    net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, layer->clKernel, 3, NULL, globalWorkSize,
+       NULL, 0, NULL, net->clConfig->clEvent);
+    dR_finishCLKernel(net, "deepRACIN:haarwt");
+
+    // do next transform with /4 the amount of workitems
+    // do operation from out to in
+
+    // do next transform with /8 the amount of workitems
+    // do operation from in to out
+
+    // transpose from out to in
+
+    // do next transform with /2 the amount of workitems
+    // do operation from in to out
+
+    // do next transform with /4 the amount of workitems
+    // do operation from out to in
+
+    // do next transform with /8 the amount of workitems
+    // do operation from in to out
+
+    // transpose from out to in
+
+    // copy from in to out
+
+    printf("\n**END haarwt**\n");
     return TRUE;
+
+    /*
+    net->clConfig->clError = clSetKernelArg(fft->copyKernel, 0, sizeof(cl_mem), in);
+
+    net->clConfig->clError |= clSetKernelArg(fft->copyKernel, 1, sizeof(cl_mem), out);
+
+    net->clConfig->clError |= clSetKernelArg(fft->copyKernel, 2, sizeof(cl_int), (void *)&real_width);
+
+    net->clConfig->clError |= clSetKernelArg(fft->copyKernel, 3, sizeof(cl_int), (void *)&real_height);
+
+    if (dR_openCLError(net, "Setting kernel args failed.", "copy Kernel"))
+        return FALSE;
+
+    net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, fft->copyKernel, 3, NULL, globalWorkSize,
+       NULL, 0, NULL, net->clConfig->clEvent);
+    dR_finishCLKernel(net, "deepRACIN:copy");
+    */
 }
 
 
@@ -121,21 +185,21 @@ gboolean dR_haarwt_schedule(dR_Graph* net, dR_Node* layer){
      // store last node
      lastlayer = dR_list_next(layer->previous_layers);
 
-     // input shape of haarwt node is output of FFTAbs (shifted frequency domain magnitudes)
+     // input shape of haarwt node is a grayscale image
      haarwt->ishape.s0 = lastlayer->oshape.s0;
      haarwt->ishape.s1 = lastlayer->oshape.s1;
      haarwt->ishape.s2 = lastlayer->oshape.s2;
 
-     layer->oshape.s0 = lastlayer->oshape.s0; //specxture->rmax;
-     layer->oshape.s1 = lastlayer->oshape.s1;//1;
-     layer->oshape.s2 = 1;
+     layer->oshape.s0 = lastlayer->oshape.s0;
+     layer->oshape.s1 = lastlayer->oshape.s1;//1;//lastlayer->oshape.s1; TODO: for now. later 2D
+     layer->oshape.s2 = lastlayer->oshape.s2;//1;
      return TRUE;
  }
 
  gint32 dR_haarwt_getRequiredOutputBufferSize(dR_Node* layer)
  {
      dR_Haarwt_Data* haarwt = (dR_Haarwt_Data*)(layer->layer);
-     gint32 ret;
+     gint32 ret = layer->oshape.s0*layer->oshape.s1;
      return ret;
  }
 
@@ -144,8 +208,7 @@ gboolean dR_haarwt_schedule(dR_Graph* net, dR_Node* layer){
      //call all Opencl kernel creation routines required
      dR_Haarwt_Data* haarwt = (dR_Haarwt_Data*)(layer->layer);
      gboolean ret = FALSE;
-
-     ret = TRUE;
+     ret = dR_createKernel(net,"haarwt",&(layer->clKernel));
      return ret;
  }
 
