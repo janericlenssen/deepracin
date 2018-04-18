@@ -32,9 +32,9 @@ graph = env.create_graph(interface_layout='HWC')
 #feed_node = dr.feed_node(graph, shape=(497, 303, 1))
 
 #feed_node = dr.feed_node(graph, shape=(256, 256, 1))
-feed_node = dr.feed_node(graph, shape=(256, 256, 1))
+feed_node = dr.feed_node(graph, shape=(8, 8, 1))
 
-image_paths = ['dia256.png']
+image_paths = ['tigerbw8.png']
 #image_paths = ['tigerbw64.png']
 
 # create wavelet node
@@ -74,13 +74,19 @@ for path in image_paths:
 
     # to use wavelets in python: pip install PyWavelets
     # from https://pywavelets.readthedocs.io/en/latest/
-    x = [ [ 6, 12, 15, 15, 14, 12, 120, 116 ] ]
+    x = [ 6, 12, 15, 15, 14, 12, 120, 116 ]
+
+    #wavedec(x, 'haar', 3) = [array([[ 109.60155108]]), array([[-75.66042559]]), array([[  -6., -105.]]), array([[-4.24264069,  0.        ,  1.41421356,  2.82842712]])]
+
+    tigerbw8 = [64, 91, 108, 123, 123, 136, 170, 133 ]
+
+    # wavedec(tigerbw8, 'haar', 3) = [array([ 335.16861428]), array([-62.22539674]), array([-38., -22.]), array([-19.09188309, -10.60660172,  -9.19238816,  26.1629509 ])]
 
     #x = [ [1, 2, 3, 4], [0, 4, 3, 2], [1, 0, 4, 2], [1, 4, 3, 4] ]
     print('\n')
-    print(x)
+    print(tigerbw8)
 
-    c1 = wt.wavedec(x, 'haar')
+    c1 = wt.wavedec(tigerbw8, 'haar')
     print('\n')
     print(c1)
 

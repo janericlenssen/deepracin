@@ -92,22 +92,62 @@ dR_Node* dR_haarwt_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numINod
     return out;
 }
 
-gboolean dR_haarwt_compute(dR_Graph* net, dR_Node* layer){
+gboolean dR_haarwt_compute(dR_Graph* net, dR_Node* layer)
+{
     printf("\n**BEGIN haarwt**\n");
 
     dR_Haarwt_Data* haarwt = ((dR_Haarwt_Data*)(layer->layer));
+    cl_mem* input1 = ((dR_Node*)dR_list_next(layer->previous_layers))->outputBuf->bufptr;
+    cl_mem* output1 = (void*)layer->outputBuf->bufptr;
 
     size_t globalWorkSize[3];
     int paramid = 0;
     dR_list_resetIt(layer->previous_layers);
 
-    void *in = ((dR_Node*)dR_list_next(layer->previous_layers))->outputBuf->bufptr;
-    void *out = (void*)layer->outputBuf->bufptr;
+    void *in = input1;
+    void *out = output1;
 
+    // first wavelet decimation step (1/3)
     globalWorkSize[0] = layer->oshape.s0/2;
-    globalWorkSize[1] = layer->oshape.s1; //layer->oshape.s1;
-    globalWorkSize[2] = 1; //layer->oshape.s2;
+    globalWorkSize[1] = layer->oshape.s1;
+    globalWorkSize[2] = layer->oshape.s2;
 
+    net->clConfig->clError = clSetKernelArg(layer->clKernel, 0, sizeof(cl_mem), in);
+
+    net->clConfig->clError |= clSetKernelArg(layer->clKernel, 1, sizeof(cl_mem), out);
+
+    if (dR_openCLError(net, "Setting kernel args failed.", "haarwt Kernel"))
+        return FALSE;
+
+    net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, layer->clKernel, 3, NULL, globalWorkSize,
+       NULL, 0, NULL, net->clConfig->clEvent);
+    dR_finishCLKernel(net, "deepRACIN:haarwt");
+
+    // second wavelet decimation step (2/3)
+    globalWorkSize[0] = layer->oshape.s0/4;
+    globalWorkSize[1] = layer->oshape.s1;
+    globalWorkSize[2] = layer->oshape.s2;
+
+    in = output1;
+    out = input1;
+    net->clConfig->clError = clSetKernelArg(layer->clKernel, 0, sizeof(cl_mem), in);
+
+    net->clConfig->clError |= clSetKernelArg(layer->clKernel, 1, sizeof(cl_mem), out);
+
+    if (dR_openCLError(net, "Setting kernel args failed.", "haarwt Kernel"))
+        return FALSE;
+
+    net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, layer->clKernel, 3, NULL, globalWorkSize,
+       NULL, 0, NULL, net->clConfig->clEvent);
+    dR_finishCLKernel(net, "deepRACIN:haarwt");
+
+    // third wavelet decimation step (3/3)
+    globalWorkSize[0] = layer->oshape.s0/8;
+    globalWorkSize[1] = layer->oshape.s1;
+    globalWorkSize[2] = layer->oshape.s2;
+
+    in = input1;
+    out = output1;
     net->clConfig->clError = clSetKernelArg(layer->clKernel, 0, sizeof(cl_mem), in);
 
     net->clConfig->clError |= clSetKernelArg(layer->clKernel, 1, sizeof(cl_mem), out);

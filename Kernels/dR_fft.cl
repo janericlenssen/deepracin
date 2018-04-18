@@ -297,8 +297,14 @@ __kernel void shiftFFT(
       int gx = get_global_id(0);
       int gy = get_global_id(1);
 
+      out[gx] = in[2*gx] + in[2*gx + 1];
+      out[gx] /= SQRT2;
+      out[width + gx] = in[2*gx] - in[2*gx + 1];
+      out[width + gx] /= SQRT2;
+      /*
       out[gy*width + gx] = in[gy*width + 2*gx] + in[gy*width + 2*gx + 1];
       out[gy*width + gx] /= SQRT2;
       out[gy*width + width + gx] = in[gy*width + 2*gx] - in[gy*width + 2*gx + 1];
       out[gy*width + width + gx] /= SQRT2;
+      */
     }
