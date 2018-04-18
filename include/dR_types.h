@@ -94,7 +94,8 @@ enum dR_LayerType {
     tFFT,
     tFFTShift,
     tFFTAbs,
-    tSpecxture
+    tSpecxture,
+    tHaarwt
 };
 typedef enum dR_LayerType dR_LayerType;
 

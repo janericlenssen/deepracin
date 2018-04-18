@@ -11,5 +11,6 @@
 #include "dR_nodes_transform.h"
 #include "dR_nodes_fft.h"
 #include "dR_nodes_specxture.h"
+#include "dR_nodes_haarwt.h"
 
 #endif // DR_BASE_H

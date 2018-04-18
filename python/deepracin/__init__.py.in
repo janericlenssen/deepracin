@@ -187,6 +187,11 @@ func = lib.dR_Specxture
 func.argtypes = [c_void_p, c_void_p]
 func.restype = c_void_p
 
+# dR_Haarwt
+func = lib.dR_Haarwt
+func.argtypes = [c_void_p, c_void_p]
+func.restype = c_void_p
+
 # dR_Softmax
 func = lib.dR_Softmax
 func.argtypes = [c_void_p, c_void_p]
@@ -1022,6 +1027,16 @@ def Specxture(input_node):
 
     # Call deepRACIN
     onode = Node(lib.dR_Specxture(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr), 0), input_node.graph, desc, params)
+    return onode
+
+def Haarwt(input_node):
+    # type: (Node) -> Node
+    # Description for python structures
+    desc = 'Haarwt'
+    params = [' ']
+
+    # Call deepRACIN
+    onode = Node(lib.dR_Haarwt(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr), 0), input_node.graph, desc, params)
     return onode
 
 def Concat(input_nodes,  concat_dim, layout='HWC'):

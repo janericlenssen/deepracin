@@ -41,6 +41,7 @@ image_paths = ['dia8.png']
 ffttest = dr.FFT(feed_node)
 fftshifted = dr.FFTShift(ffttest)
 fftmag = dr.FFTAbs(fftshifted)
+hwt = dr.Haarwt(fftmag)
 
 # Mark output nodes (determines what dr.apply() returns)
 dr.mark_as_output(fftmag)
@@ -78,9 +79,19 @@ for path in image_paths:
     # from https://pywavelets.readthedocs.io/en/latest/
     x = [ [ 6, 12, 15, 15, 14, 12, 120, 116 ] ]
 
+    #x = [ [1, 2, 3, 4], [0, 4, 3, 2], [1, 0, 4, 2], [1, 4, 3, 4] ]
     print '\n'
     print(x)
 
-    c1 = wt.wavedec(x, 'haar', level=3)
+    c1 = wt.wavedec(x, 'haar')
     print '\n'
     print(c1)
+
+    #print '\n'
+    #print(c2)
+
+    #print '\n'
+    #print(c3)
+
+    #print '\n'
+    #print(c4)
