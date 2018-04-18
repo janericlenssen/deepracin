@@ -105,8 +105,8 @@ gboolean dR_haarwt_compute(dR_Graph* net, dR_Node* layer){
     void *out = (void*)layer->outputBuf->bufptr;
 
     globalWorkSize[0] = layer->oshape.s0/2;
-    globalWorkSize[1] = layer->oshape.s1;
-    globalWorkSize[2] = layer->oshape.s2;
+    globalWorkSize[1] = layer->oshape.s1; //layer->oshape.s1;
+    globalWorkSize[2] = 1; //layer->oshape.s2;
 
     net->clConfig->clError = clSetKernelArg(layer->clKernel, 0, sizeof(cl_mem), in);
 
@@ -118,6 +118,27 @@ gboolean dR_haarwt_compute(dR_Graph* net, dR_Node* layer){
     net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, layer->clKernel, 3, NULL, globalWorkSize,
        NULL, 0, NULL, net->clConfig->clEvent);
     dR_finishCLKernel(net, "deepRACIN:haarwt");
+
+    // do next transform with /4 the amount of workitems
+    // do operation from out to in
+
+    // do next transform with /8 the amount of workitems
+    // do operation from in to out
+
+    // transpose from out to in
+
+    // do next transform with /2 the amount of workitems
+    // do operation from in to out
+
+    // do next transform with /4 the amount of workitems
+    // do operation from out to in
+
+    // do next transform with /8 the amount of workitems
+    // do operation from in to out
+
+    // transpose from out to in
+
+    // copy from in to out
 
     printf("\n**END haarwt**\n");
     return TRUE;
@@ -170,15 +191,15 @@ gboolean dR_haarwt_schedule(dR_Graph* net, dR_Node* layer){
      haarwt->ishape.s2 = lastlayer->oshape.s2;
 
      layer->oshape.s0 = lastlayer->oshape.s0;
-     layer->oshape.s1 = 1;//lastlayer->oshape.s1; TODO: for now. later 2D
-     layer->oshape.s2 = 1;
+     layer->oshape.s1 = lastlayer->oshape.s1;//1;//lastlayer->oshape.s1; TODO: for now. later 2D
+     layer->oshape.s2 = lastlayer->oshape.s2;//1;
      return TRUE;
  }
 
  gint32 dR_haarwt_getRequiredOutputBufferSize(dR_Node* layer)
  {
      dR_Haarwt_Data* haarwt = (dR_Haarwt_Data*)(layer->layer);
-     gint32 ret = layer->oshape.s0;
+     gint32 ret = layer->oshape.s0*layer->oshape.s1;
      return ret;
  }
 

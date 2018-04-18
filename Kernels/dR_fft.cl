@@ -294,17 +294,11 @@ __kernel void shiftFFT(
     )
     {
       int width = (int) get_global_size(0);
-      /*
-      int height = (int) get_global_size(1);
       int gx = get_global_id(0);
       int gy = get_global_id(1);
-      int gid = gy*width + gx;
-      */
-      int width = (int) get_global_size(0);
-      int gx = get_global_id(0);
 
-      out[gx] = in[2*gx] + in[2*gx+1];
-      out[gx] /= SQRT2;
-      out[width/2 + gx] = out[2*gx] - out[2*gx+1];
-      out[width/2 + gx] /= SQRT2;
+      out[gy*width + gx] = in[gy*width + 2*gx] + in[gy*width + 2*gx + 1];
+      out[gy*width + gx] /= SQRT2;
+      out[gy*width + width + gx] = in[gy*width + 2*gx] - in[gy*width + 2*gx + 1];
+      out[gy*width + width + gx] /= SQRT2;
     }

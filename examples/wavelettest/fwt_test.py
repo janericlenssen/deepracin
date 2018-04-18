@@ -32,16 +32,13 @@ graph = env.create_graph(interface_layout='HWC')
 #feed_node = dr.feed_node(graph, shape=(497, 303, 1))
 
 #feed_node = dr.feed_node(graph, shape=(256, 256, 1))
-feed_node = dr.feed_node(graph, shape=(8, 8, 1))
+feed_node = dr.feed_node(graph, shape=(256, 256, 1))
 
-image_paths = ['dia8.png']
+image_paths = ['dia256.png']
 #image_paths = ['tigerbw64.png']
 
-# create FFT node
-ffttest = dr.FFT(feed_node)
+# create wavelet node
 hwt = dr.Haarwt(feed_node)
-fftshifted = dr.FFTShift(ffttest)
-fftmag = dr.FFTAbs(fftshifted)
 
 # Mark output nodes (determines what dr.apply() returns)
 dr.mark_as_output(hwt)
@@ -59,7 +56,7 @@ for path in image_paths:
     # Feed Input
     img = io.imread(path)
     io.imshow(img)
-    ##io.show()
+    io.show()
 
     exp = np.expand_dims(img,2)
 
@@ -80,11 +77,11 @@ for path in image_paths:
     x = [ [ 6, 12, 15, 15, 14, 12, 120, 116 ] ]
 
     #x = [ [1, 2, 3, 4], [0, 4, 3, 2], [1, 0, 4, 2], [1, 4, 3, 4] ]
-    print '\n'
+    print('\n')
     print(x)
 
     c1 = wt.wavedec(x, 'haar')
-    print '\n'
+    print('\n')
     print(c1)
 
     #print '\n'
