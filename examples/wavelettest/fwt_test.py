@@ -55,8 +55,9 @@ for path in image_paths:
 
     # Feed Input
     img = io.imread(path)
+    #io.use_plugin('qt')
     io.imshow(img)
-    io.show()
+    ##io.show()
 
     exp = np.expand_dims(img,2)
 
@@ -67,10 +68,10 @@ for path in image_paths:
     # Apply graph - returns one numpy array for each node marked as output
     hwtOut = dr.apply(graph)
     dat = np.array(hwtOut[0]).astype(np.float32)
-
+    print(dat)
     #show output of specxture
     io.imshow(dat)
-    io.show()
+    ##io.show()
 
     # to use wavelets in python: pip install PyWavelets
     # from https://pywavelets.readthedocs.io/en/latest/
@@ -79,14 +80,17 @@ for path in image_paths:
     #wavedec(x, 'haar', 3) = [array([[ 109.60155108]]), array([[-75.66042559]]), array([[  -6., -105.]]), array([[-4.24264069,  0.        ,  1.41421356,  2.82842712]])]
 
     tigerbw8 = [64, 91, 108, 123, 123, 136, 170, 133 ]
+    # 1. stage: 109.60 163.34 183.14 214.25 -19.09 -10.61 -9.19 26.16
 
+
+    #ulexp = [1.000, 2.000, 3.000, 1.000, 2.000, 3.000, 4.000, 0.000]
     # wavedec(tigerbw8, 'haar', 3) = [array([ 335.16861428]), array([-62.22539674]), array([-38., -22.]), array([-19.09188309, -10.60660172,  -9.19238816,  26.1629509 ])]
 
     #x = [ [1, 2, 3, 4], [0, 4, 3, 2], [1, 0, 4, 2], [1, 4, 3, 4] ]
     print('\n')
-    print(tigerbw8)
+    #print(ulexp)
 
-    c1 = wt.wavedec(tigerbw8, 'haar')
+    c1 = wt.wavedec(tigerbw8, 'haar', level=3)
     print('\n')
     print(c1)
 

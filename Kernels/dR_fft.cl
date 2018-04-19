@@ -308,3 +308,17 @@ __kernel void shiftFFT(
       out[gy*width + width + gx] /= SQRT2;
       */
     }
+
+    __kernel void hwtcopy(
+     __global float * in,
+     __global float * out
+   )
+   {
+     int gx = get_global_id(0);
+     int gy = get_global_id(1);
+     int width = (int) get_global_size(0);
+     int height = (int) get_global_size(1);
+     int gid = width*gy + gx;
+
+     out[gid] = in[gid];
+   }
