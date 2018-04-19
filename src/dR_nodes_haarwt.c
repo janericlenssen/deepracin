@@ -106,6 +106,7 @@ gboolean dR_haarwt_compute(dR_Graph* net, dR_Node* layer)
 
     void *in = input1;
     void *out = output1;
+    cl_int img_width = layer->oshape.s0;
 
     // first wavelet decimation step (1/3)
     globalWorkSize[0] = layer->oshape.s0/2;
@@ -115,6 +116,8 @@ gboolean dR_haarwt_compute(dR_Graph* net, dR_Node* layer)
     net->clConfig->clError = clSetKernelArg(layer->clKernel, 0, sizeof(cl_mem), in);
 
     net->clConfig->clError |= clSetKernelArg(layer->clKernel, 1, sizeof(cl_mem), out);
+
+    net->clConfig->clError |= clSetKernelArg(layer->clKernel, 2, sizeof(cl_int), (void *)&img_width);
 
     if (dR_openCLError(net, "Setting kernel args failed.", "haarwt Kernel"))
         return FALSE;
@@ -149,6 +152,8 @@ gboolean dR_haarwt_compute(dR_Graph* net, dR_Node* layer)
 
     net->clConfig->clError |= clSetKernelArg(layer->clKernel, 1, sizeof(cl_mem), out);
 
+    net->clConfig->clError |= clSetKernelArg(layer->clKernel, 2, sizeof(cl_int), (void *)&img_width);
+
     if (dR_openCLError(net, "Setting kernel args failed.", "haarwt Kernel"))
         return FALSE;
 
@@ -177,11 +182,11 @@ gboolean dR_haarwt_compute(dR_Graph* net, dR_Node* layer)
     globalWorkSize[1] = layer->oshape.s1;
     globalWorkSize[2] = layer->oshape.s2;
 
-    //in = input1;
-    //out = output1;
     net->clConfig->clError = clSetKernelArg(layer->clKernel, 0, sizeof(cl_mem), in);
 
     net->clConfig->clError |= clSetKernelArg(layer->clKernel, 1, sizeof(cl_mem), out);
+
+    net->clConfig->clError |= clSetKernelArg(layer->clKernel, 2, sizeof(cl_int), (void *)&img_width);
 
     if (dR_openCLError(net, "Setting kernel args failed.", "haarwt Kernel"))
         return FALSE;
