@@ -290,23 +290,18 @@ __kernel void shiftFFT(
 
   __kernel void haarwt(
     __global float *in,
-    __global float *out
+    __global float *out,
+    int img_width
     )
     {
       int width = (int) get_global_size(0);
       int gx = get_global_id(0);
       int gy = get_global_id(1);
 
-      out[gx] = in[2*gx] + in[2*gx + 1];
-      out[gx] /= SQRT2;
-      out[width + gx] = in[2*gx] - in[2*gx + 1];
-      out[width + gx] /= SQRT2;
-      /*
-      out[gy*width + gx] = in[gy*width + 2*gx] + in[gy*width + 2*gx + 1];
-      out[gy*width + gx] /= SQRT2;
-      out[gy*width + width + gx] = in[gy*width + 2*gx] - in[gy*width + 2*gx + 1];
-      out[gy*width + width + gx] /= SQRT2;
-      */
+      out[img_width*gy + gx] = in[img_width*gy + 2*gx] + in[img_width*gy + 2*gx + 1];
+      out[img_width*gy + gx] /= SQRT2;
+      out[img_width*gy + width + gx] = in[img_width*gy + 2*gx] - in[img_width*gy + 2*gx + 1];
+      out[img_width*gy + width + gx] /= SQRT2;
     }
 
     __kernel void hwtcopy(
@@ -317,8 +312,21 @@ __kernel void shiftFFT(
      int gx = get_global_id(0);
      int gy = get_global_id(1);
      int width = (int) get_global_size(0);
-     int height = (int) get_global_size(1);
      int gid = width*gy + gx;
 
      out[gid] = in[gid];
+   }
+
+   __kernel void hwttranspose(
+     __global float * in,
+     __global float * out
+   )
+   {
+     int gx = get_global_id(0);
+     int gy = get_global_id(1);
+     int width = (int) get_global_size(0);
+     int gid =  width*gy + gx;
+     int t_gid = width*gx + gy;
+
+     out[t_gid] = in[gid];
    }
