@@ -111,7 +111,7 @@ gboolean dR_haarwt_compute(dR_Graph* net, dR_Node* layer)
     for(int i = 2; i <= 8; i*=2)
     {
       globalWorkSize[0] = layer->oshape.s0/i;
-      globalWorkSize[1] = layer->oshape.s1;
+      globalWorkSize[1] = layer->oshape.s1/i*2;
       globalWorkSize[2] = layer->oshape.s2;
 
       net->clConfig->clError = clSetKernelArg(layer->clKernel, 0, sizeof(cl_mem), in);
@@ -142,40 +142,36 @@ gboolean dR_haarwt_compute(dR_Graph* net, dR_Node* layer)
       net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, haarwt->copyKernel, 3, NULL, globalWorkSize,
          NULL, 0, NULL, net->clConfig->clEvent);
       dR_finishCLKernel(net, "deepRACIN:hwtcopy");
-    }
 
-    // transpose
-    globalWorkSize[0] = layer->oshape.s0;
-    globalWorkSize[1] = layer->oshape.s1;
-    globalWorkSize[2] = layer->oshape.s2;
-    net->clConfig->clError = clSetKernelArg(haarwt->transposeKernel, 0, sizeof(cl_mem), in);
+      // transpose
+      globalWorkSize[0] = layer->oshape.s0;
+      globalWorkSize[1] = layer->oshape.s1;
+      globalWorkSize[2] = layer->oshape.s2;
+      net->clConfig->clError = clSetKernelArg(haarwt->transposeKernel, 0, sizeof(cl_mem), in);
 
-    net->clConfig->clError |= clSetKernelArg(haarwt->transposeKernel, 1, sizeof(cl_mem), out);
+      net->clConfig->clError |= clSetKernelArg(haarwt->transposeKernel, 1, sizeof(cl_mem), out);
 
-    if (dR_openCLError(net, "Setting kernel args failed.", "hwttranspose Kernel"))
-        return FALSE;
+      if (dR_openCLError(net, "Setting kernel args failed.", "hwttranspose Kernel"))
+          return FALSE;
 
-    net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, haarwt->transposeKernel, 3, NULL, globalWorkSize,
-       NULL, 0, NULL, net->clConfig->clEvent);
-    dR_finishCLKernel(net, "deepRACIN:hwttranspose");
+      net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, haarwt->transposeKernel, 3, NULL, globalWorkSize,
+         NULL, 0, NULL, net->clConfig->clEvent);
+      dR_finishCLKernel(net, "deepRACIN:hwttranspose");
 
-    //copy
-    net->clConfig->clError = clSetKernelArg(haarwt->copyKernel, 0, sizeof(cl_mem), out);
+      //copy
+      net->clConfig->clError = clSetKernelArg(haarwt->copyKernel, 0, sizeof(cl_mem), out);
 
-    net->clConfig->clError |= clSetKernelArg(haarwt->copyKernel, 1, sizeof(cl_mem), in);
+      net->clConfig->clError |= clSetKernelArg(haarwt->copyKernel, 1, sizeof(cl_mem), in);
 
-    if (dR_openCLError(net, "Setting kernel args failed.", "hwtcopy Kernel"))
-        return FALSE;
+      if (dR_openCLError(net, "Setting kernel args failed.", "hwtcopy Kernel"))
+          return FALSE;
 
-    net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, haarwt->copyKernel, 3, NULL, globalWorkSize,
-       NULL, 0, NULL, net->clConfig->clEvent);
-    dR_finishCLKernel(net, "deepRACIN:hwtcopy");
+      net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, haarwt->copyKernel, 3, NULL, globalWorkSize,
+         NULL, 0, NULL, net->clConfig->clEvent);
+      dR_finishCLKernel(net, "deepRACIN:hwtcopy");
 
-
-    for(int i = 2; i <= 8; i*=2)
-    {
       globalWorkSize[0] = layer->oshape.s0/i;
-      globalWorkSize[1] = layer->oshape.s1;
+      globalWorkSize[1] = layer->oshape.s1/i*2;
       globalWorkSize[2] = layer->oshape.s2;
 
       net->clConfig->clError = clSetKernelArg(layer->clKernel, 0, sizeof(cl_mem), in);
@@ -191,14 +187,25 @@ gboolean dR_haarwt_compute(dR_Graph* net, dR_Node* layer)
          NULL, 0, NULL, net->clConfig->clEvent);
       dR_finishCLKernel(net, "deepRACIN:haarwt");
 
-      // copy from out to in. 1
+      // transpose
       globalWorkSize[0] = layer->oshape.s0;
       globalWorkSize[1] = layer->oshape.s1;
       globalWorkSize[2] = layer->oshape.s2;
+      net->clConfig->clError = clSetKernelArg(haarwt->transposeKernel, 0, sizeof(cl_mem), out);
 
-      net->clConfig->clError = clSetKernelArg(haarwt->copyKernel, 0, sizeof(cl_mem), out);
+      net->clConfig->clError |= clSetKernelArg(haarwt->transposeKernel, 1, sizeof(cl_mem), in);
 
-      net->clConfig->clError |= clSetKernelArg(haarwt->copyKernel, 1, sizeof(cl_mem), in);
+      if (dR_openCLError(net, "Setting kernel args failed.", "hwttranspose Kernel"))
+          return FALSE;
+
+      net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, haarwt->transposeKernel, 3, NULL, globalWorkSize,
+         NULL, 0, NULL, net->clConfig->clEvent);
+      dR_finishCLKernel(net, "deepRACIN:hwttranspose");
+
+      //copy
+      net->clConfig->clError = clSetKernelArg(haarwt->copyKernel, 0, sizeof(cl_mem), in);
+
+      net->clConfig->clError |= clSetKernelArg(haarwt->copyKernel, 1, sizeof(cl_mem), out);
 
       if (dR_openCLError(net, "Setting kernel args failed.", "hwtcopy Kernel"))
           return FALSE;
@@ -207,18 +214,6 @@ gboolean dR_haarwt_compute(dR_Graph* net, dR_Node* layer)
          NULL, 0, NULL, net->clConfig->clEvent);
       dR_finishCLKernel(net, "deepRACIN:hwtcopy");
     }
-
-    // transpose from in to out
-    net->clConfig->clError = clSetKernelArg(haarwt->transposeKernel, 0, sizeof(cl_mem), in);
-
-    net->clConfig->clError |= clSetKernelArg(haarwt->transposeKernel, 1, sizeof(cl_mem), out);
-
-    if (dR_openCLError(net, "Setting kernel args failed.", "hwttranspose Kernel"))
-        return FALSE;
-
-    net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, haarwt->transposeKernel, 3, NULL, globalWorkSize,
-       NULL, 0, NULL, net->clConfig->clEvent);
-    dR_finishCLKernel(net, "deepRACIN:hwttranspose");
 
     printf("\n**END haarwt**\n");
     return TRUE;
