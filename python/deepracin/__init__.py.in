@@ -189,7 +189,7 @@ func.restype = c_void_p
 
 # dR_Haarwt
 func = lib.dR_Haarwt
-func.argtypes = [c_void_p, c_void_p]
+func.argtypes = [c_void_p, c_void_p, c_int]
 func.restype = c_void_p
 
 # dR_Softmax
@@ -1029,14 +1029,14 @@ def Specxture(input_node):
     onode = Node(lib.dR_Specxture(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr), 0), input_node.graph, desc, params)
     return onode
 
-def Haarwt(input_node):
+def Haarwt(input_node, level):
     # type: (Node) -> Node
     # Description for python structures
     desc = 'Haarwt'
-    params = [' ']
+    params = [level]
 
     # Call deepRACIN
-    onode = Node(lib.dR_Haarwt(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr), 0), input_node.graph, desc, params)
+    onode = Node(lib.dR_Haarwt(c_void_p(input_node.graph.ptr), c_void_p(input_node.ptr), level), input_node.graph, desc, params)
     return onode
 
 def Concat(input_nodes,  concat_dim, layout='HWC'):

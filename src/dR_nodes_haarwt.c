@@ -1,14 +1,15 @@
 #include "dR_nodes_haarwt.h"
 #include "dR_core.h"
 
-dR_Node* dR_Haarwt(dR_Graph* net, dR_Node* inputNode1)
+dR_Node* dR_Haarwt(dR_Graph* net, dR_Node* inputNode1, gint level)
 {
     // allocate memory for dR_Shape3 (3 dimensional vector)
     dR_Haarwt_Data* haarwt = g_malloc(sizeof(dR_Haarwt_Data));
     // allocate memory for a node
     dR_Node* l = g_malloc(sizeof(dR_Node));
 
-    // set all attributes of fft node
+    haarwt->level = level;
+    // set all attributes of haarwt node
     // dR_Shape3
     l->layer = haarwt;
     // node type
@@ -41,7 +42,7 @@ dR_Node* dR_Haarwt(dR_Graph* net, dR_Node* inputNode1)
       dR_list_append(l->previous_layers,inputNode1);
       // create empty list for following nodes
       l->next_layers = dR_list_createEmptyList();
-      // append the current (fft) node as the following node of the previous node
+      // append the current (haarwt) node as the following node of the previous node
       dR_list_append(inputNode1->next_layers,l);
     }
     else
@@ -74,7 +75,7 @@ gchar* dR_haarwt_serializeNode(dR_Node* layer, gchar* params[], gint* numParams,
 dR_Node* dR_haarwt_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numINodes, gchar** params, gint numParams, gfloat** variables, gint numVariables)
 {
     gint numNodeInputs = 1;
-    gint numNodeParams = 0;
+    gint numNodeParams = 1;
     gint numNodeVariables = 0;
     dR_Node* out;
     if(numINodes!=1)
@@ -88,18 +89,16 @@ dR_Node* dR_haarwt_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numINod
         return NULL;
     }
 
-    out = dR_Haarwt( net, iNodes[0] );
+    out = dR_Haarwt( net, iNodes[0], atoi(params[0]) );
     return out;
 }
 
 gboolean dR_haarwt_compute(dR_Graph* net, dR_Node* layer)
 {
-    printf("\n**BEGIN haarwt**\n");
-
     dR_Haarwt_Data* haarwt = ((dR_Haarwt_Data*)(layer->layer));
     cl_mem* input1 = ((dR_Node*)dR_list_next(layer->previous_layers))->outputBuf->bufptr;
     cl_mem* output1 = (void*)layer->outputBuf->bufptr;
-
+    gint level = 2 << (haarwt->level - 1);
     size_t globalWorkSize[3];
     int paramid = 0;
     dR_list_resetIt(layer->previous_layers);
@@ -108,8 +107,9 @@ gboolean dR_haarwt_compute(dR_Graph* net, dR_Node* layer)
     void *out = output1;
     cl_int img_width = layer->oshape.s0;
 
-    for(int i = 2; i <= 8; i*=2)
+    for(int i = 2; i <= level; i*=2)
     {
+      // rows decimation
       globalWorkSize[0] = layer->oshape.s0/i;
       globalWorkSize[1] = layer->oshape.s1/i*2;
       globalWorkSize[2] = layer->oshape.s2;
@@ -144,9 +144,6 @@ gboolean dR_haarwt_compute(dR_Graph* net, dR_Node* layer)
       dR_finishCLKernel(net, "deepRACIN:hwtcopy");
 
       // transpose
-      globalWorkSize[0] = layer->oshape.s0;
-      globalWorkSize[1] = layer->oshape.s1;
-      globalWorkSize[2] = layer->oshape.s2;
       net->clConfig->clError = clSetKernelArg(haarwt->transposeKernel, 0, sizeof(cl_mem), in);
 
       net->clConfig->clError |= clSetKernelArg(haarwt->transposeKernel, 1, sizeof(cl_mem), out);
@@ -170,6 +167,7 @@ gboolean dR_haarwt_compute(dR_Graph* net, dR_Node* layer)
          NULL, 0, NULL, net->clConfig->clEvent);
       dR_finishCLKernel(net, "deepRACIN:hwtcopy");
 
+      // columns decimation
       globalWorkSize[0] = layer->oshape.s0/i;
       globalWorkSize[1] = layer->oshape.s1/i*2;
       globalWorkSize[2] = layer->oshape.s2;
@@ -187,7 +185,7 @@ gboolean dR_haarwt_compute(dR_Graph* net, dR_Node* layer)
          NULL, 0, NULL, net->clConfig->clEvent);
       dR_finishCLKernel(net, "deepRACIN:haarwt");
 
-      // transpose
+      // transpose back
       globalWorkSize[0] = layer->oshape.s0;
       globalWorkSize[1] = layer->oshape.s1;
       globalWorkSize[2] = layer->oshape.s2;
@@ -214,8 +212,6 @@ gboolean dR_haarwt_compute(dR_Graph* net, dR_Node* layer)
          NULL, 0, NULL, net->clConfig->clEvent);
       dR_finishCLKernel(net, "deepRACIN:hwtcopy");
     }
-
-    printf("\n**END haarwt**\n");
     return TRUE;
 }
 

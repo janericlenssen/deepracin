@@ -15,6 +15,7 @@ struct dR_Haarwt_Data {
     gfloat*                   hostmem;
     cl_kernel                 transposeKernel;
     cl_kernel                 copyKernel;
+    gint                      level;
 };
 
 // Mandatory

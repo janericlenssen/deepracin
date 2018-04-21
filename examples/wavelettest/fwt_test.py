@@ -31,14 +31,14 @@ graph = env.create_graph(interface_layout='HWC')
 # Feed node - Will be fed with data for ea<ch graph application
 #feed_node = dr.feed_node(graph, shape=(497, 303, 1))
 
-#feed_node = dr.feed_node(graph, shape=(256, 256, 1))
-feed_node = dr.feed_node(graph, shape=(8, 8, 1))
+feed_node = dr.feed_node(graph, shape=(256, 256, 1))
+#feed_node = dr.feed_node(graph, shape=(8, 8, 1))
 
-image_paths = ['tigerbw8.png']
+image_paths = ['tigerbw256.png']
 #image_paths = ['tigerbw64.png']
 
 # create wavelet node
-hwt = dr.Haarwt(feed_node)
+hwt = dr.Haarwt(feed_node, 3)
 
 # Mark output nodes (determines what dr.apply() returns)
 dr.mark_as_output(hwt)
@@ -57,7 +57,7 @@ for path in image_paths:
     img = io.imread(path)
     #io.use_plugin('qt')
     io.imshow(img)
-    ##io.show()
+    io.show()
 
     exp = np.expand_dims(img,2)
 
@@ -71,7 +71,7 @@ for path in image_paths:
     print(dat)
     #show output of specxture
     io.imshow(dat)
-    ##io.show()
+    io.show()
 
     # to use wavelets in python: pip install PyWavelets
     # from https://pywavelets.readthedocs.io/en/latest/
@@ -92,7 +92,7 @@ for path in image_paths:
 
     #ulexp = [1.000, 2.000, 3.000, 1.000, 2.000, 3.000, 4.000, 0.000]
     # wavedec(tigerbw8, 'haar', 3) = [array([ 335.16861428]), array([-62.22539674]), array([-38., -22.]), array([-19.09188309, -10.60660172,  -9.19238816,  26.1629509 ])]
-
+#
     #x = [ [1, 2, 3, 4], [0, 4, 3, 2], [1, 0, 4, 2], [1, 4, 3, 4] ]
     print('\n')
     #print(ulexp)
