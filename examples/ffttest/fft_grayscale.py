@@ -31,9 +31,9 @@ graph = env.create_graph(interface_layout='HWC')
 #feed_node = dr.feed_node(graph, shape=(497, 303, 1))
 
 #feed_node = dr.feed_node(graph, shape=(256, 256, 1))
-feed_node = dr.feed_node(graph, shape=(64, 64, 1))
+feed_node = dr.feed_node(graph, shape=(16, 16, 1))
 
-image_paths = ['dia64.png']
+image_paths = ['dia16.png']
 #image_paths = ['tigerbw64.png']
 
 # create FFT node

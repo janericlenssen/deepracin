@@ -330,3 +330,106 @@ __kernel void shiftFFT(
 
      out[t_gid] = in[gid];
    }
+   /*
+   Image segments in Wavelet decimation
+   1 2
+   3 4
+   */
+
+   __kernel void wenergy2_3(
+     __global float * in,
+     __global float * out
+   )
+   {
+     int gx = get_global_id(0);
+     int gy = get_global_id(1);
+     int width = (int) get_global_size(0);
+     int height = (int) get_global_size(1);
+     int gid =  width*gy + gx;
+
+     // Level 1 Energy
+     if (gx < width/2)
+     {
+       // left part of image
+       if (gy < height/2)
+       {
+         // left top: 1. quadrant
+
+         //Call again for w/2, h/2
+         #if 0 // LVL 2
+         // Level 2 energy
+         if (gx < width/4)
+         {
+           // left part of image
+           if (gy < height/4)
+           {
+             // left top: 1. quadrant lvl 2
+             // Call again
+             #if 1 // LVL 3
+             // Level 3 energy
+             if (gx < width/8)
+             {
+               // left part of image
+               if (gy < height/8)
+               {
+                 // left top: 1. quadrant lvl 3
+                 // No more recursions
+
+               }
+               else
+               {
+                 // left bottom: 3. quadrant lvl 3
+               }
+             }
+             else
+             {
+               // right part of image
+               if (gy < height/8)
+               {
+                 // right top: 2. quadrant lvl 3
+               }
+               else
+               {
+                 // right bottom: 4. quadrant lvl 3
+               }
+               // End of Level 3 decimation
+               #endif
+           }
+           else
+           {
+             // left bottom: 3. quadrant
+           }
+         }
+         else
+         {
+           // right part of image
+           if (gy < height/4)
+           {
+             // right top: 2. quadrant lvl 2
+           }
+           else
+           {
+             // right bottom: 4. quadrant lvl 2
+           }
+           // End of level 2 Decimation
+           #endif
+       }
+       else
+       {
+         // left bottom: 3. quadrant
+       }
+     }
+     else
+     {
+       // right part of image
+       if (gy < height/2)
+       {
+         // right top: 2. quadrant
+       }
+       else
+       {
+         // right bottom: 4. quadrant
+       }
+     }
+     // End of level 1 decimation
+   }

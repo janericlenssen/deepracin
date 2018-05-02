@@ -68,7 +68,7 @@ for path in image_paths:
     # Apply graph - returns one numpy array for each node marked as output
     hwtOut = dr.apply(graph)
     dat = np.array(hwtOut[0]).astype(np.float32)
-    print(dat)
+    #print(dat)
     #show output of specxture
     io.imshow(dat)
     io.show()
@@ -99,7 +99,7 @@ for path in image_paths:
 
     c1 = wt.wavedec2(tigerbw8x8, 'haar', level=3)
     print('\n')
-    print(c1)
+    #print(c1)
 
     #print '\n'
     #print(c2)

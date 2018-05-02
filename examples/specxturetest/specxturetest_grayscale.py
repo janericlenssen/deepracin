@@ -31,9 +31,9 @@ graph = env.create_graph(interface_layout='HWC')
 #feed_node = dr.feed_node(graph, shape=(497, 303, 1))
 
 #feed_node = dr.feed_node(graph, shape=(256, 256, 1))
-feed_node = dr.feed_node(graph, shape=(16, 16, 1))
+feed_node = dr.feed_node(graph, shape=(32, 32, 1))
 
-image_paths = ['dia16.png']
+image_paths = ['dia32.png']
 #image_paths = ['tigerbw64.png']
 
 # create FFT node
@@ -43,7 +43,7 @@ fftmag = dr.FFTAbs(fftshifted)
 specxture = dr.Specxture(fftmag)
 
 # Mark output nodes (determines what dr.apply() returns)
-dr.mark_as_output(specxture)
+dr.mark_as_output(fftmag)
 
 # Print graph to console
 dr.print_graph(graph)
@@ -58,7 +58,7 @@ for path in image_paths:
     # Feed Input
     img = io.imread(path)
     io.imshow(img)
-    ##io.show()
+    io.show()
 
     exp = np.expand_dims(img,2)
 
@@ -67,9 +67,9 @@ for path in image_paths:
     dr.feed_data(feed_node,data)
 
     # Apply graph - returns one numpy array for each node marked as output
-    specxtureOut = dr.apply(graph)
-    dat = np.array(specxtureOut[0]).astype(np.float32)
+    fftmag = dr.apply(graph)
+    dat = np.array(fftmag[0]).astype(np.float32)
 
     #show output of specxture
     io.imshow(dat)
-    ##io.show()
+    io.show()

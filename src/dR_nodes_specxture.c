@@ -110,7 +110,7 @@ gboolean dR_specxture_compute(dR_Graph* net, dR_Node* layer){
     int paramid = 0;
     dR_list_resetIt(layer->previous_layers);
 
-    printf("\n**SPECXTURE BEGIN**\n");
+    //printf("\n**SPECXTURE BEGIN**\n");
 
     int width = specxture->x0*2;
     gint32 rmax = specxture->rmax;
@@ -181,7 +181,7 @@ gboolean dR_specxture_compute(dR_Graph* net, dR_Node* layer){
         }
     }
     #endif
-    printf("\n**SPECXTURE END**\n");
+    //printf("\n**SPECXTURE END**\n");
     return TRUE;
 }
 

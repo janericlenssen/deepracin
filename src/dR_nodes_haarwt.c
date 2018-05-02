@@ -317,3 +317,202 @@ gboolean dR_haarwt_schedule(dR_Graph* net, dR_Node* layer){
      out =  g_strdup_printf("%s%d%s", "haarwt operation node: ",layer->layerID, "\n");
      return out;
  }
+
+
+// WENERGY2 lvl 3
+
+
+dR_Node* dR_Wenergy2(dR_Graph* net, dR_Node* inputNode1)
+{
+    // allocate memory for dR_Shape3 (3 dimensional vector)
+    dR_Wenergy2_Data* wenergy2 = g_malloc(sizeof(dR_Wenergy2_Data));
+    // allocate memory for a node
+    dR_Node* l = g_malloc(sizeof(dR_Node));
+
+    // set all attributes of wenergy2 node
+    // dR_Shape3
+    l->layer = wenergy2;
+    // node type
+    l->type = tWenergy2;
+    // set functions (implemented in this file) for this node
+
+    l->compute = dR_wenergy2_compute;
+
+    l->schedule = dR_wenergy2_schedule;
+    l->propagateShape = dR_wenergy2_propagateShape;
+    l->getRequiredOutputBufferSize = dR_wenergy2_getRequiredOutputBufferSize;
+    l->createKernel = dR_wenergy2_createKernel;
+    l->allocateBuffers = dR_wenergy2_allocateBuffers;
+    l->fillBuffers = dR_wenergy2_fillBuffers;
+    l->cleanupBuffers = dR_wenergy2_cleanupBuffers;
+    l->cleanupLayer = dR_wenergy2_cleanupLayer;
+    l->serializeNode = dR_wenergy2_serializeNode;
+    l->parseAppendNode = dR_wenergy2_parseAppendNode;
+
+    l->generateKernel = NULL;
+    l->createKernelName = NULL;
+    l->setVariables = NULL;
+    l->printLayer = dR_wenergy2_printLayer;
+
+    if (inputNode1)
+    {
+      // create empty list for previous nodes
+      l->previous_layers = dR_list_createEmptyList();
+      // append the input of this node to the list
+      dR_list_append(l->previous_layers,inputNode1);
+      // create empty list for following nodes
+      l->next_layers = dR_list_createEmptyList();
+      // append the current (wenergy2) node as the following node of the previous node
+      dR_list_append(inputNode1->next_layers,l);
+    }
+    else
+    {
+        g_print("Error: wenergy2 node needs an appropriate Inputnode");
+    }
+    // append node to graph
+    dR_appendLayer(net, l);
+    // return pointer to node
+    return l;
+}
+
+gchar* dR_wenergy2_serializeNode(dR_Node* layer, gchar* params[], gint* numParams, gfloat* variables[], gint variableSizes[], gint* numVariables)
+{
+    dR_Wenergy2_Data* wenergy2 = (dR_Wenergy2_Data*)(layer->layer);
+    gchar* desc = "wenergy2";
+    gint numNodeParams = 0;
+    gint numNodeVariables = 0;
+    if(*numParams<numNodeParams||*numVariables<numNodeVariables)
+    {
+        g_print("wenergy2 Node needs space for %d parameters and %d variables!\n",numNodeParams,numNodeVariables);
+        return NULL;
+    }
+    *numParams = numNodeParams;
+
+    *numVariables = numNodeVariables;
+    return desc;
+}
+
+dR_Node* dR_wenergy2_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numINodes, gchar** params, gint numParams, gfloat** variables, gint numVariables)
+{
+    gint numNodeInputs = 1;
+    gint numNodeParams = 1;
+    gint numNodeVariables = 0;
+    dR_Node* out;
+    if(numINodes!=1)
+    {
+        g_print("Parsing Error: wenergy2 Node needs %d InputNodes but got %d!\n",numNodeInputs,numNodeVariables);
+        return NULL;
+    }
+    if(numParams!=numNodeParams||numVariables!=numNodeVariables)
+    {
+        g_print("Parsing Error: wenergy2 Node needs %d Parameters and %d Variables!\n",numNodeParams,numNodeVariables);
+        return NULL;
+    }
+
+    out = dR_Wenergy2( net, iNodes[0] );
+    return out;
+}
+
+gboolean dR_wenergy2_compute(dR_Graph* net, dR_Node* layer)
+{
+    return TRUE;
+}
+
+
+gboolean dR_wenergy2_schedule(dR_Graph* net, dR_Node* layer){
+    // Nothing to do
+    // Warnings shut up, please
+    net = net;
+    layer = layer;
+    return TRUE;
+ }
+
+ gboolean dR_wenergy2_propagateShape(dR_Graph* net, dR_Node* layer)
+ {
+     dR_Wenergy2_Data* wenergy2 = (dR_Wenergy2_Data*)(layer->layer);
+     dR_Node* lastlayer;
+
+     if(layer->previous_layers->length!=1)
+     {
+         if(!net->config->silent)
+             g_print("wenergy2 Node with id %d has %d inputs but needs 1!\n",layer->layerID,layer->previous_layers->length);
+         return FALSE;
+     }
+     dR_list_resetIt(layer->previous_layers); // to NULL
+     // store last node
+     lastlayer = dR_list_next(layer->previous_layers);
+
+     // input shape of wenergy2 node is a grayscale image
+     wenergy2->ishape.s0 = lastlayer->oshape.s0;
+     wenergy2->ishape.s1 = lastlayer->oshape.s1;
+     wenergy2->ishape.s2 = lastlayer->oshape.s2;
+
+     layer->oshape.s0 = lastlayer->oshape.s0;
+     layer->oshape.s1 = lastlayer->oshape.s1;//1;//lastlayer->oshape.s1; TODO: for now. later 2D
+     layer->oshape.s2 = lastlayer->oshape.s2;//1;
+     return TRUE;
+ }
+
+ gint32 dR_wenergy2_getRequiredOutputBufferSize(dR_Node* layer)
+ {
+     dR_Wenergy2_Data* wenergy2 = (dR_Wenergy2_Data*)(layer->layer);
+     gint32 ret = layer->oshape.s0*layer->oshape.s1;
+     return ret;
+ }
+
+ gboolean dR_wenergy2_createKernel(dR_Graph* net, dR_Node* layer)
+ {
+     //call all Opencl kernel creation routines required
+     dR_Wenergy2_Data* wenergy2 = (dR_Wenergy2_Data*)(layer->layer);
+     gboolean ret = FALSE;
+     ret = dR_createKernel(net,"wenergy2_3",&(layer->clKernel));
+     return ret;
+ }
+
+ gboolean dR_wenergy2_allocateBuffers(dR_Graph* net, dR_Node* layer)
+ {
+     /* create buffer for intermediate steps */
+     dR_Wenergy2_Data* wenergy2 = ((dR_Wenergy2_Data*)(layer->layer));
+     gboolean ret = TRUE;
+     //wenergy2->hostmem = g_malloc(wenergy2->x0*wenergy2->y0*sizeof(cl_float)*4);
+     return ret;
+ }
+
+ gboolean dR_wenergy2_fillBuffers(dR_Graph* net, dR_Node* layer)
+ {
+     net = net;
+     layer = layer;
+     return TRUE;
+ }
+
+ gboolean dR_wenergy2_cleanupBuffers(dR_Graph* net, dR_Node* layer)
+ {
+     gboolean ret = TRUE;
+     if(net->prepared)
+     {
+         dR_Wenergy2_Data* wenergy2 = ((dR_Wenergy2_Data*)(layer->layer));
+         ret &= dR_cleanupKernel((layer->clKernel));
+     }
+     return ret;
+ }
+
+ gboolean dR_wenergy2_cleanupLayer(dR_Graph* net, dR_Node* layer)
+ {
+     dR_Wenergy2_Data* wenergy2 = ((dR_Wenergy2_Data*)(layer->layer));
+     // free all memory that was reserved for node
+     if(net->prepared)
+     {
+        // g_free(wenergy2->hostmem);
+         g_free(wenergy2);
+     }
+     return TRUE;
+ }
+
+ gchar* dR_wenergy2_printLayer(dR_Node* layer)
+ {
+     // print node
+     dR_Wenergy2_Data* wenergy2 = (dR_Wenergy2_Data*)(layer->layer);
+     gchar* out;
+     out =  g_strdup_printf("%s%d%s", "wenergy2 operation node: ",layer->layerID, "\n");
+     return out;
+ }
