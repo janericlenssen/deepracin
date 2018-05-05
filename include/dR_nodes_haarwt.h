@@ -98,7 +98,12 @@ typedef struct dR_Wenergy2_Data dR_Wenergy2_Data;
 struct dR_Wenergy2_Data {
     dR_Shape3                 ishape;
     gfloat*                   hostmem;
+    cl_mem                    intermed;
+    cl_kernel                 wenergy2All;
+    cl_kernel                 wenergy2Subset;
     cl_kernel                 copyKernel;
+    gint                      localworksizex;
+    gint                      localworksizey;
     gint                      level;
 };
 

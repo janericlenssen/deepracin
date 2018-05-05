@@ -318,7 +318,7 @@ gboolean dR_haarwt_schedule(dR_Graph* net, dR_Node* layer){
      return out;
  }
 
-
+// ***************************************************************************
 // WENERGY2 lvl 3
 
 
@@ -415,6 +415,93 @@ dR_Node* dR_wenergy2_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numIN
 
 gboolean dR_wenergy2_compute(dR_Graph* net, dR_Node* layer)
 {
+    dR_Wenergy2_Data* wenergy2  = ((dR_Wenergy2_Data*)(layer->layer));
+    cl_mem* input1 = ((dR_Node*)dR_list_next(layer->previous_layers))->outputBuf->bufptr;
+    cl_mem* output1 = (void*)layer->outputBuf->bufptr;
+
+    size_t globalWorkSize[3];
+    int paramid = 0;
+    dR_list_resetIt(layer->previous_layers);
+
+    void *in = input1;
+    //void *out = (void*)&wenergy2->intermed;
+    void *feat = output1; // 15 elements output array
+
+    cl_int key = 0;
+    cl_int offset = 0;
+    // whole image Energy summands
+
+    globalWorkSize[0] = layer->oshape.s0;
+    globalWorkSize[1] = layer->oshape.s1;
+    globalWorkSize[2] = layer->oshape.s2;
+
+    net->clConfig->clError = clSetKernelArg(wenergy2->wenergy2All, 0, sizeof(cl_mem), in);
+
+    if (dR_openCLError(net, "Setting kernel args failed.", "wenergy2All Kernel"))
+        return FALSE;
+
+    net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, wenergy2->wenergy2All, 3, NULL, globalWorkSize,
+       NULL, 0, NULL, net->clConfig->clEvent);
+    dR_finishCLKernel(net, "deepRACIN:wenergy2All");
+
+    // copy
+    /*
+    globalWorkSize[0] = layer->oshape.s0;
+    globalWorkSize[1] = layer->oshape.s1;
+    globalWorkSize[2] = layer->oshape.s2;
+
+    net->clConfig->clError = clSetKernelArg(wenergy2->copyKernel, 0, sizeof(cl_mem), in);
+
+    net->clConfig->clError |= clSetKernelArg(wenergy2->copyKernel, 1, sizeof(cl_mem), feat);
+
+    if (dR_openCLError(net, "Setting kernel args failed.", "hwtcopy Kernel"))
+        return FALSE;
+
+    net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, wenergy2->copyKernel, 3, NULL, globalWorkSize,
+       NULL, 0, NULL, net->clConfig->clEvent);
+    dR_finishCLKernel(net, "deepRACIN:hwtcopy");
+    */
+
+    // Whole image sum of all energy summands
+    /*
+    net->clConfig->clError = clSetKernelArg(wenergy2->wenergy2Subset, 0, sizeof(cl_mem), in);
+
+    net->clConfig->clError = clSetKernelArg(wenergy2->wenergy2Subset, 1, sizeof(cl_mem), feat);
+
+    net->clConfig->clError = clSetKernelArg(wenergy2->wenergy2Subset, 2, sizeof(cl_int), (void *)&key);
+
+    if (dR_openCLError(net, "Setting kernel args failed.", "wenergy2Subset Kernel"))
+        return FALSE;
+
+    net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, wenergy2->wenergy2Subset, 3, NULL, globalWorkSize,
+       NULL, 0, NULL, net->clConfig->clEvent);
+    dR_finishCLKernel(net, "deepRACIN:wenergySubset");
+    */
+    /*
+    globalWorkSize[0] = layer->oshape.s0;
+    globalWorkSize[1] = layer->oshape.s1;
+    globalWorkSize[2] = layer->oshape.s2;
+
+    size_t localWorkSize[3];
+    cl_int width = wenergy2->ishape.s0;
+    cl_int height = wenergy2->ishape.s1;
+    cl_int firststep = 1;
+    size_t lMemSize;
+
+    localWorkSize[0] = (size_t)wenergy2->localworksizex;
+    localWorkSize[1] = (size_t)wenergy2->localworksizey;
+    localWorkSize[2] = 1;
+    */
+    //***LVL1
+    // EH1, left bottom
+
+    // EV1, right top
+
+    // ED1, diagonal
+
+    //***LVL2
+
+    //***LVL3
     return TRUE;
 }
 
@@ -442,21 +529,44 @@ gboolean dR_wenergy2_schedule(dR_Graph* net, dR_Node* layer){
      // store last node
      lastlayer = dR_list_next(layer->previous_layers);
 
-     // input shape of wenergy2 node is a grayscale image
+     // input shape of wenergy2 node is a wavelet coefficients
      wenergy2->ishape.s0 = lastlayer->oshape.s0;
      wenergy2->ishape.s1 = lastlayer->oshape.s1;
      wenergy2->ishape.s2 = lastlayer->oshape.s2;
 
-     layer->oshape.s0 = lastlayer->oshape.s0;
-     layer->oshape.s1 = lastlayer->oshape.s1;//1;//lastlayer->oshape.s1; TODO: for now. later 2D
-     layer->oshape.s2 = lastlayer->oshape.s2;//1;
+     layer->oshape.s0 = 5;
+     layer->oshape.s1 = 3;
+     layer->oshape.s2 = 1;
      return TRUE;
  }
 
  gint32 dR_wenergy2_getRequiredOutputBufferSize(dR_Node* layer)
  {
      dR_Wenergy2_Data* wenergy2 = (dR_Wenergy2_Data*)(layer->layer);
-     gint32 ret = layer->oshape.s0*layer->oshape.s1;
+     /*
+       EF1: Energy of whole image
+       EF2: Energy of image with w/2 h/2 in level 2 decimation
+       EF3: Energy of image with w/4 h/4 in level 3 decimation
+
+       EH1: Energy of horizontal decimation in level 1
+       EV1: Energy of vertical decimation in level 1
+       ED1: Energy of diagonal decimation in level 1
+
+       EH2: Energy of horizontal decimation in level 2
+       ...
+       EH3: ...
+
+       Ea: Energy of scaled down image with w/8 h/8
+
+       Array is size 15
+
+            | EFn   Ea   EHn   EVn   EDn
+      ----------------------------------
+       LVL1 | EF1   /    EH1   EV1   ED1
+       LVL2 | EF2   /    EH2   EV2   ED2
+       LVL3 | EF3   Ea   EH3   EV3   ED3
+     */
+     gint32 ret = 15;
      return ret;
  }
 
@@ -465,7 +575,9 @@ gboolean dR_wenergy2_schedule(dR_Graph* net, dR_Node* layer){
      //call all Opencl kernel creation routines required
      dR_Wenergy2_Data* wenergy2 = (dR_Wenergy2_Data*)(layer->layer);
      gboolean ret = FALSE;
-     ret = dR_createKernel(net,"wenergy2_3",&(layer->clKernel));
+     ret = dR_createKernel(net,"wenergy2All",&(wenergy2->wenergy2All));
+     ret = dR_createKernel(net,"wenergy2Subset",&(wenergy2->wenergy2Subset));
+     ret = dR_createKernel(net,"hwtcopy",&(wenergy2->copyKernel));
      return ret;
  }
 
@@ -474,7 +586,9 @@ gboolean dR_wenergy2_schedule(dR_Graph* net, dR_Node* layer){
      /* create buffer for intermediate steps */
      dR_Wenergy2_Data* wenergy2 = ((dR_Wenergy2_Data*)(layer->layer));
      gboolean ret = TRUE;
-     //wenergy2->hostmem = g_malloc(wenergy2->x0*wenergy2->y0*sizeof(cl_float)*4);
+     dR_Shape3 shape = wenergy2->ishape;
+     //wenergy2->energies = g_malloc(sizeof(cl_float)*15);
+     ret &= dR_createFloatBuffer(net, &(wenergy2->intermed),shape.s0*shape.s1*shape.s2*sizeof(gfloat), CL_MEM_READ_WRITE);
      return ret;
  }
 
@@ -491,7 +605,11 @@ gboolean dR_wenergy2_schedule(dR_Graph* net, dR_Node* layer){
      if(net->prepared)
      {
          dR_Wenergy2_Data* wenergy2 = ((dR_Wenergy2_Data*)(layer->layer));
+         ret &= dR_clMemoryBufferCleanup(net, wenergy2->intermed);
          ret &= dR_cleanupKernel((layer->clKernel));
+         ret &= dR_cleanupKernel((wenergy2->wenergy2All));
+         ret &= dR_cleanupKernel((wenergy2->wenergy2Subset));
+         ret &= dR_cleanupKernel((wenergy2->copyKernel));
      }
      return ret;
  }
@@ -502,7 +620,7 @@ gboolean dR_wenergy2_schedule(dR_Graph* net, dR_Node* layer){
      // free all memory that was reserved for node
      if(net->prepared)
      {
-        // g_free(wenergy2->hostmem);
+         g_free(wenergy2->intermed);
          g_free(wenergy2);
      }
      return TRUE;

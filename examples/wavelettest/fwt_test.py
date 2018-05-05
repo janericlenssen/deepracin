@@ -31,17 +31,20 @@ graph = env.create_graph(interface_layout='HWC')
 # Feed node - Will be fed with data for ea<ch graph application
 #feed_node = dr.feed_node(graph, shape=(497, 303, 1))
 
-feed_node = dr.feed_node(graph, shape=(256, 256, 1))
+feed_node = dr.feed_node(graph, shape=(8, 8, 1))
 #feed_node = dr.feed_node(graph, shape=(8, 8, 1))
 
-image_paths = ['tigerbw256.png']
+image_paths = ['tigerbw8.png']
 #image_paths = ['tigerbw64.png']
 
 # create wavelet node
 hwt = dr.Haarwt(feed_node, 3)
 
+# wenergy2 node
+energy = dr.Wenergy2(hwt)
+
 # Mark output nodes (determines what dr.apply() returns)
-dr.mark_as_output(hwt)
+dr.mark_as_output(energy)
 
 # Print graph to console
 dr.print_graph(graph)
@@ -57,7 +60,7 @@ for path in image_paths:
     img = io.imread(path)
     #io.use_plugin('qt')
     io.imshow(img)
-    io.show()
+    #io.show()
 
     exp = np.expand_dims(img,2)
 
@@ -68,10 +71,10 @@ for path in image_paths:
     # Apply graph - returns one numpy array for each node marked as output
     hwtOut = dr.apply(graph)
     dat = np.array(hwtOut[0]).astype(np.float32)
-    #print(dat)
+    print(dat)
     #show output of specxture
-    io.imshow(dat)
-    io.show()
+    #io.imshow(dat)
+    #io.show()
 
     # to use wavelets in python: pip install PyWavelets
     # from https://pywavelets.readthedocs.io/en/latest/

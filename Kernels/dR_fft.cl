@@ -330,15 +330,10 @@ __kernel void shiftFFT(
 
      out[t_gid] = in[gid];
    }
-   /*
-   Image segments in Wavelet decimation
-   1 2
-   3 4
-   */
 
-   __kernel void wenergy2_3(
-     __global float * in,
-     __global float * out
+   // calculate all energy summands in-place
+   __kernel void wenergy2All(
+     __global float * in
    )
    {
      int gx = get_global_id(0);
@@ -347,6 +342,55 @@ __kernel void shiftFFT(
      int height = (int) get_global_size(1);
      int gid =  width*gy + gx;
 
+     in[gid] = in[gid]*in[gid];
+    }
+
+   // calculate energy of a subset
+   // TODO: use partial sum reduction
+   __kernel void wenergy2Subset(
+     __global float * in,
+     __global float * feat,
+     __local float * lsum,
+     int key,// where to store sum element
+     int gWidth,
+     int gHeight,
+     int gidOfLastValidElement,
+     float avg, // ?
+     int first // ?
+   )
+   {
+     int gx = get_global_id(0);
+     int gy = get_global_id(1);
+     int width = (int) get_global_size(0);
+     int height = (int) get_global_size(1);
+     int gid = width*gy + gx;
+
+     feat[0] = in[gid] + feat[0];
+   }
+
+   // TODO: to sum all values, do parallel sum reduction
+   // https://dournac.org/info/gpu_sum_reduction
+
+   // Output energy on 3 levels.
+   /*
+   Image segments in Wavelet decimation
+   1 2
+   3 4
+   */
+   __kernel void wenergy2_3(
+     __global float * in,
+     __global float * feat
+   )
+   {
+     int gx = get_global_id(0);
+     int gy = get_global_id(1);
+     int width = (int) get_global_size(0);
+     int height = (int) get_global_size(1);
+     int gid =  width*gy + gx;
+
+     // calculate total energy
+
+
      // Level 1 Energy
      if (gx < width/2)
      {
@@ -354,7 +398,6 @@ __kernel void shiftFFT(
        if (gy < height/2)
        {
          // left top: 1. quadrant
-
          //Call again for w/2, h/2
          #if 0 // LVL 2
          // Level 2 energy
@@ -417,6 +460,7 @@ __kernel void shiftFFT(
        else
        {
          // left bottom: 3. quadrant
+
        }
      }
      else
