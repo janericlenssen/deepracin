@@ -408,7 +408,6 @@ __kernel void shiftFFT(
      //feat[0] = in[gid] + feat[0];
    }
    */
-
    // inspired by https://github.com/maoshouse/OpenCL-reduction-sum
    // and https://dournac.org/info/gpu_sum_reduction
    // http://developer.download.nvidia.com/compute/cuda/1.1-Beta/x86_website/projects/reduction/doc/reduction.pdf
@@ -425,9 +424,12 @@ __kernel void shiftFFT(
     	const int localID = (int)get_local_id(1)*(int)get_local_size(0) + (int)get_local_id(0);
 
     	const int localSize = get_local_size(0)*get_local_size(1);
-      //output[0] = 0.0f;
-      //reductionSums[localID] = 0.0f;
+      const int globalSize = get_global_size(0)*get_local_size(1);
+
+      const int workgroupID = globalID / localSize;
+
     	reductionSums[localID] = input[globalID];
+      barrier(CLK_LOCAL_MEM_FENCE);
 
     	for(int offset = localSize / 2; offset > 0; offset /= 2)
       {
@@ -437,15 +439,13 @@ __kernel void shiftFFT(
       		}
       		barrier(CLK_LOCAL_MEM_FENCE);	// wait for all other work-items to finish previous iteration.
     	}
-
       // TODO: for more speedup, do this last summation on CPU
     	if(localID == 0)
       {
-    		   output[0] += reductionSums[0];
+          output[workgroupID] = reductionSums[0];
     	}
   }
   #endif
-
 
    // TODO: to sum all values, do parallel sum reduction
    // https://dournac.org/info/gpu_sum_reduction

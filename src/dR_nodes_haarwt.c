@@ -431,9 +431,9 @@ gboolean dR_wenergy2_compute(dR_Graph* net, dR_Node* layer)
     cl_int offset = 0;
     // whole image Energy summands
 
-    globalWorkSize[0] = layer->oshape.s0;
-    globalWorkSize[1] = layer->oshape.s1;
-    globalWorkSize[2] = layer->oshape.s2;
+    globalWorkSize[0] = wenergy2->ishape.s0;
+    globalWorkSize[1] = wenergy2->ishape.s1;
+    globalWorkSize[2] = wenergy2->ishape.s2;
 
     net->clConfig->clError = clSetKernelArg(wenergy2->wenergy2All, 0, sizeof(cl_mem), in);
 
@@ -445,10 +445,11 @@ gboolean dR_wenergy2_compute(dR_Graph* net, dR_Node* layer)
     dR_finishCLKernel(net, "deepRACIN:wenergy2All");
 
     //*************************************************************
+
     // parallel sum reduction and then sum iteratively on GPU
-    globalWorkSize[0] = layer->oshape.s0;
-    globalWorkSize[1] = layer->oshape.s1;
-    globalWorkSize[2] = layer->oshape.s2;
+    globalWorkSize[0] = wenergy2->ishape.s0;
+    globalWorkSize[1] = wenergy2->ishape.s1;
+    globalWorkSize[2] = wenergy2->ishape.s2;
 
     size_t localWorkSize[3];
     localWorkSize[0] = (size_t)wenergy2->localworksizex;
@@ -457,20 +458,49 @@ gboolean dR_wenergy2_compute(dR_Graph* net, dR_Node* layer)
 
     size_t lMemSize = localWorkSize[0] * localWorkSize[1];
 
+    // create buffer to store reduced sum
+    // with size globalworksize/localworksize = nr of workgroups
+    gint32 lws = localWorkSize[0]*localWorkSize[1];
+    gint32 gws = globalWorkSize[0]*globalWorkSize[1];
+    gint32 nrwg = gws/lws; // nr of workgroups
+
+    gboolean ret = TRUE;
+    ret &= dR_createFloatBuffer(net, &(wenergy2->intermed),nrwg*sizeof(gfloat), CL_MEM_READ_WRITE);
+
+    if (!ret)
+    {
+        dR_openCLError(net, "Allocating memory for sum reduction failed.", "wenergy2Sum");
+        return FALSE;
+    }
+
+    void * reducedSums = (void*)&wenergy2->intermed;
+
     net->clConfig->clError = clSetKernelArg(wenergy2->wenergy2Sum, 0, sizeof(cl_mem), in);
-    net->clConfig->clError |= clSetKernelArg(wenergy2->wenergy2Sum, 1, sizeof(cl_mem), feat);
+    net->clConfig->clError |= clSetKernelArg(wenergy2->wenergy2Sum, 1, sizeof(cl_mem), reducedSums);
     net->clConfig->clError |= clSetKernelArg(wenergy2->wenergy2Sum, 2, lMemSize * sizeof(cl_float), NULL);
 
     if (dR_openCLError(net, "Setting kernel args failed.", "wenergy2Sum"))
         return FALSE;
 
-    net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, wenergy2->wenergy2Sum, 3 /* number of dimensions used*/, NULL, globalWorkSize,
+    net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, wenergy2->wenergy2Sum, 3, NULL, globalWorkSize,
         localWorkSize, 0, NULL, net->clConfig->clEvent);
     if (dR_openCLError(net, "Executing kernel failed.", "wenergy2Sum"))
         return FALSE;
 
     dR_finishCLKernel(net, "deepRACIN:wenergy2Sum");
 
+    // download intermed for debug
+    size_t numBytes = nrwg*sizeof(gfloat)*4;
+    gfloat* dlarray = (gfloat*)g_malloc(nrwg*sizeof(cl_float));
+    dR_downloadArray(net, "reducedSums", reducedSums, 0, numBytes, dlarray);
+    gfloat sumOfArray = 0.0f;
+    printf("\nArray Elements: ");
+    for (int i = 0; i < nrwg; i++)
+    {
+        sumOfArray += dlarray[i];
+        printf("%f, ", dlarray[i] );
+    }
+    printf("SUM: %f\n\n", sumOfArray );
     // copy
     /*
     globalWorkSize[0] = layer->oshape.s0;
@@ -536,8 +566,8 @@ gboolean dR_wenergy2_compute(dR_Graph* net, dR_Node* layer)
 gboolean dR_wenergy2_schedule(dR_Graph* net, dR_Node* layer){
     dR_Wenergy2_Data* wenergy2  = ((dR_Wenergy2_Data*)(layer->layer));
 
-    wenergy2->localworksizex = 2;
-    wenergy2->localworksizey = 2;
+    wenergy2->localworksizex = 8;
+    wenergy2->localworksizey = 1;
 
     net = net;
     layer = layer;
@@ -619,7 +649,7 @@ gboolean dR_wenergy2_schedule(dR_Graph* net, dR_Node* layer){
      gboolean ret = TRUE;
      dR_Shape3 shape = wenergy2->ishape;
      //wenergy2->energies = g_malloc(sizeof(cl_float)*15);
-     ret &= dR_createFloatBuffer(net, &(wenergy2->intermed),shape.s0*shape.s1*shape.s2*sizeof(gfloat), CL_MEM_READ_WRITE);
+     //ret &= dR_createFloatBuffer(net, &(wenergy2->intermed),shape.s0*shape.s1*shape.s2*sizeof(gfloat), CL_MEM_READ_WRITE);
      return ret;
  }
 
