@@ -100,6 +100,7 @@ struct dR_Wenergy2_Data {
     gfloat*                   hostmem;
     cl_mem                    intermed;
     cl_kernel                 wenergy2All;
+    cl_kernel                 wenergy2Sum;
     cl_kernel                 wenergy2Subset;
     cl_kernel                 copyKernel;
     gint                      localworksizex;

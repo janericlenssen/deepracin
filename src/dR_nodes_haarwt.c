@@ -444,6 +444,33 @@ gboolean dR_wenergy2_compute(dR_Graph* net, dR_Node* layer)
        NULL, 0, NULL, net->clConfig->clEvent);
     dR_finishCLKernel(net, "deepRACIN:wenergy2All");
 
+    //*************************************************************
+    // parallel sum reduction and then sum iteratively on GPU
+    globalWorkSize[0] = layer->oshape.s0;
+    globalWorkSize[1] = layer->oshape.s1;
+    globalWorkSize[2] = layer->oshape.s2;
+
+    size_t localWorkSize[3];
+    localWorkSize[0] = (size_t)wenergy2->localworksizex;
+    localWorkSize[1] = (size_t)wenergy2->localworksizey;
+    localWorkSize[2] = 1;
+
+    size_t lMemSize = localWorkSize[0] * localWorkSize[1];
+
+    net->clConfig->clError = clSetKernelArg(wenergy2->wenergy2Sum, 0, sizeof(cl_mem), in);
+    net->clConfig->clError |= clSetKernelArg(wenergy2->wenergy2Sum, 1, sizeof(cl_mem), feat);
+    net->clConfig->clError |= clSetKernelArg(wenergy2->wenergy2Sum, 2, lMemSize * sizeof(cl_float), NULL);
+
+    if (dR_openCLError(net, "Setting kernel args failed.", "wenergy2Sum"))
+        return FALSE;
+
+    net->clConfig->clError = clEnqueueNDRangeKernel(net->clConfig->clCommandQueue, wenergy2->wenergy2Sum, 3 /* number of dimensions used*/, NULL, globalWorkSize,
+        localWorkSize, 0, NULL, net->clConfig->clEvent);
+    if (dR_openCLError(net, "Executing kernel failed.", "wenergy2Sum"))
+        return FALSE;
+
+    dR_finishCLKernel(net, "deepRACIN:wenergy2Sum");
+
     // copy
     /*
     globalWorkSize[0] = layer->oshape.s0;
@@ -507,8 +534,11 @@ gboolean dR_wenergy2_compute(dR_Graph* net, dR_Node* layer)
 
 
 gboolean dR_wenergy2_schedule(dR_Graph* net, dR_Node* layer){
-    // Nothing to do
-    // Warnings shut up, please
+    dR_Wenergy2_Data* wenergy2  = ((dR_Wenergy2_Data*)(layer->layer));
+
+    wenergy2->localworksizex = 2;
+    wenergy2->localworksizey = 2;
+
     net = net;
     layer = layer;
     return TRUE;
@@ -576,7 +606,8 @@ gboolean dR_wenergy2_schedule(dR_Graph* net, dR_Node* layer){
      dR_Wenergy2_Data* wenergy2 = (dR_Wenergy2_Data*)(layer->layer);
      gboolean ret = FALSE;
      ret = dR_createKernel(net,"wenergy2All",&(wenergy2->wenergy2All));
-     ret = dR_createKernel(net,"wenergy2Subset",&(wenergy2->wenergy2Subset));
+     ret = dR_createKernel(net,"wenergy2Sum",&(wenergy2->wenergy2Sum));
+     //ret = dR_createKernel(net,"wenergy2Subset",&(wenergy2->wenergy2Subset));
      ret = dR_createKernel(net,"hwtcopy",&(wenergy2->copyKernel));
      return ret;
  }
@@ -608,6 +639,7 @@ gboolean dR_wenergy2_schedule(dR_Graph* net, dR_Node* layer){
          ret &= dR_clMemoryBufferCleanup(net, wenergy2->intermed);
          ret &= dR_cleanupKernel((layer->clKernel));
          ret &= dR_cleanupKernel((wenergy2->wenergy2All));
+         ret &= dR_cleanupKernel((wenergy2->wenergy2Sum));
          ret &= dR_cleanupKernel((wenergy2->wenergy2Subset));
          ret &= dR_cleanupKernel((wenergy2->copyKernel));
      }

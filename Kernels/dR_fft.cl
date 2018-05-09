@@ -345,6 +345,7 @@ __kernel void shiftFFT(
      in[gid] = in[gid]*in[gid];
     }
 
+    /*
    // calculate energy of a subset
    // TODO: use partial sum reduction
    __kernel void wenergy2Subset(
@@ -352,21 +353,99 @@ __kernel void shiftFFT(
      __global float * feat,
      __local float * lsum,
      int key,// where to store sum element
-     int gWidth,
-     int gHeight,
      int gidOfLastValidElement,
-     float avg, // ?
-     int first // ?
    )
    {
+     // global positions
      int gx = get_global_id(0);
      int gy = get_global_id(1);
      int width = (int) get_global_size(0);
      int height = (int) get_global_size(1);
      int gid = width*gy + gx;
 
-     feat[0] = in[gid] + feat[0];
+     // local position, w*gy + gx for local ids
+     int lid = (int)get_local_id(1)*(int)get_local_size(0) + (int)get_local_id(0);
+     // total nr of active threads
+     int nActiveThreads = (int)get_local_size(0) * (int)get_local_size(1);
+
+     int halfPoint = 0;
+
+     // initialize with neutral element
+     lsum[lid] = 0.0f;
+     gidOfLastValidElement = gidOfLastValidElement+((int)get_global_id(1)*(int) get_global_size(0));
+
+     //read to local memory
+     lsum[lid] = in[gid];
+
+     //wait for all threads to read one value of the (e.g.) 256 values
+     barrier(CLK_LOCAL_MEM_FENCE);
+
+     while(nActiveThreads > 1)
+     {
+         halfPoint = (nActiveThreads >> 1);	// divide by two
+         // only the first half of the threads will be active.
+         // in this round the first half of threads reads what the last half of threads calculated in the previous round
+         // it compares the lmax[lid + halfPoint] value with the value lmax[lid]
+         // continues until only one thread is left (all other threads are still running but inactive)
+         if (lid < halfPoint)
+         {
+             // Get the shared value stored by another thread (of the last half) then compare the two values and keep the lesser one
+             lsum[lid] += lsum[lid + halfPoint];
+
+         }
+
+         barrier(CLK_LOCAL_MEM_FENCE);
+
+         nActiveThreads = halfPoint;	//only first half stays active
+     } //while(nActiveThreads > 1)
+
+
+     if (lid == 0)
+     {
+         feat[0] = lsum[0];
+     }
+
+     //feat[0] = in[gid] + feat[0];
    }
+   */
+
+   // inspired by https://github.com/maoshouse/OpenCL-reduction-sum
+   // and https://dournac.org/info/gpu_sum_reduction
+   // http://developer.download.nvidia.com/compute/cuda/1.1-Beta/x86_website/projects/reduction/doc/reduction.pdf
+
+   #if 1
+  __kernel void wenergy2Sum(
+    __global float *input,
+    __global float *output,
+    __local float *reductionSums
+  )
+  {
+    	const int globalID = (int)get_global_id(1) * (int)get_global_size(0) + (int)get_global_id(0);
+
+    	const int localID = (int)get_local_id(1)*(int)get_local_size(0) + (int)get_local_id(0);
+
+    	const int localSize = get_local_size(0)*get_local_size(1);
+      //output[0] = 0.0f;
+      //reductionSums[localID] = 0.0f;
+    	reductionSums[localID] = input[globalID];
+
+    	for(int offset = localSize / 2; offset > 0; offset /= 2)
+      {
+      		if(localID < offset)
+          {
+      			  reductionSums[localID] += reductionSums[localID + offset];
+      		}
+      		barrier(CLK_LOCAL_MEM_FENCE);	// wait for all other work-items to finish previous iteration.
+    	}
+
+      // TODO: for more speedup, do this last summation on CPU
+    	if(localID == 0)
+      {
+    		   output[0] += reductionSums[0];
+    	}
+  }
+  #endif
+
 
    // TODO: to sum all values, do parallel sum reduction
    // https://dournac.org/info/gpu_sum_reduction
