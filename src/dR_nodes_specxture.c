@@ -152,16 +152,16 @@ gboolean dR_specxture_compute(dR_Graph* net, dR_Node* layer){
                 prev_yc = yc[i];
             }
         }
-        printf("\nsrad[%d] = %0.2f\n", curr_radius, srad[curr_radius]);
+        //printf("\nsrad[%d] = %0.2f\n", curr_radius, srad[curr_radius]);
     }
     prev_xc = 0;
     prev_yc = 0;
 
     // calculate sang. xc and yc contain the cartesian coordinates for the circular arc with radius rmax.
-    #if 1
     // 180 iterations
     for(gint32 i = 0; i < 180; i++)
     {
+        sang[i] = 0;
         // only sum when there is a new coordinate
         if(i == 0 || prev_xc != xc[i] || prev_yc != yc[i])
         {
@@ -171,16 +171,91 @@ gboolean dR_specxture_compute(dR_Graph* net, dR_Node* layer){
             gint32 y2 = 3;
             */
             //printf("\nx2,y2: %d, %d\n", xc[i], yc[i]);
-            sang[i] = 0;
             intline(specxture->x0, specxture->y0, xc[i], yc[i], &sang[i], out);
             //printf("\nI: %d\n", i);
             //printf("\nxc: %d, yc: %d\n", xc[i], yc[i]);
-            printf("\nsang[%d] = %0.2f\n", i, sang[i]);
+            //printf("\nsang[%d] = %0.2f\n", i, sang[i]);
             prev_xc = xc[i];
             prev_yc = yc[i];
         }
     }
-    #endif
+
+    // Spectral features srad
+    // max
+    float cmax = srad[0];
+    float maxloc = 0;
+    for (int i = 1; i < rmax; i++)
+    {
+      if (srad[i] > cmax)
+      {
+        cmax = srad[i];
+        maxloc = i;
+      }
+    }
+
+    // mean
+    float mean=0.0f, acc=0.0f;
+    for (int i = 0; i < rmax; i++)
+    {
+      acc += srad[i];
+    }
+    mean = acc / rmax;
+
+    // variance
+    float variance=0.0f;
+    acc = 0.0f;
+    for (int i = 0; i < rmax; i++)
+    {
+      acc += (srad[i] - mean)*(srad[i] - mean);
+    }
+    variance = acc / rmax;
+
+    // distance
+    float distance = (mean - cmax) > 0 ? (mean - cmax) : (-1)*(mean - cmax);
+
+    /***************************/
+    // spectral features sang
+    // max
+    float angMax = sang[0];
+    float angMaxloc = 0;
+    for (int i = 1; i < 180; i++)
+    {
+      if (sang[i] > angMax)
+      {
+        angMax = srad[i];
+        angMaxloc = i;
+      }
+    }
+
+    // mean
+    float angMean=0.0f, angAcc=0.0f;
+    for (int i = 0; i < 180; i++)
+    {
+      angAcc += sang[i];
+    }
+    angMean = angAcc / 180;
+
+    // variance
+    float angVariance=0.0f;
+    angAcc = 0.0f;
+    for (int i = 0; i < 180; i++)
+    {
+      angAcc += (sang[i] - angMean)*(sang[i] - angMean);
+    }
+    angVariance = angAcc / 180;
+
+    // distance
+    float angDistance = (angMean - angMax) > 0 ? (angMean - angMax) : (-1)*(angMean - angMax);
+
+    // spectral feature vector
+    float spectralFeatures[10] = {cmax, maxloc, mean, variance, distance, angMax, angMaxloc, angMean, angVariance, angDistance};
+
+    printf("\nSpectral features:\n");
+    for (int i = 0; i < 10; i++)
+    {
+      printf("%0.2f, ", spectralFeatures[i]);
+    }
+    printf("\n");
     //printf("\n**SPECXTURE END**\n");
     return TRUE;
 }
