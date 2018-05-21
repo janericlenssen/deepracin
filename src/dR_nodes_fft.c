@@ -160,7 +160,7 @@ gboolean dR_fft_compute(dR_Graph* net, dR_Node* layer){
     }
     padToSize = power_two;
 
-    g_print("pad to: %d", power_two);
+    //g_print("pad to: %d", power_two);
 
     size_t globalWorkSize[3];
     int paramid = 0;
@@ -455,7 +455,7 @@ gboolean dR_fft_propagateShape(dR_Graph* net, dR_Node* layer)
       power_two *= 2;
     }
     padToSize = power_two;
-    g_print("pad to: %d", power_two);
+    //g_print("pad to: %d", power_two);
 
     // store the actual width and height of the image
     fft->real_width = lastlayer->oshape.s0;
@@ -469,9 +469,9 @@ gboolean dR_fft_propagateShape(dR_Graph* net, dR_Node* layer)
     }
     else // image is not quadratic
     {
-      g_print("non-quadratic image\n");
+      //g_print("non-quadratic image\n");
       //save bigger size to make a quadratic image out of non-quadratic image
-      g_print("bigger size: %d\n", padToSize);
+      //g_print("bigger size: %d\n", padToSize);
 
       fft->ishape.s0 = lastlayer->oshape.s0;
       fft->ishape.s1 = lastlayer->oshape.s1;

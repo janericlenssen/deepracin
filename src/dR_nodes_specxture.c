@@ -105,7 +105,7 @@ gboolean dR_specxture_compute(dR_Graph* net, dR_Node* layer){
     dR_list_resetIt(layer->previous_layers);
     cl_mem* fftMagArray;
     fftMagArray = ((dR_Node*)dR_list_next(layer->previous_layers))->outputBuf->bufptr;
-    dR_downloadArray(net, "ffMagDownload", fftMagArray, 0, numBytes, out);
+    dR_downloadArray(net, "fftMagDownload", fftMagArray, 0, numBytes, out);
 
     int paramid = 0;
     dR_list_resetIt(layer->previous_layers);
@@ -123,7 +123,8 @@ gboolean dR_specxture_compute(dR_Graph* net, dR_Node* layer){
     gint32 yc[180];
 
     srad[0] = 0; // we do not use this array element
-    srad[1] = 1; // store DC component here
+    srad[1] = out[width*specxture->y0 + specxture->x0]; // store DC component here
+    //printf("\nout::%0.2f\n", out[width*(specxture->y0) + specxture->x0] );
 
     gint32 prev_xc = 0;
     gint32 prev_yc = 0;
@@ -134,14 +135,14 @@ gboolean dR_specxture_compute(dR_Graph* net, dR_Node* layer){
     // compure srad. This loop has N/2 iterations (for N*N image)
     for(curr_radius = 2; curr_radius <= rmax; curr_radius++)
     {
-        srad[curr_radius] = 0;
+        srad[curr_radius] = 0.0f;
         // create halfcircle. Loop in halfcircle has 180 iterations
         halfcircle(curr_radius, xc, yc, specxture->x0, specxture->y0, out);
         // sum on circle. 180 iterations, but many are skipped for smaller radii
         for(gint32 i = 0; i < 180; i++)
         {
             // only sum when there is a new coordinate
-            if(i == 0 || prev_xc != xc[i] || prev_yc != yc[i])
+            //if(i == 0 || prev_xc != xc[i] || prev_yc != yc[i])
             {
                 //printf("\nI: %d\n", i);
                 //printf("\nxc: %d, yc: %d\n", xc[i], yc[i]);
@@ -161,7 +162,7 @@ gboolean dR_specxture_compute(dR_Graph* net, dR_Node* layer){
     // 180 iterations
     for(gint32 i = 0; i < 180; i++)
     {
-        sang[i] = 0;
+        sang[i] = 0.0f;
         // only sum when there is a new coordinate
         if(i == 0 || prev_xc != xc[i] || prev_yc != yc[i])
         {
@@ -182,76 +183,76 @@ gboolean dR_specxture_compute(dR_Graph* net, dR_Node* layer){
 
     // Spectral features srad
     // max
-    float cmax = srad[0];
-    float maxloc = 0;
-    for (int i = 1; i < rmax; i++)
+    gfloat sradMax = srad[1];
+    gfloat sradMaxloc = 1;
+    for (gint32 i = 2; i < rmax; i++)
     {
-      if (srad[i] > cmax)
+      if (srad[i] > sradMax)
       {
-        cmax = srad[i];
-        maxloc = i;
+        sradMax = srad[i];
+        sradMaxloc = i;
       }
     }
 
     // mean
-    float mean=0.0f, acc=0.0f;
-    for (int i = 0; i < rmax; i++)
+    gfloat sradMean=0.0f, sradAcc=0.0f;
+    for (gint32 i = 1; i < rmax; i++)
     {
-      acc += srad[i];
+      sradAcc += srad[i];
     }
-    mean = acc / rmax;
+    sradMean = sradAcc / rmax;
 
     // variance
-    float variance=0.0f;
-    acc = 0.0f;
-    for (int i = 0; i < rmax; i++)
+    gfloat sradVariance=0.0f;
+    sradAcc = 0.0f;
+    for (gint32 i = 1; i < rmax; i++)
     {
-      acc += (srad[i] - mean)*(srad[i] - mean);
+      sradAcc += (srad[i] - sradMean)*(srad[i] - sradMean);
     }
-    variance = acc / rmax;
+    sradVariance = sradAcc / rmax;
 
     // distance
-    float distance = (mean - cmax) > 0 ? (mean - cmax) : (-1)*(mean - cmax);
+    gfloat sradDistance = (sradMean - sradMax) > 0 ? (sradMean - sradMax) : (-1)*(sradMean - sradMax);
 
     /***************************/
     // spectral features sang
     // max
-    float angMax = sang[0];
-    float angMaxloc = 0;
-    for (int i = 1; i < 180; i++)
+    gfloat angMax = sang[0];
+    gfloat angMaxloc = 0;
+    for (gint32 i = 1; i < 180; i++)
     {
       if (sang[i] > angMax)
       {
-        angMax = srad[i];
+        angMax = sang[i];
         angMaxloc = i;
       }
     }
 
     // mean
-    float angMean=0.0f, angAcc=0.0f;
-    for (int i = 0; i < 180; i++)
+    gfloat angMean=0.0f, angAcc=0.0f;
+    for (gint32 i = 0; i < 180; i++)
     {
       angAcc += sang[i];
     }
     angMean = angAcc / 180;
 
     // variance
-    float angVariance=0.0f;
+    gfloat angVariance=0.0f;
     angAcc = 0.0f;
-    for (int i = 0; i < 180; i++)
+    for (gint32 i = 0; i < 180; i++)
     {
       angAcc += (sang[i] - angMean)*(sang[i] - angMean);
     }
     angVariance = angAcc / 180;
 
     // distance
-    float angDistance = (angMean - angMax) > 0 ? (angMean - angMax) : (-1)*(angMean - angMax);
+    gfloat angDistance = (angMean - angMax) > 0 ? (angMean - angMax) : (-1)*(angMean - angMax);
 
     // spectral feature vector
-    float spectralFeatures[10] = {cmax, maxloc, mean, variance, distance, angMax, angMaxloc, angMean, angVariance, angDistance};
+    gfloat spectralFeatures[10] = {sradMax, sradMaxloc, sradMean, sradVariance, sradDistance, angMax, angMaxloc, angMean, angVariance, angDistance};
 
     printf("\nSpectral features:\n");
-    for (int i = 0; i < 10; i++)
+    for (gint32 i = 0; i < 10; i++)
     {
       printf("%0.2f, ", spectralFeatures[i]);
     }
