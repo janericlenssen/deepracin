@@ -446,7 +446,7 @@ gboolean dR_wenergy2_compute(dR_Graph* net, dR_Node* layer)
 
     //*************************************************************
 
-    // parallel sum reduction and then sum iteratively on GPU
+    // parallel sum reduction
     globalWorkSize[0] = wenergy2->ishape.s0;
     globalWorkSize[1] = wenergy2->ishape.s1;
     globalWorkSize[2] = wenergy2->ishape.s2;
@@ -493,16 +493,129 @@ gboolean dR_wenergy2_compute(dR_Graph* net, dR_Node* layer)
     size_t numBytes = nrwg*sizeof(gfloat)*4;
     gfloat* dlarray = (gfloat*)g_malloc(nrwg*sizeof(cl_float));
     dR_downloadArray(net, "reducedSums", reducedSums, 0, numBytes, dlarray);
-    gfloat sumOfArray = 0.0f;
-    printf("\nArray Elements: ");
+    gfloat wholeEnergy = 0.0f;
+    //printf("\nArray Elements: ");
     for (int i = 0; i < nrwg; i++)
     {
-        sumOfArray += dlarray[i];
-        printf("%f, ", dlarray[i] );
+        wholeEnergy += dlarray[i];
+        //printf("%f, ", dlarray[i] );
     }
-    printf("SUM: %f\n\n", sumOfArray );
+    printf("\n\nSUM: %f\n\n", wholeEnergy );
+    g_free(wenergy2->intermed);
+
+    // compute rest on CPU
+    // download array from
+    numBytes = wenergy2->ishape.s0*wenergy2->ishape.s1*sizeof(cl_float);
+    cl_mem* wtEnergyArray;
+    gfloat* out = (gfloat*)wenergy2->hostmem;
+    wtEnergyArray = ((dR_Node*)dR_list_next(layer->previous_layers))->outputBuf->bufptr;
+    dR_downloadArray(net, "wtEnergyDownload", wtEnergyArray, 0, numBytes, out);
+
+    // summing level 1:
+    // H, V, D
+    float H1=0.0f, D1=0.0f, V1=0.0f, H2=0.0f, D2=0.0f, V2=0.0f, H3=0.0f, D3=0.0f, V3=0.0f, Ea=0.0f;
+
+    int indexH1=0, indexD1=0, indexV1=0, indexH2=0, indexD2=0, indexV2=0, indexH3=0, indexD3=0, indexV3=0, indexEa=0;
+
+    int width = wenergy2->ishape.s0;
+    int height = wenergy2->ishape.s1;
+
+    int cWidth = wenergy2->ishape.s0/2;
+    int cHeight = wenergy2->ishape.s1/2;
+
+    float Ea1 = 0.0f, Ea2 = 0.0f, Ea3 = 0.0f;
+
+    for (int i = 0; i < cHeight; i++)
+    {
+      for (int j = 0; j < cWidth; j++)
+      {
+        indexH1 = width*height/2 + width*i + j;
+        H1 += out[indexH1];
+
+        indexD1 = width*(height+1)/2 + width*i + j;
+        D1 += out[indexD1];
+
+        indexV1 = width/2 + width*i + j;
+        V1 += out[indexV1];
+
+        Ea1 += out[width*i + j];
+      }
+    }
+
+    float sumAll = H1 + D1 + V1 + Ea1;
+    //printf("\nSum all Energies lvl1: %f\n", sumAll);
+    //printf("\nEa1: %f\n", Ea1);
+
+    // sum level 2
+    cWidth /= 2;
+    cHeight /= 2;
+
+    for (int i = 0; i < cHeight; i++)
+    {
+      for (int j = 0; j < cWidth; j++)
+      {
+        indexH2 = width*height/4 + width*i + j;
+        H2 += out[indexH2];
+
+        indexD2 = width*(height+1)/4 + width*i + j;
+        D2 += out[indexD2];
+
+        indexV2 = width/4 + width*i + j;
+        V2 += out[indexV2];
+
+        Ea2 += out[width*i + j];
+      }
+    }
+
+    float sumAll2 = H2 + D2 + V2 + Ea2;
+    //printf("\nSum all Energies lvl2: %f\n", sumAll);
+    //printf("\nEa2: %f\n", Ea2);
+
+    // sum level 3
+    cWidth /= 2;
+    cHeight /= 2;
+
+    for (int i = 0; i < cHeight; i++)
+    {
+      for (int j = 0; j < cWidth; j++)
+      {
+        indexH3 = width*height/8 + width*i + j;
+        H3 += out[indexH3];
+
+        indexD3 = width*(height+1)/8 + width*i + j;
+        D3 += out[indexD3];
+
+        indexV3 = width/8 + width*i + j;
+        V3 += out[indexV3];
+
+        Ea3 += out[width*i + j];
+      }
+    }
+
+    float sumAll3 = H3 + D3 + V3 + Ea3;
+    //printf("\nSum all Energies lvl3: %f\n", sumAll);
+    //printf("\nEa3: %f\n", Ea3);
+
+    float wenergy2out[15] = {sumAll, 0, (H1*100)/sumAll, (V1*100)/sumAll, (D1*100)/sumAll, sumAll2, 0, (H2*100)/sumAll, (V2*100)/sumAll, (D2*100)/sumAll, sumAll3, (Ea3*100)/sumAll, (H3*100)/sumAll, (V3*100)/sumAll, (D3*100)/sumAll};
+
+    for (int i = 0; i < 3; i++)
+    {
+      for (int j = 0; j < 5; j++)
+      {
+        printf("out[%d] = %f\n", 5*i + j, wenergy2out[5*i + j] );
+      }
+      printf("\n");
+    }
+    printf("\n");
+
     // copy
     /*
+
+    //    | EFn   Ea   EHn   EVn   EDn
+    //----------------------------------
+    //LVL1 | EF1   /    EH1   EV1   ED1
+    //LVL2 | EF2   /    EH2   EV2   ED2
+    //LVL3 | EF3   Ea   EH3   EV3   ED3
     globalWorkSize[0] = layer->oshape.s0;
     globalWorkSize[1] = layer->oshape.s1;
     globalWorkSize[2] = layer->oshape.s2;
@@ -650,6 +763,7 @@ gboolean dR_wenergy2_schedule(dR_Graph* net, dR_Node* layer){
      dR_Shape3 shape = wenergy2->ishape;
      //wenergy2->energies = g_malloc(sizeof(cl_float)*15);
      //ret &= dR_createFloatBuffer(net, &(wenergy2->intermed),shape.s0*shape.s1*shape.s2*sizeof(gfloat), CL_MEM_READ_WRITE);
+     wenergy2->hostmem = g_malloc(wenergy2->ishape.s0*wenergy2->ishape.s1*sizeof(cl_float));
      return ret;
  }
 
@@ -682,6 +796,7 @@ gboolean dR_wenergy2_schedule(dR_Graph* net, dR_Node* layer){
      // free all memory that was reserved for node
      if(net->prepared)
      {
+         g_free(wenergy2->hostmem);
          g_free(wenergy2->intermed);
          g_free(wenergy2);
      }
