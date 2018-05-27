@@ -164,7 +164,7 @@ gboolean dR_specxture_compute(dR_Graph* net, dR_Node* layer){
     {
         sang[i] = 0.0f;
         // only sum when there is a new coordinate
-        if(i == 0 || prev_xc != xc[i] || prev_yc != yc[i])
+        //if(i == 0 || prev_xc != xc[i] || prev_yc != yc[i])
         {
             //printf("\nx1,y1:  %d, %d\n", specxture->x0, specxture->y0);
             /******
@@ -251,6 +251,7 @@ gboolean dR_specxture_compute(dR_Graph* net, dR_Node* layer){
     // spectral feature vector
     gfloat spectralFeatures[10] = {sradMax, sradMaxloc, sradMean, sradVariance, sradDistance, angMax, angMaxloc, angMean, angVariance, angDistance};
 
+    /*
     printf("\nSpectral features:\n");
     for (gint32 i = 0; i < 10; i++)
     {
@@ -258,6 +259,7 @@ gboolean dR_specxture_compute(dR_Graph* net, dR_Node* layer){
     }
     printf("\n");
     //printf("\n**SPECXTURE END**\n");
+    */
     return TRUE;
 }
 
@@ -310,7 +312,6 @@ void intline(gint32 x1, gint32 y1, gint32 x2, gint32 y2, gfloat* sangElement, fl
 
     gint32 dx = abs(x2 - x1);
     gint32 dy = abs(y2 - y1);
-
     // no line to draw
     if((dx == 0) && (dy == 0))
     {
@@ -346,22 +347,27 @@ void intline(gint32 x1, gint32 y1, gint32 x2, gint32 y2, gfloat* sangElement, fl
         //printf("\nm = %.2f\n", m);
         // create an array X of length dx which has all values between x1 and x2
         // TODO: replace malloc with 2*N static array, could be faster
-        gint32 *x_coord = (gint32 *)g_malloc(dx * sizeof(gint32));
-        gint32 *y_coord = (gint32 *)g_malloc(dx * sizeof(gint32));
+        gint32 *x_coord = (gint32 *)g_malloc((dx+1) * sizeof(gint32));
+        gint32 *y_coord = (gint32 *)g_malloc((dx+1) * sizeof(gint32));
         //printf("\n Output of sang:\n");
 
         //printf("\nx_coord:");
         //printf("\ny_coord:");
-        for(gint32 i = 0; i < dx; i++)
+        //*sangElement = 0.0f;
+        //printf("\nTODO: x1: %d y1: %d \n", x1, y1);
+        //printf("\nTODO: x2: %d y2: %d \n", x2, y2);
+
+        for(gint32 i = 0; i <= dx; i++)
         {
             //printf("%d,%d | ", x_coord[i], y_coord[i]);
             x_coord[i] = x1 + i;
             y_coord[i] = round(y1 + m*(x_coord[i]-x1));
-            //printf("%d,", y_coord[i]);
+            //printf("\nx: %d, y: %d\n", x_coord[i], y_coord[i]);
             //out[y_coord[i]*n + x_coord[i]] = 1.0;
             *sangElement += out[y_coord[i]*n + x_coord[i]];
         }
         //printf("\n");
+        //printf("\n...END...\n");
 
         /*
         for(int i = 0; i < n; i++)
@@ -392,18 +398,23 @@ void intline(gint32 x1, gint32 y1, gint32 x2, gint32 y2, gfloat* sangElement, fl
         // calculate slope
         m = (gfloat)(x2 - x1) / (y2 - y1);
         // x = round(x1 + m*(y - y1));
-        gint32 *y_coord = (gint32 *)malloc(dy * sizeof(gint32));
-        gint32 *x_coord = (gint32 *)malloc(dy * sizeof(gint32));
+        gint32 *y_coord = (gint32 *)malloc((dy+1) * sizeof(gint32));
+        gint32 *x_coord = (gint32 *)malloc((dy+1) * sizeof(gint32));
 
         //  printf("\nx_coord:");
         //printf("\n Output of sang:\n");
-        for(gint32 i = 0; i < dy; i++)
+        //*sangElement = 0.0f;
+        //printf("\nTODO: x1: %d y1: %d \n", x1, y1);
+        //printf("\nTODO: x2: %d y2: %d \n", x2, y2);
+        for(gint32 i = 0; i <= dy; i++)
         {
             y_coord[i] = y1 + i;
             x_coord[i] = round(x1 + m*(y_coord[i]-y1));
             //out[y_coord[i]*n + x_coord[i]] = 1.0;
+            //printf("\nx: %d, y: %d\n", x_coord[i], y_coord[i]);
             *sangElement += out[y_coord[i]*n + x_coord[i]];
         }
+        //printf("\n...END...\n");
         /*
         for(int i = 0; i < n; i++)
         {

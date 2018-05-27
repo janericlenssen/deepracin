@@ -500,7 +500,7 @@ gboolean dR_wenergy2_compute(dR_Graph* net, dR_Node* layer)
         wholeEnergy += dlarray[i];
         //printf("%f, ", dlarray[i] );
     }
-    printf("\n\nSUM: %f\n\n", wholeEnergy );
+    //printf("\n\nSUM: %f\n\n", wholeEnergy );
     g_free(wenergy2->intermed);
 
     // compute rest on CPU
@@ -598,6 +598,7 @@ gboolean dR_wenergy2_compute(dR_Graph* net, dR_Node* layer)
 
     float wenergy2out[15] = {sumAll, 0, (H1*100)/sumAll, (V1*100)/sumAll, (D1*100)/sumAll, sumAll2, 0, (H2*100)/sumAll, (V2*100)/sumAll, (D2*100)/sumAll, sumAll3, (Ea3*100)/sumAll, (H3*100)/sumAll, (V3*100)/sumAll, (D3*100)/sumAll};
 
+    /*
     for (int i = 0; i < 3; i++)
     {
       for (int j = 0; j < 5; j++)
@@ -607,7 +608,7 @@ gboolean dR_wenergy2_compute(dR_Graph* net, dR_Node* layer)
       printf("\n");
     }
     printf("\n");
-
+    */
     // copy
     /*
 
