@@ -99,6 +99,7 @@ struct dR_Wenergy2_Data {
     dR_Shape3                 ishape;
     gfloat*                   hostmem;
     cl_mem                    intermed;
+    gfloat*                   feat;
     cl_kernel                 wenergy2All;
     cl_kernel                 wenergy2Sum;
     cl_kernel                 wenergy2Subset;

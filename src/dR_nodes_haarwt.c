@@ -417,7 +417,7 @@ gboolean dR_wenergy2_compute(dR_Graph* net, dR_Node* layer)
 {
     dR_Wenergy2_Data* wenergy2  = ((dR_Wenergy2_Data*)(layer->layer));
     cl_mem* input1 = ((dR_Node*)dR_list_next(layer->previous_layers))->outputBuf->bufptr;
-    cl_mem* output1 = (void*)layer->outputBuf->bufptr;
+    cl_mem output1 = (cl_mem)((void*)layer->outputBuf->buf);
 
     size_t globalWorkSize[3];
     int paramid = 0;
@@ -425,7 +425,6 @@ gboolean dR_wenergy2_compute(dR_Graph* net, dR_Node* layer)
 
     void *in = input1;
     //void *out = (void*)&wenergy2->intermed;
-    void *feat = output1; // 15 elements output array
 
     cl_int key = 0;
     cl_int offset = 0;
@@ -445,7 +444,8 @@ gboolean dR_wenergy2_compute(dR_Graph* net, dR_Node* layer)
     dR_finishCLKernel(net, "deepRACIN:wenergy2All");
 
     //*************************************************************
-
+    // comment out parallel sum reduction
+    #if 0
     // parallel sum reduction
     globalWorkSize[0] = wenergy2->ishape.s0;
     globalWorkSize[1] = wenergy2->ishape.s1;
@@ -503,9 +503,11 @@ gboolean dR_wenergy2_compute(dR_Graph* net, dR_Node* layer)
     //printf("\n\nSUM: %f\n\n", wholeEnergy );
     g_free(wenergy2->intermed);
 
+    #endif
+
     // compute rest on CPU
-    // download array from
-    numBytes = wenergy2->ishape.s0*wenergy2->ishape.s1*sizeof(cl_float);
+    // download array from GPU to CPU
+    int numBytes = wenergy2->ishape.s0*wenergy2->ishape.s1*sizeof(cl_float);
     cl_mem* wtEnergyArray;
     gfloat* out = (gfloat*)wenergy2->hostmem;
     wtEnergyArray = ((dR_Node*)dR_list_next(layer->previous_layers))->outputBuf->bufptr;
@@ -567,7 +569,7 @@ gboolean dR_wenergy2_compute(dR_Graph* net, dR_Node* layer)
       }
     }
 
-    float sumAll2 = H2 + D2 + V2 + Ea2;
+    //float sumAll2 = H2 + D2 + V2 + Ea2;
     //printf("\nSum all Energies lvl2: %f\n", sumAll);
     //printf("\nEa2: %f\n", Ea2);
 
@@ -592,23 +594,35 @@ gboolean dR_wenergy2_compute(dR_Graph* net, dR_Node* layer)
       }
     }
 
-    float sumAll3 = H3 + D3 + V3 + Ea3;
+    //float sumAll3 = H3 + D3 + V3 + Ea3;
     //printf("\nSum all Energies lvl3: %f\n", sumAll);
     //printf("\nEa3: %f\n", Ea3);
 
-    float wenergy2out[15] = {sumAll, 0, (H1*100)/sumAll, (V1*100)/sumAll, (D1*100)/sumAll, sumAll2, 0, (H2*100)/sumAll, (V2*100)/sumAll, (D2*100)/sumAll, sumAll3, (Ea3*100)/sumAll, (H3*100)/sumAll, (V3*100)/sumAll, (D3*100)/sumAll};
+    gfloat* features = wenergy2->feat;
+    features[0] = (Ea3*100)/sumAll;
+    features[1] = (H1*100)/sumAll;
+    features[2] = (H2*100)/sumAll;
+    features[3] = (H3*100)/sumAll;
+    features[4] = (V1*100)/sumAll;
+    features[5] = (V2*100)/sumAll;
+    features[6] = (V3*100)/sumAll;
+    features[7] = (D1*100)/sumAll;
+    features[8] = (D2*100)/sumAll;
+    features[9] = (D3*100)/sumAll;
+    //for (int i = 0; i < 10; i++)
+    //{
+    //  features[i] = 1.0;
+    //}
+    // upload to GPU memory
+    dR_uploadArray(net, "wtEnergyUpload", features, 0, 10*sizeof(cl_float), output1);
 
-    /*
-    for (int i = 0; i < 3; i++)
+    printf("\n");
+    for (int i = 0; i < 10; i++)
     {
-      for (int j = 0; j < 5; j++)
-      {
-        printf("out[%d] = %f\n", 5*i + j, wenergy2out[5*i + j] );
-      }
-      printf("\n");
+      printf("out[%d] = %f\n",i, features[i]);//printf("out[%d] = %f\n", i, *(float*)(wenergy2->feat+i) );
     }
     printf("\n");
-    */
+
     // copy
     /*
 
@@ -708,8 +722,8 @@ gboolean dR_wenergy2_schedule(dR_Graph* net, dR_Node* layer){
      wenergy2->ishape.s1 = lastlayer->oshape.s1;
      wenergy2->ishape.s2 = lastlayer->oshape.s2;
 
-     layer->oshape.s0 = 5;
-     layer->oshape.s1 = 3;
+     layer->oshape.s0 = 10;
+     layer->oshape.s1 = 1;
      layer->oshape.s2 = 1;
      return TRUE;
  }
@@ -740,7 +754,7 @@ gboolean dR_wenergy2_schedule(dR_Graph* net, dR_Node* layer){
        LVL2 | EF2   /    EH2   EV2   ED2
        LVL3 | EF3   Ea   EH3   EV3   ED3
      */
-     gint32 ret = 15;
+     gint32 ret = 10;
      return ret;
  }
 
@@ -765,6 +779,7 @@ gboolean dR_wenergy2_schedule(dR_Graph* net, dR_Node* layer){
      //wenergy2->energies = g_malloc(sizeof(cl_float)*15);
      //ret &= dR_createFloatBuffer(net, &(wenergy2->intermed),shape.s0*shape.s1*shape.s2*sizeof(gfloat), CL_MEM_READ_WRITE);
      wenergy2->hostmem = g_malloc(wenergy2->ishape.s0*wenergy2->ishape.s1*sizeof(cl_float));
+     wenergy2->feat = g_malloc(10*sizeof(cl_float));
      return ret;
  }
 
@@ -781,7 +796,8 @@ gboolean dR_wenergy2_schedule(dR_Graph* net, dR_Node* layer){
      if(net->prepared)
      {
          dR_Wenergy2_Data* wenergy2 = ((dR_Wenergy2_Data*)(layer->layer));
-         ret &= dR_clMemoryBufferCleanup(net, wenergy2->intermed);
+         //ret &= dR_clMemoryBufferCleanup(net, wenergy2->intermed);
+         //ret &= dR_clMemoryBufferCleanup(net, wenergy2->feat);
          ret &= dR_cleanupKernel((layer->clKernel));
          ret &= dR_cleanupKernel((wenergy2->wenergy2All));
          ret &= dR_cleanupKernel((wenergy2->wenergy2Sum));
@@ -799,6 +815,7 @@ gboolean dR_wenergy2_schedule(dR_Graph* net, dR_Node* layer){
      {
          g_free(wenergy2->hostmem);
          g_free(wenergy2->intermed);
+         g_free(wenergy2->feat);
          g_free(wenergy2);
      }
      return TRUE;
