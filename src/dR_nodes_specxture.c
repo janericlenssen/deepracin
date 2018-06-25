@@ -251,6 +251,21 @@ gboolean dR_specxture_compute(dR_Graph* net, dR_Node* layer){
     // spectral feature vector
     gfloat spectralFeatures[10] = {sradMax, sradMaxloc, sradMean, sradVariance, sradDistance, angMax, angMaxloc, angMean, angVariance, angDistance};
 
+    gfloat* features = specxture->feat;
+    features[0] = sradMax;
+    features[1] = sradMaxloc;
+    features[2] = sradMean;
+    features[3] = sradVariance;
+    features[4] = sradDistance;
+    features[5] = angMax;
+    features[6] = angMaxloc;
+    features[7] = angMean;
+    features[8] = angVariance;
+    features[9] = angDistance;
+
+    // upload to GPU memory
+    dR_uploadArray(net, "specxtureUpload", features, 0, 10*sizeof(cl_float), (cl_mem)((void*)layer->outputBuf->buf));
+
     /*
     printf("\nSpectral features:\n");
     for (gint32 i = 0; i < 10; i++)
@@ -470,9 +485,8 @@ gboolean dR_specxture_schedule(dR_Graph* net, dR_Node* layer){
      specxture->x0 = x/2;
      specxture->y0 = y/2;
 
-     // as an outputshape, only an array of rmax is needed
-     layer->oshape.s0 = lastlayer->oshape.s0; //specxture->rmax;
-     layer->oshape.s1 = lastlayer->oshape.s1;//1;
+     layer->oshape.s0 = 10; //specxture->rmax;
+     layer->oshape.s1 = 1;//1;
      layer->oshape.s2 = 1;
 
      return TRUE;
@@ -482,7 +496,7 @@ gboolean dR_specxture_schedule(dR_Graph* net, dR_Node* layer){
  {
      dR_Specxture_Data* specxture = (dR_Specxture_Data*)(layer->layer);
      gint32 ret;
-     ret = specxture->rmax;
+     ret = 10;
      return ret;
  }
 
@@ -502,6 +516,7 @@ gboolean dR_specxture_schedule(dR_Graph* net, dR_Node* layer){
      dR_Specxture_Data* specxture = ((dR_Specxture_Data*)(layer->layer));
      gboolean ret = TRUE;
      specxture->hostmem = g_malloc(specxture->x0*specxture->y0*sizeof(cl_float)*4);
+     specxture->feat = g_malloc(10*sizeof(cl_float));
      return ret;
  }
 
@@ -530,6 +545,7 @@ gboolean dR_specxture_schedule(dR_Graph* net, dR_Node* layer){
      if(net->prepared)
      {
          g_free(specxture->hostmem);
+         g_free(specxture->feat);
          g_free(specxture);
      }
      return TRUE;

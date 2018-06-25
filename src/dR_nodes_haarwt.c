@@ -515,7 +515,7 @@ gboolean dR_wenergy2_compute(dR_Graph* net, dR_Node* layer)
 
     // summing level 1:
     // H, V, D
-    float H1=0.0f, D1=0.0f, V1=0.0f, H2=0.0f, D2=0.0f, V2=0.0f, H3=0.0f, D3=0.0f, V3=0.0f, Ea=0.0f;
+    gfloat H1=0.0f, D1=0.0f, V1=0.0f, H2=0.0f, D2=0.0f, V2=0.0f, H3=0.0f, D3=0.0f, V3=0.0f, Ea=0.0f;
 
     int indexH1=0, indexD1=0, indexV1=0, indexH2=0, indexD2=0, indexV2=0, indexH3=0, indexD3=0, indexV3=0, indexEa=0;
 
@@ -525,7 +525,7 @@ gboolean dR_wenergy2_compute(dR_Graph* net, dR_Node* layer)
     int cWidth = wenergy2->ishape.s0/2;
     int cHeight = wenergy2->ishape.s1/2;
 
-    float Ea1 = 0.0f, Ea2 = 0.0f, Ea3 = 0.0f;
+    gfloat Ea1 = 0.0f, Ea2 = 0.0f, Ea3 = 0.0f;
 
     for (int i = 0; i < cHeight; i++)
     {
@@ -544,7 +544,7 @@ gboolean dR_wenergy2_compute(dR_Graph* net, dR_Node* layer)
       }
     }
 
-    float sumAll = H1 + D1 + V1 + Ea1;
+    gfloat sumAll = H1 + D1 + V1 + Ea1;
     //printf("\nSum all Energies lvl1: %f\n", sumAll);
     //printf("\nEa1: %f\n", Ea1);
 
@@ -565,7 +565,7 @@ gboolean dR_wenergy2_compute(dR_Graph* net, dR_Node* layer)
         indexV2 = width/4 + width*i + j;
         V2 += out[indexV2];
 
-        Ea2 += out[width*i + j];
+        //Ea2 += out[width*i + j];
       }
     }
 
@@ -616,13 +616,16 @@ gboolean dR_wenergy2_compute(dR_Graph* net, dR_Node* layer)
     // upload to GPU memory
     dR_uploadArray(net, "wtEnergyUpload", features, 0, 10*sizeof(cl_float), output1);
 
+    //printf("Ea3: %f\n",features[0]);//printf("out[%d] = %f\n", i, *(float*)(wenergy2->feat+i) );
+
+    /*
     printf("\n");
     for (int i = 0; i < 10; i++)
     {
       printf("out[%d] = %f\n",i, features[i]);//printf("out[%d] = %f\n", i, *(float*)(wenergy2->feat+i) );
     }
     printf("\n");
-
+    */
     // copy
     /*
 

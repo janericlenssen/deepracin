@@ -16,6 +16,7 @@ struct dR_Specxture_Data {
     gint32                    x0;
     gint32                    y0;
     gfloat*                   hostmem;
+    gfloat*                   feat;
 };
 
 // Mandatory
