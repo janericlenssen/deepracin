@@ -13,17 +13,17 @@ def timeFeatures():
     profile.runctx("getFeatures()", globals(), locals())
 
 def decisionTree(F):
-
+    
     return True
 
 def getFeatures():
     features = []
     featuresFFT.fftfeatures(features)
     featuresWVT.wvtfeatures(features)
-    concatFeatures = np.concatenate((features[0], features[1]), axis=0)
-    print(concatFeatures)
+    concFeatures = np.concatenate((features[0], features[1]), axis=0)
+    print(concFeatures)
 
-    decisionTree(concatFeatures)
+    decisionTree(concFeatures)
 
 if __name__=="__main__":
     #timeFeatures()
