@@ -8,13 +8,15 @@ import cProfile as profile
 
 import featuresWVT
 import featuresFFT
+import DT
 
 def timeFeatures():
     profile.runctx("getFeatures()", globals(), locals())
 
 def decisionTree(F):
-    
-    return True
+
+    decision = DT.DT(F)
+    return decision
 
 def getFeatures():
     features = []
@@ -23,7 +25,8 @@ def getFeatures():
     concFeatures = np.concatenate((features[0], features[1]), axis=0)
     print(concFeatures)
 
-    decisionTree(concFeatures)
+    decision = decisionTree(concFeatures)
+    print("\nDecision: {decision}".replace("{decision}", str(decision)))
 
 if __name__=="__main__":
     #timeFeatures()

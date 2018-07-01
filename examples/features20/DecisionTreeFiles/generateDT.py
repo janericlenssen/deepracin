@@ -7,6 +7,7 @@ class DecisionTree:
     def __init__(self):
         self.nodes = []
         self.numClasses = None
+        self.DTcode = "def DT(F):"
 
     def setNodes(self, nrNodes):
         # first node has ID 1
@@ -24,16 +25,42 @@ class Node:
         self.classification = None
         self.featureNr = None
 
+DT = DecisionTree()
 
 def main():
-    DT = DecisionTree()
-    readCSV(DT)
-    generateDT(DT) #to C, then exec from lib
+    readCSV()
+    generateDT() #to C, then exec from lib
 
-def generateDT(DT):
-    return
+def generateDT():
+    nodes = DT.nodes
+    root = nodes[0]
 
-def readCSV(DT):
+    generateDTch(root)
+
+    #print(DT.DTcode)
+    with open('DT.py', 'w') as DTfile:
+        DTfile.write(DT.DTcode)
+
+def generateDTch(node, level=1):
+    DT.DTcode += "\n"
+    tabs = "".join(['\t' for i in range(level)])
+
+    # if leaf, add return statement
+    if(node.lch == 0 and node.rch == 0):
+        DT.DTcode += (tabs + "return {classification}").replace("{classification}", str(node.classification))
+        return
+    else:
+        # not  a leaf
+        # if part
+        DT.DTcode += (tabs + "if (F[{featureNr}] < {cut}):").replace("{featureNr}", str(node.featureNr)) \
+                                                  .replace("{cut}", str(node.cut))
+
+        generateDTch(DT.nodes[node.lch-1], level+1)
+        DT.DTcode += "\n" + tabs + "else:\n"
+        generateDTch(DT.nodes[node.rch-1], level+1)
+
+
+def readCSV():
 
     with open('DT_ISAS.csv', 'rb') as csvfile:
         csvDT = csv.reader(csvfile, delimiter = ',')
@@ -87,7 +114,7 @@ def readCSV(DT):
                 break
             else:
                 #print("Row:", row[0])
-                DT.nodes[nodeIndex].parent = row[0]
+                DT.nodes[nodeIndex].parent = int(row[0])
                 #print("nodeIndex: ", str(nodeIndex + 1), ", Parent: ", DT.nodes[nodeIndex].parent)
 
         # we are in the "class:" row now, skip "class:" and ", " row
@@ -101,7 +128,7 @@ def readCSV(DT):
             else:
                 # use 1 as virus, 0 as no virus (0 instead of 2), and 255 as an error case
                 row0 = [1 if row[0]=="1" else 0 if row[0]=="2" else 255]
-                DT.nodes[nodeIndex].classification = row0
+                DT.nodes[nodeIndex].classification = row0[0]
                 #print(DT.nodes[nodeIndex].classification)
 
         # we are now at "var:"
@@ -112,7 +139,7 @@ def readCSV(DT):
             if (nodeIndex == (nrNodes)):
                 break
             else:
-                DT.nodes[nodeIndex].featureNr = row[0]
+                DT.nodes[nodeIndex].featureNr = int(row[0])
                 #print(DT.nodes[nodeIndex].featureNr)
 
         # we are now at "cut:"
@@ -123,7 +150,7 @@ def readCSV(DT):
             if (nodeIndex == (nrNodes)):
                 break
             else:
-                DT.nodes[nodeIndex].cut = row[0]
+                DT.nodes[nodeIndex].cut = float(row[0])
                 #print(DT.nodes[nodeIndex].cut)
 
         # we are now at "children:"
@@ -134,8 +161,8 @@ def readCSV(DT):
             if (nodeIndex == (nrNodes)):
                 break
             else:
-                DT.nodes[nodeIndex].lch = row[0]
-                DT.nodes[nodeIndex].rch = row[1]
+                DT.nodes[nodeIndex].rch = int(row[0])
+                DT.nodes[nodeIndex].lch = int(row[1])
                 #print(DT.nodes[nodeIndex].lch, DT.nodes[nodeIndex].rch)
 
         next(csvDT)
@@ -144,7 +171,7 @@ def readCSV(DT):
         #print(row)
         currentCSV = list(csvDT)
         DT.numClasses = currentCSV[0][0]
-        
+
         # print all nodes
         """
         for i in range(nrNodes):
