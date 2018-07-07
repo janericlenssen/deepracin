@@ -36,7 +36,7 @@ def main():
         #cv2.waitKey(0)
         paddedImg = cv2.copyMakeBorder(loadedImg, top, bottom, left, right, cv2.BORDER_CONSTANT, value=0)
         #cv2.imshow(imgName, paddedImg)
-        cv2.imwrite(dirPaddedImgName, paddedImg)
+        cv2.imwrite(dirPaddedImgName, paddedImg, [cv2.IMWRITE_PNG_COMPRESSION, 0])
         #cv2.waitKey(0)
 
 if __name__=="__main__":
