@@ -6,7 +6,7 @@
 <li>Runs on Linux, Windows (and MacOS systems, not tested)
 <li>Nvidia, AMD, Intel and mobile GPUs: Mali (OpenCL 1.1 required)
 </ul>
-<b>Note:</b> This library is under development and in alpha status. While the library should run on all OS and GPUs that support OpenCL 1.1, it is not tested on most configurations.
+<b>Note:</b> This library is under development and in alpha status. While the library should run on all OS and GPUs that support OpenCL 1.1, it is not tested on most configurations. Also, there is no full documentation yet.
  
 If you have questions, feedback, suggestions or if you want to contribute, feel free to contact me!
 
