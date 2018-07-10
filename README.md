@@ -6,7 +6,7 @@
 <li>Runs on Linux, Windows (and MacOS systems, not tested)
 <li>Tested on Nvidia, AMD, Intel and mobile GPUs: Mali (OpenCL 1.1 required)
 </ul>
-<b>Note:</b> This library is under ongoing development and in alpha status. While the library should run on all OS and GPUs that support OpenCL 1.1, it is not tested on all configurations.
+<b>Note:</b> This library is under development and in alpha status. While the library should run on all OS and GPUs that support OpenCL 1.1, it is not tested on all configurations.
  
 If you have questions, feedback, suggestions or if you want to contribute, feel free to contact me!
 
@@ -156,7 +156,7 @@ sudo make install
 ```
 </ol>
 
-On Windows: (Overview, detailed version coming soon)
+On Windows: (Overview, detailed version not available at the moment)
 <ol>
 <li> Download and compile glib > 2.6, libpng and zlib with Visual Studio and install OpenCL
 <li> Checkout deepRacin git repository
@@ -206,8 +206,6 @@ On Windows: (Overview, detailed version coming soon)
 </ul>
 All implementations are given as OpenCL host and device code.
 
-<h2> Benchmarks </h2>
-TODO
 
 <h2> Acknowledgement </h2>
 This work has been supported by Deutsche Forschungsgemeinschaft (DFG) within the Collaborative Research Center SFB 876 “Providing Information by Resource-Constrained Analysis”, project B2.
