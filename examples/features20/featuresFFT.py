@@ -26,7 +26,7 @@ with dr.Environment(preferred_platform_name) as env:
 
 
 
-def fftfeatures(features, path, first):
+def fftfeatures(features, path):
     print(path)
     graph = env.create_graph(interface_layout='HWC')
     feed_node = dr.feed_node(graph, shape=(64, 64, 1))

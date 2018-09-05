@@ -26,7 +26,7 @@ with dr.Environment(preferred_platform_name) as env:
 
 
 
-def wvtfeatures(features, path, first):
+def wvtfeatures(features, path):
     graph = env.create_graph(interface_layout='HWC')
     feed_node = dr.feed_node(graph, shape=(64, 64, 1))
     hwt = dr.Haarwt(feed_node, 3)
