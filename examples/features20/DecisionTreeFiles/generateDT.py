@@ -62,7 +62,7 @@ def generateDTch(node, level=1):
 
 def readCSV():
 
-    with open('DT_ISAS.csv', 'rb') as csvfile:
+    with open('DT_ZeroPadded.csv', 'rb') as csvfile:
         csvDT = csv.reader(csvfile, delimiter = ',')
 
         # delete till first value of node field
