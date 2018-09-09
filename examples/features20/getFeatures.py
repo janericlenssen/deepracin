@@ -33,7 +33,7 @@ def getFeatures():
     scriptPath = os.path.dirname(__file__)
     # set the folder in which the test images are
     destPath = "training/train/neg"
-    #destPath = "training/train/neg"
+    #destPath = "training/train/pos"
     destPath = os.path.join(scriptPath, destPath)
     destPath = os.path.join(destPath, imageToClassify)
     # load all images in the test specified folder
@@ -52,6 +52,7 @@ def getFeatures():
     concFeaturesString += "\n"
 
     file = open("trainingValuesScript/negFeatures.txt","a")
+    #file = open("trainingValuesScript/posFeatures.txt","a")
     file.write(concFeaturesString)
     file.close()
 
