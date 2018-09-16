@@ -1,4 +1,5 @@
 from sklearn import tree
+from sklearn.tree import _tree
 import numpy as np
 import re
 import copy
@@ -6,6 +7,11 @@ import graphviz
 from sklearn.model_selection import cross_val_predict, KFold, train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score
 
+class DecisionTree:
+    def __init__(self):
+        self.DTcode = ""
+
+DT = DecisionTree()
 
 def trainDT():
     posExamples = open("posFeatures.txt","r").readlines()
@@ -22,7 +28,7 @@ def trainDT():
     ones9672 = np.full((9672), 1, dtype=int)
     Y = np.concatenate((zeros9674, ones9672), axis=0)
 
-    X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=3422, )
+    X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.1, random_state=32)
 
     clf = tree.DecisionTreeClassifier()
     clf.fit(X_train, y_train)
@@ -45,9 +51,15 @@ def trainDT():
     print('Recall:      {:.4%}'.format(recall))
 
     dot_data  = tree.export_graphviz(clf, out_file=None, class_names=['0','1'])
-    graph = graphviz.Source(dot_data)
-    graph.render("iris")
-    print('Training completed.')
+    #graph = graphviz.Source(dot_data)
+    #graph.render("iris")
+    tree_to_code(clf, ['x0','x1','x2','x3','x4','x5','x6','x7','x8','x9','x10','x11','x12','x13','x14','x15','x16','x17','x18','x19'])
+
+    file = open("skTree.py","w")
+    file.write(DT.DTcode)
+    file.close()
+
+    print('Completed.')
 
 def getData(examples):
     allFeatures = []
@@ -90,6 +102,28 @@ def getData(examples):
         #if (index == 1):
         #    break
     return allFeatures
+
+def tree_to_code(tree, feature_names):
+    tree_ = tree.tree_
+    feature_name = [
+        feature_names[i] if i != _tree.TREE_UNDEFINED else "undefined!"
+        for i in tree_.feature
+    ]
+    DT.DTcode += "def DT({}):".format(", ".join(feature_names))
+
+    def recurse(node, depth):
+        indent = "  " * depth
+        if tree_.feature[node] != _tree.TREE_UNDEFINED:
+            name = feature_name[node]
+            threshold = tree_.threshold[node]
+            DT.DTcode += ("\n{}if {} <= {}:".format(indent, name, threshold))
+            recurse(tree_.children_left[node], depth + 1)
+            DT.DTcode += ("\n{}else:  # if {} > {}".format(indent, name, threshold))
+            recurse(tree_.children_right[node], depth + 1)
+        else:
+            DT.DTcode += ("\n{}return {}".format(indent, np.argmax(tree_.value[node][0])))
+
+    recurse(0, 1)
 
 if __name__=="__main__":
     trainDT()

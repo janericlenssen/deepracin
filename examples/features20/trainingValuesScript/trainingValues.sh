@@ -1,8 +1,10 @@
 #!/bin/bash
 # Gets the training data by calling getFeatures.py on every training image
 
-# train_dir="training/train/pos"
+#train_dir="training/train/pos"
 train_dir="training/train/neg"
+#train_dir = "training/test"
+
 declare -i iteration=1
 cd ..
 for entry in "${train_dir}"/*
