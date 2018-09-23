@@ -5,7 +5,7 @@ import re
 import copy
 import graphviz
 from sklearn.model_selection import cross_val_predict, KFold, train_test_split
-from sklearn.metrics import accuracy_score, precision_score, recall_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, precision_recall_curve, average_precision_score
 import matplotlib.pyplot as plt
 from sklearn.decomposition.pca import PCA
 
@@ -16,6 +16,7 @@ class DecisionTree:
 DT = DecisionTree()
 
 def trainDT():
+    # load train set
     posExamples = open("posFeatures.txt","r").readlines()
     negExamples = open("negFeatures.txt","r").readlines()
 
@@ -25,49 +26,68 @@ def trainDT():
     npPosVec = np.array(posVector)
     npNegVec = np.array(negVector)
 
-    X = np.concatenate((npNegVec, npPosVec), axis=0)
+    X_train = np.concatenate((npNegVec, npPosVec), axis=0)
     zeros9674 = np.zeros((9674), dtype=int)
     ones9672 = np.full((9672), 1, dtype=int)
-    Y = np.concatenate((zeros9674, ones9672), axis=0)
+    y_train = np.concatenate((zeros9674, ones9672), axis=0)
 
-    X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.1, random_state=32)
+    # split the data for testing
+    #X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.1, random_state=32)
 
+    # train the tree
     clf = tree.DecisionTreeClassifier()
     clf.fit(X_train, y_train)
 
-    pred = cross_val_predict(clf, X_test, y_test, cv=5)
-    print('Mean of CV:  {:.4%}'.format(accuracy_score(pred, y_test)))
+    # test set
+    testFeaturespos = open("testFeaturespos.txt","r").readlines()
+    testFeaturesneg = open("testFeaturesneg.txt","r").readlines()
+
+    posTestVector = getData(testFeaturespos)
+    negTestVector = getData(testFeaturesneg)
+
+    npTestPosVec = np.array(posTestVector)
+    npTestNegVec = np.array(negTestVector)
+
+    X_test = np.concatenate((npTestNegVec, npTestPosVec), axis=0)
+    zeros9674_test = np.zeros((9674), dtype=int)
+    ones9671 = np.full((9671), 1, dtype=int)
+    y_test = np.concatenate((zeros9674_test, ones9671), axis=0)
+
+    #pred = cross_val_predict(clf, X_test, y_test, cv=5)
+    #print('Mean of CV:  {:.4%}'.format(accuracy_score(pred, y_test)))
 
     dt_param = 0.9
 
-    score_train = accuracy_score(clf.predict(X_train) > dt_param, y_train)
+    #score_train = accuracy_score(clf.predict(X_train) > dt_param, y_train)
     decision_function = clf.predict(X_test)
     pred = decision_function > dt_param
     score = accuracy_score(y_test, pred)
     precision = precision_score(y_test, pred)
     recall = recall_score(y_test, pred)
+    average_precision = average_precision_score(y_test, decision_function)
 
     # print classification performance metrics
-    print('Train score: {:.4%}'.format(score_train))
+    #print('Train score: {:.4%}'.format(score_train))
     print('Test score:  {:.4%}'.format(score))
     print('Precision:   {:.4%}'.format(precision))
     print('Recall:      {:.4%}'.format(recall))
+    print('Average pr score: {:.4%}'.format(average_precision))
 
     # visualize tree
-    dot_data  = tree.export_graphviz(clf, out_file=None, class_names=['0','1'])
-    graph = graphviz.Source(dot_data)
-    graph.render("iris")
+    #dot_data  = tree.export_graphviz(clf, out_file=None, class_names=['0','1'])
+    #graph = graphviz.Source(dot_data)
+    #graph.render("iris")
 
     # extract tree code in python from sklearn
-    tree_to_code(clf, ['x0','x1','x2','x3','x4','x5','x6','x7','x8','x9','x10','x11','x12','x13','x14','x15','x16','x17','x18','x19'])
+    #tree_to_code(clf, ['x0','x1','x2','x3','x4','x5','x6','x7','x8','x9','x10','x11','x12','x13','x14','x15','x16','x17','x18','x19'])
 
-    # show pca curve
+    # show pca curve and pr curve
     pca(clf, X_train, X_test, y_train, y_test, pred)
-
+    pr_curve(y_test, decision_function, average_precision)
     # store trained model
-    file = open("skTree.py","w")
-    file.write(DT.DTcode)
-    file.close()
+    #file = open("skTree.py","w")
+    #file.write(DT.DTcode)
+    #file.close()
 
     print('Completed.')
 
@@ -163,6 +183,20 @@ def pca(model, X_train, X_test, y_train, y_test, pred, threshold=0, weights_trai
     plt.savefig('pca.png')
     plt.show()
 
+def pr_curve(y_test, y_score, average_precision):
+
+    precision, recall, _ = precision_recall_curve(y_test, y_score)
+
+    plt.step(recall, precision, color='b', alpha=0.5, where='mid')
+    plt.fill_between(recall, precision, step='mid', alpha=0.5, color='b')
+
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    plt.ylim([0.0, 1.15])
+    plt.xlim([0.0, 1.15])
+    plt.title('2-class Precision-Recall curve: AP={0:0.2f}'.format(average_precision))
+    plt.savefig('pr.png')
+    plt.show()
 
 if __name__=="__main__":
     trainDT()

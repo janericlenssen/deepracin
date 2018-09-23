@@ -33,7 +33,8 @@ def getFeatures():
     scriptPath = os.path.dirname(__file__)
 
     # set the folder in which the test images are
-    destPath = "training/train/neg"
+    #destPath = "training/testposneg/neg"
+    destPath = "training/testposneg/pos"
     #destPath = "training/train/pos"
     #destPath = "training/test"
 
@@ -54,13 +55,16 @@ def getFeatures():
     concFeaturesString = concFeaturesString.replace('\n', ' ').replace('\r', '').replace('[', '').replace(']', '').replace('  ', ' ')
     concFeaturesString += "\n"
 
+    #file = open("trainingValuesScript/testFeaturespos.txt","a")
     #file = open("trainingValuesScript/testFeatures.txt","a")
     #file = open("trainingValuesScript/posFeatures.txt","a")
-    #file.write(concFeaturesString)
-    #file.close()
+    file.write(concFeaturesString)
+    file.close()
 
+    print("--")
     decision = decisionTree(F[0], F[1], F[2], F[3], F[4], F[5], F[6], F[7], F[8], F[9], F[10], F[11], F[12], F[13], F[14], F[15], F[16], F[17], F[18], F[19])
     print("\nDecision: {decision}".replace("{decision}", str(decision)))
+    print("--")
     #first += 1
 
 if __name__=="__main__":
