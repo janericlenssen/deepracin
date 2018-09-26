@@ -9,6 +9,21 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, preci
 import matplotlib.pyplot as plt
 from sklearn.decomposition.pca import PCA
 
+from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
+
+from sklearn.preprocessing import StandardScaler
+from sklearn.datasets import make_moons, make_circles, make_classification
+from sklearn.neural_network import MLPClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+from sklearn.gaussian_process import GaussianProcessClassifier
+from sklearn.gaussian_process.kernels import RBF
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+
 class DecisionTree:
     def __init__(self):
         self.DTcode = ""
@@ -31,13 +46,6 @@ def trainDT():
     ones9672 = np.full((9672), 1, dtype=int)
     y_train = np.concatenate((zeros9674, ones9672), axis=0)
 
-    # split the data for testing
-    #X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.1, random_state=32)
-
-    # train the tree
-    clf = tree.DecisionTreeClassifier()
-    clf.fit(X_train, y_train)
-
     # test set
     testFeaturespos = open("testFeaturespos.txt","r").readlines()
     testFeaturesneg = open("testFeaturesneg.txt","r").readlines()
@@ -53,43 +61,68 @@ def trainDT():
     ones9671 = np.full((9671), 1, dtype=int)
     y_test = np.concatenate((zeros9674_test, ones9671), axis=0)
 
-    #pred = cross_val_predict(clf, X_test, y_test, cv=5)
-    #print('Mean of CV:  {:.4%}'.format(accuracy_score(pred, y_test)))
+    # split the data for testing
+    #X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.1, random_state=32)
 
-    dt_param = 0.9
+    # try all classifiers
+    #clf1 = KNeighborsClassifier(3)
+    #clf2 = SVC(kernel="linear", C=0.025)
+    #clf3 = SVC(gamma=2, C=1)
+    #clf4 = GaussianProcessClassifier(1.0 * RBF(1.0))
+    clf5 = DecisionTreeClassifier()
+    clf6 = RandomForestClassifier()
+    #clf7 = MLPClassifier(alpha=1)
+    clf8 = AdaBoostClassifier(base_estimator=DecisionTreeClassifier(), n_estimators=10)
+    #clf9 = GaussianNB()
+    #clf10 = QuadraticDiscriminantAnalysis()
+    #clf11 = RandomForestClassifier(max_depth=50, random_state=0)
 
-    #score_train = accuracy_score(clf.predict(X_train) > dt_param, y_train)
-    decision_function = clf.predict(X_test)
-    pred = decision_function > dt_param
-    score = accuracy_score(y_test, pred)
-    precision = precision_score(y_test, pred)
-    recall = recall_score(y_test, pred)
-    average_precision = average_precision_score(y_test, decision_function)
+    Clf = [clf5, clf6, clf8]
+    #clf = tree.DecisionTreeClassifier()
+    iteration = 0
+    for clf in Clf:
+        print(clf)
+        iteration += 1
+        clf.fit(X_train, y_train)
 
-    # print classification performance metrics
-    #print('Train score: {:.4%}'.format(score_train))
-    print('Test score:  {:.4%}'.format(score))
-    print('Precision:   {:.4%}'.format(precision))
-    print('Recall:      {:.4%}'.format(recall))
-    print('Average pr score: {:.4%}'.format(average_precision))
+        #pred = cross_val_predict(clf, X_test, y_test, cv=5)
+        #print('Mean of CV:  {:.4%}'.format(accuracy_score(pred, y_test)))
 
-    # visualize tree
-    #dot_data  = tree.export_graphviz(clf, out_file=None, class_names=['0','1'])
-    #graph = graphviz.Source(dot_data)
-    #graph.render("iris")
+        dt_param = 0.9
 
-    # extract tree code in python from sklearn
-    #tree_to_code(clf, ['x0','x1','x2','x3','x4','x5','x6','x7','x8','x9','x10','x11','x12','x13','x14','x15','x16','x17','x18','x19'])
+        #score_train = accuracy_score(clf.predict(X_train) > dt_param, y_train)
+        decision_function = clf.predict(X_test)
+        pred = decision_function > dt_param
+        score = accuracy_score(y_test, pred)
+        precision = precision_score(y_test, pred)
+        recall = recall_score(y_test, pred)
+        average_precision = average_precision_score(y_test, decision_function)
 
-    # show pca curve and pr curve
-    pca(clf, X_train, X_test, y_train, y_test, pred)
-    pr_curve(y_test, decision_function, average_precision)
-    # store trained model
-    #file = open("skTree.py","w")
-    #file.write(DT.DTcode)
-    #file.close()
+        # print classification performance metrics
+        #print('Train score: {:.4%}'.format(score_train))
+        print('Test score:  {:.4%}'.format(score))
+        print('Precision:   {:.4%}'.format(precision))
+        print('Recall:      {:.4%}'.format(recall))
+        print('Average pr score: {:.4%}'.format(average_precision))
 
-    print('Completed.')
+        # visualize tree
+        #dot_data  = tree.export_graphviz(clf, out_file=None, class_names=['0','1'])
+        #graph = graphviz.Source(dot_data)
+        #graph.render("iris")
+
+        # extract tree code in python from sklearn
+        #tree_to_code(clf, ['x0','x1','x2','x3','x4','x5','x6','x7','x8','x9','x10','x11','x12','x13','x14','x15','x16','x17','x18','x19'])
+
+        # show pca curve and pr curve
+        #pca(clf, X_train, X_test, y_train, y_test, pred)
+        #pr_curve(y_test, decision_function, average_precision)
+        # store trained model
+        #file = open("skTree.py","w")
+        #file.write(DT.DTcode)
+        #file.close()
+
+        print('---')
+        #break
 
 def getData(examples):
     allFeatures = []
