@@ -208,7 +208,7 @@ gboolean dR_apply(dR_Graph* net){
     gint64 nstarttime_secs = 0;
 	gint64 gstarttime = 0;
 	gint64 nstarttime = 0;
-    if(!net->config->silent)
+    if(net->config->debugInfo)
         g_print("Applying graph...\n");
     dR_list_resetIt(net->scheduledLayers);
     current_layer = (dR_Node*)dR_list_next(net->scheduledLayers);
@@ -263,21 +263,20 @@ gboolean dR_apply(dR_Graph* net){
 		}
         g_print("CPU Profiling: Whole graph took: %2.3fms, Sum of all nodes: %2.3fms \n", graphruntime,net->config->totalNodeCPUTime);
     }
-    if(!net->config->silent)
+    if(net->config->debugInfo)
         g_print("Done.\n\n");
     return TRUE;
 }
 
 void dR_cleanup(dR_Graph* net, gboolean cleanupcl){
-    //gboolean silent = net->config->silent;
-    //if(!silent)
+    if(!net->config->silent)
         g_print("Cleaning up deepRACIN...\n");
     if(net->prepared)
         dR_cleanupBuffers(net);
     if(cleanupcl && net->prepared)
         dR_cleanupCL(net);
     dR_cleanupNet(net);
-    //if(!silent)
+    if(!net->config->silent)
         g_print("Done.\n");
 }
 
