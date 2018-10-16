@@ -1358,7 +1358,7 @@ gboolean dR_exportFloatArrayToCSV(dR_Graph* net, gchar * filepath, gchar * filen
     }
 
 
-#if defined(WIN32) || defined(WIN64)
+#if defined(_WIN32) || defined(_WIN64)
     fopen_s(&f, filepathAndFilename, "w");
 #else
     f = fopen(filename, "w");

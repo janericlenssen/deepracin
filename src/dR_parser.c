@@ -41,7 +41,7 @@ float* loadVariables(char* path, int length)
 {
     gfloat* ret = g_malloc(length*sizeof(gfloat));
     FILE *fp;
-    #if defined(WIN32) || defined(WIN64)
+    #if defined(_WIN32) || defined(_WIN64)
         fopen_s(&fp, path, "rb");
     #else
         fp = fopen(path, "rb");
@@ -145,7 +145,7 @@ gboolean dR_serializeGraph(dR_Graph* net, gchar* path)
             source = concat_and_free_old(source,temp);
             // Save variable file
             filePath = g_build_filename(folderPath,filename, NULL);
-			#if defined(WIN32) || defined(WIN64)
+			#if defined(_WIN32) || defined(_WIN64)
 				fopen_s(&fp, filePath, "wb");
 			#else
 				fp = fopen(filePath, "wb");
@@ -800,7 +800,7 @@ void dR_printNet(dR_Graph* net, char* path)
     current_layer = dR_list_next(net->allNodes);
     if(path)
     {
-		#if defined(WIN32) || defined(WIN64)
+		#if defined(_WIN32) || defined(_WIN64)
 			fopen_s(&fp, path, "w");
 		#else
 			fp = fopen(path, "w");
