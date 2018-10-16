@@ -39,16 +39,20 @@ char* own_strtok_r(
 
 float* loadVariables(char* path, int length)
 {
- gfloat* ret = g_malloc(length*sizeof(gfloat));
- FILE *fp;
- fp = fopen(path,"rb");
- if( fp == NULL )
- {
-    g_print("Error while opening the model file.\n");
-    return 0;
- }
- fread(ret,sizeof(gfloat),length,fp);
- return ret;
+    gfloat* ret = g_malloc(length*sizeof(gfloat));
+    FILE *fp;
+    #if defined(WIN32) || defined(WIN64)
+        fopen_s(&fp, path, "rb");
+    #else
+        fp = fopen(path, "rb");
+    #endif
+    if( fp == NULL )
+    {
+        g_print("Error while opening the model file.\n");
+        return 0;
+    }
+    fread(ret,sizeof(gfloat),length,fp);
+    return ret;
 }
 
 gboolean dR_serializeGraph(dR_Graph* net, gchar* path)
@@ -141,7 +145,11 @@ gboolean dR_serializeGraph(dR_Graph* net, gchar* path)
             source = concat_and_free_old(source,temp);
             // Save variable file
             filePath = g_build_filename(folderPath,filename, NULL);
-            fp = fopen(filePath,"wb");
+			#if defined(WIN32) || defined(WIN64)
+				fopen_s(&fp, filePath, "wb");
+			#else
+				fp = fopen(filePath, "wb");
+			#endif
             if( fp == NULL )
             {
                g_print("Error while creating the variable file %s.\n",filename);
@@ -792,7 +800,11 @@ void dR_printNet(dR_Graph* net, char* path)
     current_layer = dR_list_next(net->allNodes);
     if(path)
     {
-        fp = fopen(path,"w");
+		#if defined(WIN32) || defined(WIN64)
+			fopen_s(&fp, path, "w");
+		#else
+			fp = fopen(path, "w");
+		#endif
         if(fp == NULL)
         {
            g_print("Error while opening the output file.\n");
