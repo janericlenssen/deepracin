@@ -29,7 +29,7 @@ with dr.Environment(preferred_platform_name) as env:
 def fftfeatures(features, path):
     print(path)
     graph = env.create_graph(interface_layout='HWC')
-    feed_node = dr.feed_node(graph, shape=(64, 64, 1))
+    feed_node = dr.feed_node(graph, shape=(32, 32, 1))
     ffttest = dr.FFT(feed_node)
     fftshifted = dr.FFTShift(ffttest)
     fftmag = dr.FFTAbs(fftshifted)
@@ -71,7 +71,7 @@ def fftfeatures(features, path):
 
     # Feed Input
     img = io.imread(path)
-    io.imshow(img)
+    #io.imshow(img)
     #io.show()
 
     exp = np.expand_dims(img,2)
@@ -84,6 +84,7 @@ def fftfeatures(features, path):
     specOut = dr.apply(graph)
     dat = np.array(specOut[0]).astype(np.float32)
     features.append(dat)
+
     #dat = np.array(fftmag[0]).astype(np.float32)
     #print(features)
     #show output of specxture

@@ -34,8 +34,9 @@ def getFeatures():
 
     # set the folder in which the test images are
     #destPath = "training/testposneg/neg"
-    destPath = "training/testposneg/pos"
+    destPath = "training/testposneg/neg"
     #destPath = "training/train/pos"
+    #destPath = "training/train/neg"
     #destPath = "training/test"
 
     destPath = os.path.join(scriptPath, destPath)
@@ -47,6 +48,7 @@ def getFeatures():
     features = []
     concFeatures = []
     featuresFFT.fftfeatures(features, destPath)
+    print('**----')
     featuresWVT.wvtfeatures(features, destPath)
     F = np.concatenate((features[0], features[1]), axis=0)
 
@@ -57,14 +59,16 @@ def getFeatures():
 
     #file = open("trainingValuesScript/testFeaturespos.txt","a")
     #file = open("trainingValuesScript/testFeatures.txt","a")
-    #file = open("trainingValuesScript/posFeatures.txt","a")
+    #file = open("trainingValuesScript/posFeatures32.txt","a")
+    #file = open("trainingValuesScript/negFeatures32.txt","a")
+    file = open("trainingValuesScript/testFeaturesneg32.txt","a")
     file.write(concFeaturesString)
     file.close()
 
-    print("--")
-    decision = decisionTree(F[0], F[1], F[2], F[3], F[4], F[5], F[6], F[7], F[8], F[9], F[10], F[11], F[12], F[13], F[14], F[15], F[16], F[17], F[18], F[19])
-    print("\nDecision: {decision}".replace("{decision}", str(decision)))
-    print("--")
+    #print("--")
+    #decision = decisionTree(F[0], F[1], F[2], F[3], F[4], F[5], F[6], F[7], F[8], F[9], F[10], F[11], F[12], F[13], F[14], F[15], F[16], F[17], F[18], F[19])
+    #print("\nDecision: {decision}".replace("{decision}", str(decision)))
+    #print("--")
     #first += 1
 
 if __name__=="__main__":

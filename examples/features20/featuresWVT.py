@@ -28,7 +28,7 @@ with dr.Environment(preferred_platform_name) as env:
 
 def wvtfeatures(features, path):
     graph = env.create_graph(interface_layout='HWC')
-    feed_node = dr.feed_node(graph, shape=(64, 64, 1))
+    feed_node = dr.feed_node(graph, shape=(32, 32, 1))
     hwt = dr.Haarwt(feed_node, 3)
     energy = dr.Wenergy2(hwt)
     dr.mark_as_output(energy)
@@ -70,7 +70,7 @@ def wvtfeatures(features, path):
     # Feed Input
     img = io.imread(path)
     #io.use_plugin('qt')
-    io.imshow(img)
+    #io.imshow(img)
     #io.show()
 
     exp = np.expand_dims(img,2)
