@@ -236,15 +236,15 @@ gboolean dR_apply(dR_Graph* net){
         {
             dR_downloadArray(net, "",current_layer->outputBuf->bufptr,0*current_layer->oshape.s0*current_layer->oshape.s1*sizeof(cl_float),current_layer->oshape.s0*current_layer->oshape.s1*sizeof(cl_float), net->hostDebugBuffer);
         }
-        if(net->config->profilingCPU)
+        /*if(net->config->profilingCPU)
         {
 			gdouble noderuntime;
-            clFinish(net->clConfig->clCommandQueue);
+            //clFinish(net->clConfig->clCommandQueue);
 			g_get_current_time (&result);
 			noderuntime = ((gdouble)(result.tv_sec - nstarttime_secs)*1000.0) + ((gdouble)(result.tv_usec - nstarttime)/1000.0);
             net->config->totalNodeCPUTime+=noderuntime;
             g_print("CPU Profiling: Node %d took: %2.3fms \n",current_layer->layerID, noderuntime);
-        }
+        }*/
         current_layer = (dR_Node*)dR_list_next(net->scheduledLayers);
     }
     if(net->config->profilingGPU)
@@ -255,6 +255,7 @@ gboolean dR_apply(dR_Graph* net){
     if(net->config->profilingCPU)
     {
 		gdouble graphruntime;
+		clFinish(net->clConfig->clCommandQueue);
 		g_get_current_time (&result);
 		graphruntime = ((gdouble)(result.tv_sec - gstarttime_secs)*1000.0) + ((gdouble)(result.tv_usec - gstarttime) / 1000.0);
 		if (graphruntime < 0)
