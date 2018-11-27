@@ -771,7 +771,7 @@ def Add(input_node1, input_node2):
     params = [elemwise_2op_dict['Add']]
 
     # Call deepRACIN
-    onode = Node(lib.dR_ElemWise2Operation(c_void_p(input_node.graph.ptr), c_void_p(input_node1.ptr), c_void_p(input_node2.ptr),
+    onode = Node(lib.dR_ElemWise2Operation(c_void_p(input_node1.graph.ptr), c_void_p(input_node1.ptr), c_void_p(input_node2.ptr),
                                            elemwise_2op_dict['Add']), input_node1.graph, desc, params)
     return onode
 
@@ -785,7 +785,7 @@ def Sub(input_node1, input_node2):
     params = [elemwise_2op_dict['Sub']]
 
     # Call deepRACIN
-    onode = Node(lib.dR_ElemWise2Operation(c_void_p(input_node.graph.ptr), c_void_p(input_node1.ptr), c_void_p(input_node2.ptr),
+    onode = Node(lib.dR_ElemWise2Operation(c_void_p(input_node1.graph.ptr), c_void_p(input_node1.ptr), c_void_p(input_node2.ptr),
                                            elemwise_2op_dict['Sub']), input_node1.graph, desc, params)
     return onode
 
@@ -799,7 +799,7 @@ def Mul(input_node1, input_node2):
     params = [elemwise_2op_dict['Mul']]
 
     # Call deepRACIN
-    onode = Node(lib.dR_ElemWise2Operation(c_void_p(input_node.graph.ptr), c_void_p(input_node1.ptr), c_void_p(input_node2.ptr),
+    onode = Node(lib.dR_ElemWise2Operation(c_void_p(input_node1.graph.ptr), c_void_p(input_node1.ptr), c_void_p(input_node2.ptr),
                                            elemwise_2op_dict['Mul']), input_node1.graph, desc, params)
     return onode
 
@@ -813,7 +813,7 @@ def Div(input_node1, input_node2):
     params = [elemwise_2op_dict['Div']]
 
     # Call deepRACIN
-    onode = Node(lib.dR_ElemWise2Operation(c_void_p(input_node.graph.ptr), c_void_p(input_node1.ptr), c_void_p(input_node2.ptr),
+    onode = Node(lib.dR_ElemWise2Operation(c_void_p(input_node1.graph.ptr), c_void_p(input_node1.ptr), c_void_p(input_node2.ptr),
                                            elemwise_2op_dict['Div']), input_node1.graph, desc, params)
     return onode
 
@@ -827,7 +827,7 @@ def Pow(input_node1, input_node2):
     params = [elemwise_2op_dict['Pow']]
 
     # Call deepRACIN
-    onode = Node(lib.dR_ElemWise2Operation(c_void_p(input_node.graph.ptr), c_void_p(input_node1.ptr), c_void_p(input_node2.ptr),
+    onode = Node(lib.dR_ElemWise2Operation(c_void_p(input_node1.graph.ptr), c_void_p(input_node1.ptr), c_void_p(input_node2.ptr),
                                            elemwise_2op_dict['Pow']), input_node1.graph, desc, params)
     return onode
 
