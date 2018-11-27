@@ -84,12 +84,12 @@ gboolean dR_serializeGraph(dR_Graph* net, gchar* path)
     if(g_access(path,W_OK)==-1)
     {
          g_print("Error: Cant write to target folder %s. Permission denied!\n",path);
-         return 0;
+         return FALSE;
     }*/
     if(g_mkdir_with_parents(folderPath,0777)==-1)
     {
         g_print("Error: Could not create folder %s. Maybe it already exists (-> rename or delete it).\n",folderPath);
-        return 0;
+        return FALSE;
     }
     source = g_strdup_printf(
     "deepRACIN graph: %d nodes, %d feed nodes",net->allNodes->length,net->feed_layers->length);
@@ -153,7 +153,7 @@ gboolean dR_serializeGraph(dR_Graph* net, gchar* path)
             if( fp == NULL )
             {
                g_print("Error while creating the variable file %s.\n",filename);
-               return 0;
+               return FALSE;
             }
             fwrite(variables[i],sizeof(gfloat),variable_sizes[i],fp);
             fclose(fp);
