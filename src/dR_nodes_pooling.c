@@ -343,7 +343,7 @@ gboolean dR_pooling_generateKernel(dR_Graph* net, dR_Node* layer)
                 switch(poollayer->poolingType){
                 case tMax:
                     temp = g_strdup_printf(
-                    "    res = max(res,sampleZeroPaddedFloat(gImage, iz*width*height,ix,iy,width,height));\n");
+                    "    res = MAX(res,sampleZeroPaddedFloat(gImage, iz*width*height,ix,iy,width,height));\n");
                     source = concat_and_free_old(source,temp);
                     break;
                 case tAverage:
@@ -353,7 +353,7 @@ gboolean dR_pooling_generateKernel(dR_Graph* net, dR_Node* layer)
                     break;
                 case tl2norm:
                     temp = g_strdup_printf(
-                    "    res = max(maxf,sampleZeroPaddedFloat(gImage, iz*width*height,ix,iy,width,height));\n");  // Not implemented
+                    "    res = MAX(maxf,sampleZeroPaddedFloat(gImage, iz*width*height,ix,iy,width,height));\n");  // Not implemented
                     source = concat_and_free_old(source,temp);
                     break;
                 }
