@@ -45,16 +45,16 @@ gboolean dR_bn_schedule(dR_Graph* net, dR_Node* layer)
 {
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
 }
 
 gboolean dR_bn_compute(dR_Graph* net, dR_Node* layer){ //todo
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     //dR_BN_Data* lrnlayer = ((dR_BN_Data*)(layer->layer));
     /*cl_int filterWindowWidth = convlayer->shape.s0;
     cl_int filterWindowHeight = convlayer->shape.s1;
@@ -128,8 +128,8 @@ gboolean dR_bn_createKernel(dR_Graph* net, dR_Node* layer)
 {
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
 }
 
@@ -137,8 +137,8 @@ gboolean dR_bn_allocateBuffers(dR_Graph* net, dR_Node* layer)
 {
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
 }
 
@@ -146,8 +146,8 @@ gboolean dR_bn_fillBuffers(dR_Graph* net, dR_Node* layer)
 {
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
 }
 
@@ -155,8 +155,8 @@ gboolean dR_bn_cleanupBuffers(dR_Graph* net, dR_Node* layer)
 {
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
 }
 

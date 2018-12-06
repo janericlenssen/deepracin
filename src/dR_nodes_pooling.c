@@ -238,8 +238,8 @@ gboolean dR_pooling_allocateBuffers(dR_Graph* net, dR_Node* layer)
 {
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
 }
 
@@ -247,8 +247,8 @@ gboolean dR_pooling_fillBuffers(dR_Graph* net, dR_Node* layer)
 {
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
 }
 

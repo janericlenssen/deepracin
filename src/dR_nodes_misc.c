@@ -98,8 +98,8 @@ dR_Node* dR_resolveRoI_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint num
 gboolean dR_resolveRoI_schedule(dR_Graph* net, dR_Node* layer){
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
  }
 
@@ -107,7 +107,7 @@ gboolean dR_resolveRoI_schedule(dR_Graph* net, dR_Node* layer){
 gboolean dR_resolveRoI_compute(dR_Graph* net, dR_Node* layer){
     dR_ResolveRoI_Data* resolveRoI = (dR_ResolveRoI_Data*)(layer->layer);
     size_t globalWorkSize[3];
-    gint paramid = 0;
+    cl_uint paramid = 0;
     cl_mem* input;
     dR_Shape3 origin;
     gint buforigin;
@@ -125,9 +125,9 @@ gboolean dR_resolveRoI_compute(dR_Graph* net, dR_Node* layer){
     {
 
         input = inputlayer->outputBuf->bufptr;
-        globalWorkSize[0] = layer->oshape.s0;
-        globalWorkSize[1] = layer->oshape.s1;
-        globalWorkSize[2] = layer->oshape.s2;
+        globalWorkSize[0] = (size_t)layer->oshape.s0;
+        globalWorkSize[1] = (size_t)layer->oshape.s1;
+        globalWorkSize[2] = (size_t)layer->oshape.s2;
 
         origin = inputlayer->outputBuf->roiOrigin;
         bufwidth = inputlayer->oshape.s0;
@@ -172,9 +172,9 @@ gboolean dR_resolveRoI_compute(dR_Graph* net, dR_Node* layer){
         cl_mem* indexBuffer;
         cl_int index = inputlayer->outputBuf->index;
         input = inputlayer->outputBuf->bufptr;
-        globalWorkSize[0] = layer->oshape.s0;
-        globalWorkSize[1] = layer->oshape.s1;
-        globalWorkSize[2] = layer->oshape.s2;
+        globalWorkSize[0] = (size_t)layer->oshape.s0;
+        globalWorkSize[1] = (size_t)layer->oshape.s1;
+        globalWorkSize[2] = (size_t)layer->oshape.s2;
         indexBuffer = inputlayer->outputBuf->indexBuffer;
         bufwidth = inputlayer->oshape.s0;
         bufheight = inputlayer->oshape.s1;
@@ -245,8 +245,8 @@ gboolean dR_resolveRoI_allocateBuffers(dR_Graph* net, dR_Node* layer)
 {
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
 }
 
@@ -254,8 +254,8 @@ gboolean dR_resolveRoI_fillBuffers(dR_Graph* net, dR_Node* layer)
 {
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
 }
 
@@ -375,8 +375,8 @@ dR_Node* dR_rgb2gray_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numIN
 gboolean dR_rgb2gray_schedule(dR_Graph* net, dR_Node* layer){
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
  }
 
@@ -384,12 +384,12 @@ gboolean dR_rgb2gray_schedule(dR_Graph* net, dR_Node* layer){
 gboolean dR_rgb2gray_compute(dR_Graph* net, dR_Node* layer){
     //dR_RGB2Gray_Data* rgb2gray = (dR_RGB2Gray_Data*)(layer->layer);
     size_t globalWorkSize[3];
-    int paramid = 0;
+    cl_uint paramid = 0;
     cl_mem* input;
     dR_list_resetIt(layer->previous_layers);
     input = ((dR_Node*)dR_list_next(layer->previous_layers))->outputBuf->bufptr;
-    globalWorkSize[0] = layer->oshape.s0;
-    globalWorkSize[1] = layer->oshape.s1;
+    globalWorkSize[0] = (size_t)layer->oshape.s0;
+    globalWorkSize[1] = (size_t)layer->oshape.s1;
     globalWorkSize[2] = 1;
 
 
@@ -447,8 +447,8 @@ gboolean dR_rgb2gray_allocateBuffers(dR_Graph* net, dR_Node* layer)
 {
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
 }
 
@@ -456,8 +456,8 @@ gboolean dR_rgb2gray_fillBuffers(dR_Graph* net, dR_Node* layer)
 {
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
 }
 
@@ -583,8 +583,8 @@ dR_Node* dR_us_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numINodes, 
 gboolean dR_us_schedule(dR_Graph* net, dR_Node* layer){
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
  }
 
@@ -594,21 +594,21 @@ gboolean dR_us_compute(dR_Graph* net, dR_Node* layer){
     size_t globalWorkSize[3];
     size_t localWorkSize[3];
     gint lMemImageSize;
-    int paramid = 0;
+    cl_uint paramid = 0;
     cl_mem* input;
     dR_list_resetIt(layer->previous_layers);
     input = ((dR_Node*)dR_list_next(layer->previous_layers))->outputBuf->bufptr;
 
-    globalWorkSize[0] = layer->oshape.s0;
-    globalWorkSize[1] = layer->oshape.s1;
-    globalWorkSize[2] = layer->oshape.s2;
+    globalWorkSize[0] = (size_t)layer->oshape.s0;
+    globalWorkSize[1] = (size_t)layer->oshape.s1;
+    globalWorkSize[2] = (size_t)layer->oshape.s2;
 
     if(uslayer->scaleFactorX<16)
-        localWorkSize[0] = uslayer->scaleFactorX;
+        localWorkSize[0] = (size_t)uslayer->scaleFactorX;
     else
         localWorkSize[0] = 16;
     if(uslayer->scaleFactorY<16)
-        localWorkSize[1] = uslayer->scaleFactorY;
+        localWorkSize[1] = (size_t)uslayer->scaleFactorY;
     else
         localWorkSize[1] = 16;
     localWorkSize[2] = 1;
@@ -669,8 +669,8 @@ gboolean dR_us_allocateBuffers(dR_Graph* net, dR_Node* layer)
 {
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
 }
 
@@ -678,8 +678,8 @@ gboolean dR_us_fillBuffers(dR_Graph* net, dR_Node* layer)
 {
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
 }
 
@@ -764,19 +764,19 @@ gboolean dR_us_generateKernel(dR_Graph* net, dR_Node* layer)
 gchar* dR_us_createKernelName(dR_Node* layer)
 {
     dR_Upscaling_Data* uslayer = (dR_Upscaling_Data*)(layer->layer);
-    gint length = 0;
-	gint maxsize = 100;
+    gsize length = 0;
+	gsize maxsize = 100;
     gchar* string = g_malloc(sizeof(char)*maxsize);
-    length += g_snprintf(string+length,maxsize-length,"upscale%dx%d", uslayer->scaleFactorX, uslayer->scaleFactorY);
+    length += (gsize)g_snprintf(string+length,maxsize-length,"upscale%dx%d", uslayer->scaleFactorX, uslayer->scaleFactorY);
     switch(uslayer->type){
     case tNearestNUp:
-        length += g_snprintf(string+length,maxsize-length,"NearestN");
+        length += (gsize)g_snprintf(string+length,maxsize-length,"NearestN");
         break;
     case tLinearUp:
-        length += g_snprintf(string+length,maxsize-length,"Linear");
+        length += (gsize)g_snprintf(string+length,maxsize-length,"Linear");
         break;
     case tBicubicUp:
-        length += g_snprintf(string+length,maxsize-length,"Bicubic");
+        length += (gsize)g_snprintf(string+length,maxsize-length,"Bicubic");
         break;
     }
     return string;
@@ -786,7 +786,7 @@ gchar* dR_us_printLayer(dR_Node* layer)
 {
     dR_Upscaling_Data* uslayer = (dR_Upscaling_Data*)(layer->layer);
     gchar* out;
-    gchar* typestr;
+    gchar* typestr = "unknown";
     if(uslayer->type == tLinearUp)
         typestr = "Bilinear";
     else if(uslayer->type == tBicubicUp)
@@ -895,8 +895,8 @@ dR_Node* dR_lc_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numINodes, 
 gboolean dR_lc_schedule(dR_Graph* net, dR_Node* layer){
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
  }
 
@@ -905,13 +905,13 @@ gboolean dR_lc_compute(dR_Graph* net, dR_Node* layer){
 
     dR_LabelCreation_Data* lclayer = (dR_LabelCreation_Data*)(layer->layer);
     size_t globalWorkSize[3];
-    int paramid = 0;
+    cl_uint paramid = 0;
     cl_mem* input;
     dR_list_resetIt(layer->previous_layers);
     input = ((dR_Node*)dR_list_next(layer->previous_layers))->outputBuf->bufptr;
 
-    globalWorkSize[0] = layer->oshape.s0;
-    globalWorkSize[1] = layer->oshape.s1;
+    globalWorkSize[0] = (size_t)layer->oshape.s0;
+    globalWorkSize[1] = (size_t)layer->oshape.s1;
     globalWorkSize[2] = 1;
 
     net->clConfig->clError = clSetKernelArg(layer->clKernel, paramid, sizeof(cl_mem), (void *)input);								paramid++;
@@ -989,8 +989,8 @@ gboolean dR_lc_allocateBuffers(dR_Graph* net, dR_Node* layer)
 {
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
 }
 
@@ -998,8 +998,8 @@ gboolean dR_lc_fillBuffers(dR_Graph* net, dR_Node* layer)
 {
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
 }
 
@@ -1022,7 +1022,7 @@ gchar* dR_lc_printLayer(dR_Node* layer)
 {
     dR_LabelCreation_Data* lclayer = (dR_LabelCreation_Data*)(layer->layer);
     gchar* out;
-    gchar* typestr;
+    gchar* typestr = "unknown";
     if(lclayer->type == t3to2ClassesBin)
         typestr = "3 to 2 Classes, Binary (c=1|2 / c=0) Labels";
     else if(lclayer->type == t3to2ClassesConf)
@@ -1172,7 +1172,7 @@ gboolean dR_norm_compute(dR_Graph* net, dR_Node* layer){
     cl_float gavg = 0.0f;
 	cl_float targetMean, targetDev;
     size_t globalWorkSize[3];
-    int paramid = 0;
+    cl_uint paramid = 0;
     cl_mem* input;
     dR_list_resetIt(layer->previous_layers);
     input = ((dR_Node*)dR_list_next(layer->previous_layers))->outputBuf->bufptr;
@@ -1204,7 +1204,7 @@ gboolean dR_norm_compute(dR_Graph* net, dR_Node* layer){
         lMemSize = localWorkSize[0] * localWorkSize[1];
         globalWorkSize[0] = (size_t)normlayer->globalWorkSizeX;
         globalWorkSize[1] = (size_t)normlayer->globalWorkSizeY;
-        globalWorkSize[2] = normlayer->ishape.s2;
+        globalWorkSize[2] = (size_t)normlayer->ishape.s2;
         nGroupsX = (cl_int)(globalWorkSize[0] / localWorkSize[0]);
         nGroupsY = (cl_int)(globalWorkSize[1] / localWorkSize[1]);
         nGroupsPerChannel = nGroupsX * nGroupsY;
@@ -1316,7 +1316,7 @@ gboolean dR_norm_compute(dR_Graph* net, dR_Node* layer){
         lMemSize = localWorkSize[0] * localWorkSize[1];
         globalWorkSize[0] = (size_t)normlayer->globalWorkSizeX;
         globalWorkSize[1] = (size_t)normlayer->globalWorkSizeY;
-        globalWorkSize[2] = normlayer->ishape.s2;
+        globalWorkSize[2] = (size_t)normlayer->ishape.s2;
         nGroupsX = (cl_int)(globalWorkSize[0] / localWorkSize[0]);
         nGroupsY = (cl_int)(globalWorkSize[1] / localWorkSize[1]);
         nGroupsPerChannel = nGroupsX * nGroupsY;
@@ -1395,7 +1395,7 @@ gboolean dR_norm_compute(dR_Graph* net, dR_Node* layer){
         {
             sum += normlayer->resultHost[i];
         }
-        gdev = sqrt(sum / (cl_float)(normlayer->ishape.s0 * normlayer->ishape.s1 * normlayer->ishape.s2));
+        gdev = (cl_float)sqrt(sum / (cl_float)(normlayer->ishape.s0 * normlayer->ishape.s1 * normlayer->ishape.s2));
 	    if(net->config->debugInfo)
         {
             g_print("Stddev: %f\n",gdev);
@@ -1403,9 +1403,9 @@ gboolean dR_norm_compute(dR_Graph* net, dR_Node* layer){
     }
     // Normalize
 
-    globalWorkSize[0] = layer->oshape.s0;
-    globalWorkSize[1] = layer->oshape.s1;
-    globalWorkSize[2] = layer->oshape.s2;
+    globalWorkSize[0] = (size_t)layer->oshape.s0;
+    globalWorkSize[1] = (size_t)layer->oshape.s1;
+    globalWorkSize[2] = (size_t)layer->oshape.s2;
 
     targetMean = normlayer->targetMean;
     targetDev = normlayer->targetDev;
@@ -1490,7 +1490,7 @@ gboolean dR_norm_allocateBuffers(dR_Graph* net, dR_Node* layer)
     dR_Normalization_Data* normlayer = ((dR_Normalization_Data*)(layer->layer));
     ret &= dR_createFloatBuffer(net, &(normlayer->tempFloatBuffer1),(normlayer->ishape.s0/normlayer->localworksizex)*(normlayer->ishape.s1/normlayer->localworksizey), CL_MEM_READ_WRITE);
     ret &= dR_createFloatBuffer(net, &(normlayer->tempFloatBuffer2),(normlayer->ishape.s0/normlayer->localworksizex)*(normlayer->ishape.s1/normlayer->localworksizey), CL_MEM_READ_WRITE);
-    normlayer->resultHost = g_malloc(normlayer->ishape.s2*sizeof(gfloat));
+    normlayer->resultHost = g_malloc((gsize)normlayer->ishape.s2*sizeof(gfloat));
     return ret;
 }
 
@@ -1498,8 +1498,8 @@ gboolean dR_norm_fillBuffers(dR_Graph* net, dR_Node* layer)
 {
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
 }
 

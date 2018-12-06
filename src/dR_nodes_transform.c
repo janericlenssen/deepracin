@@ -114,8 +114,8 @@ dR_Node* dR_slice_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numINode
 gboolean dR_slice_schedule(dR_Graph* net, dR_Node* layer){
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
  }
 
@@ -188,8 +188,8 @@ gboolean dR_slice_allocateBuffers(dR_Graph* net, dR_Node* layer)
 {
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
 }
 
@@ -197,8 +197,8 @@ gboolean dR_slice_fillBuffers(dR_Graph* net, dR_Node* layer)
 {
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
 }
 
@@ -415,8 +415,8 @@ gboolean dR_concat_allocateBuffers(dR_Graph* net, dR_Node* layer)
 {
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
 }
 
@@ -424,8 +424,8 @@ gboolean dR_concat_fillBuffers(dR_Graph* net, dR_Node* layer)
 {
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
 }
 
@@ -663,8 +663,8 @@ dR_Node* dR_croporpad_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numI
 gboolean dR_croporpad_schedule(dR_Graph* net, dR_Node* layer){
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
  }
 
@@ -734,8 +734,8 @@ gboolean dR_croporpad_allocateBuffers(dR_Graph* net, dR_Node* layer)
 {
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
 }
 
@@ -743,8 +743,8 @@ gboolean dR_croporpad_fillBuffers(dR_Graph* net, dR_Node* layer)
 {
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
 }
 

@@ -90,8 +90,8 @@ dR_Node* dR_elemwise2op_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint nu
 gboolean dR_elemwise2op_schedule(dR_Graph* net, dR_Node* layer){
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
  }
 
@@ -189,8 +189,8 @@ gboolean dR_elemwise2op_allocateBuffers(dR_Graph* net, dR_Node* layer)
 {
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
 }
 
@@ -198,8 +198,8 @@ gboolean dR_elemwise2op_fillBuffers(dR_Graph* net, dR_Node* layer)
 {
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
 }
 
@@ -340,8 +340,8 @@ dR_Node* dR_elemwise1op_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint nu
 gboolean dR_elemwise1op_schedule(dR_Graph* net, dR_Node* layer){
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
  }
 
@@ -443,8 +443,8 @@ gboolean dR_elemwise1op_allocateBuffers(dR_Graph* net, dR_Node* layer)
 {
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
 }
 
@@ -452,8 +452,8 @@ gboolean dR_elemwise1op_fillBuffers(dR_Graph* net, dR_Node* layer)
 {
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
 }
 
@@ -611,8 +611,8 @@ dR_Node* dR_softmax_parseAppendNode(dR_Graph* net, dR_Node** iNodes, gint numINo
 gboolean dR_softmax_schedule(dR_Graph* net, dR_Node* layer){
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
  }
 
@@ -728,8 +728,8 @@ gboolean dR_softmax_fillBuffers(dR_Graph* net, dR_Node* layer)
 {
     // Nothing to do
     // Warnings shut up, please
-    net = net;
-    layer = layer;
+    (void)net;
+    (void)layer;
     return TRUE;
 }
 
