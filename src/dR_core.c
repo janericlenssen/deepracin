@@ -319,7 +319,7 @@ gboolean dR_estimateAndAllocateBuffers(dR_Graph* net){
     if(!net->config->silent&&net->config->debugInfo)
         g_print("Stream buffers allocated!\n");
 
-    net->hostDebugBuffer = g_malloc(maxBufferSize*4);
+    net->hostDebugBuffer = g_malloc((gsize)maxBufferSize*4);
 
     return ret;
 }
@@ -461,7 +461,7 @@ void dR_cleanupBuffers(dR_Graph* net)
 void dR_cleanupNet(dR_Graph* net)
 {
     dR_Node* current_layer;
-    dR_Node* temp;
+    //dR_Node* temp;
     dR_MemoryHandler* memhandle;
     if(net->prepared)
     {

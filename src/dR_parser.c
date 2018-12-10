@@ -569,13 +569,13 @@ dR_Node* dR_parseModel(dR_Graph* net, dR_Node* input, gchar* path, dR_Node** nod
         }
 
         p = strtok(line2, " ");
-        params[0] = atof(p);
+        params[0] = (float)atof(p);
         while(p != NULL) {
             numberofparams++;
             p = strtok(NULL, " ");
             if(p != NULL)
             {
-                params[numberofparams]= atof(p);
+                params[numberofparams]= (float)atof(p);
             }
         }
 		g_print("\n");
